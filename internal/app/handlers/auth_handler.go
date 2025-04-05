@@ -131,3 +131,29 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 		"data":    tokenString,
 	})
 }
+
+func (h *AuthHandler) VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Token is required",
+		})
+		return
+	}
+
+	user, err := h.authService.VerifyUser(token)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Failed to verify user",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User verified successfully",
+		"data":    user,
+	})
+}

@@ -6,12 +6,14 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"github.com/yazidalg/lidm_backend/internal/pkg"
 )
 
 type AuthServiceInterface interface {
 	RegisterUser(user request.UserRegisterRequest) (models.User, error)
 	LoginUser(id int) (models.User, error)
 	GetByEmail(email string) (models.User, error)
+	VerifyUser(token string) (models.User, error)
 }
 
 type authService struct {
@@ -23,6 +25,8 @@ func NewAuthService(authRepository repositories.AuthRepositoryInterface) *authSe
 }
 
 func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.User, error) {
+	token := pkg.GenerateToken()
+
 	userData := models.User{
 		Name:       user.Name,
 		Email:      user.Email,
@@ -35,7 +39,17 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		UpdatedAt:  time.Now(),
 	}
 
-	return s.authRepository.RegisterUser(userData)
+	createdUser, err := s.authRepository.RegisterUser(userData)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	if err := pkg.SendVerificationEmail(user.Email, token); err != nil {
+		return models.User{}, err
+	}
+
+	return createdUser, nil
 }
 
 func (s *authService) LoginUser(id int) (models.User, error) {
@@ -44,4 +58,8 @@ func (s *authService) LoginUser(id int) (models.User, error) {
 
 func (s *authService) GetByEmail(email string) (models.User, error) {
 	return s.authRepository.GetByEmail(email)
+}
+
+func (s *authService) VerifyUser(token string) (models.User, error) {
+	return s.authRepository.GetByVerificationToken(token)
 }
