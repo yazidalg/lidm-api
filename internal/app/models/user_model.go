@@ -12,6 +12,7 @@ type User struct {
 	Name              string
 	Password          string
 	Class             string
+	IsVerified        bool
 	VerificationToken string
 	Point             int32
 	Streak            int32
