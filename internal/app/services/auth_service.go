@@ -6,7 +6,7 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
-	"github.com/yazidalg/lidm_backend/internal/pkg"
+	pkg "github.com/yazidalg/lidm_backend/internal/pkg/mail"
 )
 
 type AuthServiceInterface interface {

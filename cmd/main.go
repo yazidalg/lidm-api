@@ -11,7 +11,8 @@ func main() {
 	db := config.ConnectDB()
 	config.MigrateDb(db)
 
-	auth := helpers.NewBuildAuth(db)
+	userHandler := helpers.NewBuildUser(db)
+	authHandler := helpers.NewBuildAuth(db)
 
-	routes.NewRoute(auth)
+	routes.NewRoute(authHandler, userHandler)
 }

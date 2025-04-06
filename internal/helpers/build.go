@@ -7,6 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
+func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
+	userRepository := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepository)
+	userHandler := handlers.NewUserHandler(userService)
+	return userHandler
+}
+
 func NewBuildAuth(db *gorm.DB) *handlers.AuthHandler {
 	authRepository := repositories.NewAuthRepository(db)
 	authService := services.NewAuthService(authRepository)
