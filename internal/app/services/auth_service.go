@@ -13,7 +13,8 @@ type AuthServiceInterface interface {
 	RegisterUser(user request.UserRegisterRequest) (models.User, error)
 	LoginUser(id int) (models.User, error)
 	GetByEmail(email string) (models.User, error)
-	VerifyUser(token string) (models.User, error)
+	GetByVerificationToken(token string) (models.User, error)
+	VerifyUser(user models.User) (models.User, error)
 }
 
 type authService struct {
@@ -28,25 +29,26 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 	token := pkg.GenerateToken()
 
 	userData := models.User{
-		Name:       user.Name,
-		Email:      user.Email,
-		Class:      user.Class,
-		Password:   user.Password,
-		IsVerified: false,
-		Point:      0,
-		Streak:     0,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		Name:              user.Name,
+		Email:             user.Email,
+		Class:             user.Class,
+		Password:          user.Password,
+		IsVerified:        false,
+		VerificationToken: token,
+		Point:             0,
+		Streak:            0,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 	}
 
 	createdUser, err := s.authRepository.RegisterUser(userData)
 
 	if err != nil {
-		return models.User{}, err
+		return userData, err
 	}
 
 	if err := pkg.SendVerificationEmail(user.Email, token); err != nil {
-		return models.User{}, err
+		return userData, err
 	}
 
 	return createdUser, nil
@@ -60,6 +62,10 @@ func (s *authService) GetByEmail(email string) (models.User, error) {
 	return s.authRepository.GetByEmail(email)
 }
 
-func (s *authService) VerifyUser(token string) (models.User, error) {
+func (s *authService) GetByVerificationToken(token string) (models.User, error) {
 	return s.authRepository.GetByVerificationToken(token)
+}
+
+func (s *authService) VerifyUser(user models.User) (models.User, error) {
+	return s.authRepository.VerifyUser(user)
 }

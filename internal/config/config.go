@@ -21,7 +21,6 @@ func LoadEnv() {
 }
 
 func MigrateDb(db *gorm.DB) {
-	db.Migrator().DropTable(&models.User{})
 	db.AutoMigrate(&models.User{})
 }
 

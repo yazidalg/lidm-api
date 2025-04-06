@@ -19,7 +19,7 @@ func NewRoute(
 	authGroupHandler := router.Group("auth")
 	authGroupHandler.POST("/register", authHandler.RegisterUser)
 	authGroupHandler.POST("/login", authHandler.LoginUser)
-	authGroupHandler.GET("/verify", authHandler.VerifyEmail)
+	authGroupHandler.GET("/verify/:verificationToken", authHandler.VerifyEmail)
 
 	router.Run(":3000")
 }

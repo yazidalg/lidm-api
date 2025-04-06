@@ -133,7 +133,7 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 }
 
 func (h *AuthHandler) VerifyEmail(c *gin.Context) {
-	token := c.Query("token")
+	token := c.Param("verificationToken")
 
 	if token == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -142,8 +142,17 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.VerifyUser(token)
+	user, err := h.authService.GetByVerificationToken(token)
 
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Token is invalid",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	user, err = h.authService.VerifyUser(user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Failed to verify user",
