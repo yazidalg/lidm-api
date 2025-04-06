@@ -11,6 +11,7 @@ type AuthRepositoryInterface interface {
 	GetByEmail(email string) (models.User, error)
 	GetByVerificationToken(token string) (models.User, error)
 	VerifyUser(user models.User) (models.User, error)
+	GetVerifiedUser(email string) (models.User, error)
 }
 
 type authRepository struct {
@@ -39,6 +40,14 @@ func (r *authRepository) GetByEmail(email string) (models.User, error) {
 	var user models.User
 
 	err := r.db.First(&user, "email = ?", email).Error
+
+	return user, err
+}
+
+func (r *authRepository) GetVerifiedUser(email string) (models.User, error) {
+	var user models.User
+
+	err := r.db.Where("email = ? AND is_verified = ?", email, true).First(&user).Error
 
 	return user, err
 }

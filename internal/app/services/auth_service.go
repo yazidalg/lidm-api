@@ -15,6 +15,7 @@ type AuthServiceInterface interface {
 	GetByEmail(email string) (models.User, error)
 	GetByVerificationToken(token string) (models.User, error)
 	VerifyUser(user models.User) (models.User, error)
+	GetVerifiedUser(email string) (models.User, error)
 }
 
 type authService struct {
@@ -68,4 +69,8 @@ func (s *authService) GetByVerificationToken(token string) (models.User, error) 
 
 func (s *authService) VerifyUser(user models.User) (models.User, error) {
 	return s.authRepository.VerifyUser(user)
+}
+
+func (s *authService) GetVerifiedUser(email string) (models.User, error) {
+	return s.authRepository.GetVerifiedUser(email)
 }
