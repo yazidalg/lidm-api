@@ -32,12 +32,11 @@ func ConnectDB() *gorm.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
-	dbTimeZone := os.Getenv("DB_TIMEZONE") // Optional
 
 	// Format: user:password@tcp(host:port)/dbname?parseTime=true&loc=Local
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
-		dbUser, dbPassword, dbHost, dbPort, dbName, dbTimeZone,
+		"%s:%s@tcp(%s:%s)/%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName,
 	)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
