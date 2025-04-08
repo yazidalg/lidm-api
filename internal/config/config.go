@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -25,7 +25,6 @@ func MigrateDb(db *gorm.DB) {
 }
 
 func ConnectDB() *gorm.DB {
-
 	var err error
 
 	dbHost := os.Getenv("DB_HOST")
@@ -33,19 +32,19 @@ func ConnectDB() *gorm.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
-	dbSSLMode := os.Getenv("DB_SSL_MODE")
-	dbTimeZone := os.Getenv("DB_TIMEZONE")
+	dbTimeZone := os.Getenv("DB_TIMEZONE") // Optional
 
+	// Format: user:password@tcp(host:port)/dbname?parseTime=true&loc=Local
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		dbHost, dbUser, dbPassword, dbName, dbPort, dbSSLMode, dbTimeZone,
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName, dbTimeZone,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to connect to database: %v", err))
+		panic(fmt.Sprintf("failed to connect to MySQL database: %v", err))
 	}
 
 	return db
