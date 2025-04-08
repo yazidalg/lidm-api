@@ -15,8 +15,19 @@ import (
 var DB *gorm.DB
 
 func LoadEnv() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = "development" // default to dev if ENV is not set
+	}
+
+	if env != "production" {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found, skipping...")
+		} else {
+			log.Println(".env file loaded")
+		}
+	} else {
+		log.Println("Production environment, skipping .env load")
 	}
 }
 
