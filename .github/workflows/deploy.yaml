@@ -1,0 +1,46 @@
+name: Build and Push to ACR
+on:
+  push:
+    tags:
+      - "acr-v*"
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@main
+
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: "Build and push image"
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_URL }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - run: |
+          docker build . -t ${{ secrets.AZURE_URL }}/lidm2025:${{ github.ref_name }}
+          docker push ${{ secrets.AZURE_URL }}/lidm2025:${{ github.ref_name }}
+
+  # deploy_k3s:
+  #   runs-on: ubuntu-24.04
+  #   needs: build
+  #   steps:
+  #     - name: Checkout GitHub Action
+  #       uses: actions/checkout@main
+
+  #     - name: SSH Into Digitalocean Droplets and Update Deployment
+  #       uses: appleboy/ssh-action@v1
+  #       with:
+  #         host: ${{ secrets.DROPLET_IP }}
+  #         username: ${{ secrets.DROPLET_USERNAME }}
+  #         key: ${{ secrets.DROPLET_SSH_KEY }}
+  #         script: |
+  #           cd deployment/lidm/
+  #           kubectl set image deployment/lidm-api-deployment lidm-api=lidm2025.azurecr.io/lidm2025:${{ github.ref_name }}
+  #           export LIDM_API_POD_NAME=$(kubectl get pods -n lidm --no-headers --field-selector=status.phase==Running -o custom-columns=":metadata.name")
+  #           kubectl delete pod $LIDM_API_POD_NAME -n lidm
+  #           kubectl apply -f deployment.yaml -n lidm
