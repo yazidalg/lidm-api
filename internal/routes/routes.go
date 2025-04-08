@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
-	"github.com/yazidalg/lidm_backend/internal/pkg/middleware"
+	"github.com/yazidalg/lidm_backend/internal/middleware"
 )
 
 func NewRoute(
@@ -18,7 +18,7 @@ func NewRoute(
 
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(middleware.AuthRequire)
-	userGroupHandler.GET("/:id", userHandler.GetUserById)
+	userGroupHandler.GET("/profile", userHandler.GetUserById)
 
 	authGroupHandler := router.Group("auth")
 	authGroupHandler.POST("/register", authHandler.RegisterUser)

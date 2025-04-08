@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -108,36 +107,36 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	passwordError := bcrypt.CompareHashAndPassword([]byte(verifiedUser.Password), []byte(body.Password))
-
-	if passwordError != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Password doesn't match",
+	if err := bcrypt.CompareHashAndPassword([]byte(verifiedUser.Password), []byte(body.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"message": "Email or Password is wrong",
 		})
 		return
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": verifiedUser.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	tokenStr, err := token.SignedString([]byte(os.Getenv("SECRET")))
 
 	if err != nil {
-		fmt.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Failed to create token",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to generate token",
+			"details": err.Error(),
 		})
 		return
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("authorization", tokenString, 3600, "", "", false, true)
+	c.SetCookie("authorization", tokenStr, 3600*24, "", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successfully",
-		"data":    tokenString,
+		"success": true,
+		"message": "Login successful",
+		"data":    tokenStr,
 	})
 }
 

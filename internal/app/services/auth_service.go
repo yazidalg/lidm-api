@@ -6,7 +6,7 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
-	pkg "github.com/yazidalg/lidm_backend/internal/pkg/mail"
+	"github.com/yazidalg/lidm_backend/internal/utils"
 )
 
 type AuthServiceInterface interface {
@@ -27,7 +27,7 @@ func NewAuthService(authRepository repositories.AuthRepositoryInterface) *authSe
 }
 
 func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.User, error) {
-	token := pkg.GenerateToken()
+	token := utils.GenerateToken()
 
 	userData := models.User{
 		Name:              user.Name,
@@ -48,7 +48,7 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		return userData, err
 	}
 
-	if err := pkg.SendVerificationEmail(user.Email, token); err != nil {
+	if err := utils.SendVerificationEmail(user.Email, token); err != nil {
 		return userData, err
 	}
 
