@@ -16,7 +16,7 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	Streak            int32
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	CreatedAt         time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt         time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt         gorm.DeletedAt `gorm:"-:all"`
 }
