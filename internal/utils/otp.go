@@ -18,3 +18,7 @@ func GenerateOTP(length int) string {
 
 	return string(otp)
 }
+
+func GetExpiryTime() int64 {
+	return time.Now().Add(10 * time.Minute).Unix()
+}

@@ -32,7 +32,8 @@ func LoadEnv() {
 }
 
 func MigrateDb(db *gorm.DB) {
-	db.AutoMigrate(&models.User{})
+	db.Migrator().DropTable(&models.User{}, &models.ForgotPassword{})
+	db.AutoMigrate(&models.User{}, &models.ForgotPassword{})
 }
 
 func ConnectDB() *gorm.DB {
@@ -46,7 +47,7 @@ func ConnectDB() *gorm.DB {
 
 	// Format: user:password@tcp(host:port)/dbname?parseTime=true&loc=Local
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s",
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		dbUser, dbPassword, dbHost, dbPort, dbName,
 	)
 

@@ -1,48 +1,47 @@
 package repositories
 
 import (
+	"errors"
+	"time"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/gorm"
 )
 
 type ForgotPasswordRepositoryInterface interface {
-	CreateOTP(otp models.ForgetPasswordModel) (models.ForgetPasswordModel, error)
-	GetLatestOTP(userId uint, otp string) (models.ForgetPasswordModel, error)
-	DeleteOTP(id uint) (models.ForgetPasswordModel, error)
-	UpdateUserPassword(userId uint, newPassword string) (models.User, error)
+	CreateOTP(otp *models.ForgotPassword) (*models.ForgotPassword, error)
+	GetValidOTP(email, otp string) (*models.ForgotPassword, error)
+	CheckUsedOTP(otp *models.ForgotPassword) (*models.ForgotPassword, error)
 }
 
 type forgotPasswordRepository struct {
-	db gorm.DB
+	db *gorm.DB
 }
 
-func NewForgotPasswordRepository(db gorm.DB) *forgotPasswordRepository {
+func NewForgotPasswordRepository(db *gorm.DB) *forgotPasswordRepository {
 	return &forgotPasswordRepository{db}
 }
 
-func (r *forgotPasswordRepository) CreateOTP(otp models.ForgetPasswordModel) (models.ForgetPasswordModel, error) {
-	err := r.db.Create(otp).Error
+func (r *forgotPasswordRepository) CreateOTP(otp *models.ForgotPassword) (*models.ForgotPassword, error) {
+	err := r.db.Create(&otp).Error
 
 	return otp, err
 }
 
-func (r *forgotPasswordRepository) GetLatestOTP(userId uint, otp string) (models.ForgetPasswordModel, error) {
-	var forgotPasswordModel models.ForgetPasswordModel
-	err := r.db.Where("user_id = ? AND otp = ?", userId, otp).Order("created_at desc").First(&forgotPasswordModel).Error
+func (r *forgotPasswordRepository) GetValidOTP(email, otp string) (*models.ForgotPassword, error) {
+	var record models.ForgotPassword
+	err := r.db.Where("email = ? AND otp = ? AND used = ? AND expires_at > ?", email, otp, false, time.Now().Unix()).
+		First(&record).Error
 
-	return forgotPasswordModel, err
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &record, err
 }
 
-func (r *forgotPasswordRepository) DeleteOTP(id uint) (models.ForgetPasswordModel, error) {
-	var forgotPasswordModel models.ForgetPasswordModel
-	err := r.db.Delete(&forgotPasswordModel, id).Error
-
-	return forgotPasswordModel, err
-}
-
-func (r *forgotPasswordRepository) UpdateUserPassword(userId uint, newPassword string) (models.User, error) {
-	var user models.User
-	err := r.db.Model(&user).Where("id = ?", userId).Update("password", newPassword).Error
-
-	return user, err
+func (r *forgotPasswordRepository) CheckUsedOTP(otp *models.ForgotPassword) (*models.ForgotPassword, error) {
+	otp.Used = true
+	err := r.db.Save(otp).Error
+	return otp, err
 }
