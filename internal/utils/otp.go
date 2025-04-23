@@ -20,5 +20,5 @@ func GenerateOTP(length int) string {
 }
 
 func GetExpiryTime() int64 {
-	return time.Now().Add(10 * time.Minute).Unix()
+	return time.Now().Add(3 * time.Minute).Unix()
 }
