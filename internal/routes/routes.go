@@ -9,6 +9,7 @@ import (
 func NewRoute(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
+	forgotPasswordHandler *handlers.ForgotPasswordHandler,
 ) {
 	router := gin.Default()
 
@@ -24,6 +25,12 @@ func NewRoute(
 	authGroupHandler.POST("/register", authHandler.RegisterUser)
 	authGroupHandler.POST("/login", authHandler.LoginUser)
 	authGroupHandler.GET("/verify/:verificationToken", authHandler.VerifyEmail)
+
+	// Forgot password routes
+	forgotPasswordGroup := router.Group("password")
+	forgotPasswordGroup.POST("/forgot", forgotPasswordHandler.RequestPasswordReset)
+	forgotPasswordGroup.POST("/verify-otp", forgotPasswordHandler.VerifyOTP)
+	forgotPasswordGroup.POST("/reset", forgotPasswordHandler.ResetPassword)
 
 	router.Run(":3000")
 }

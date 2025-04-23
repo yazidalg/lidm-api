@@ -12,6 +12,7 @@ type AuthRepositoryInterface interface {
 	GetByVerificationToken(token string) (models.User, error)
 	VerifyUser(user models.User) (models.User, error)
 	GetVerifiedUser(email string) (models.User, error)
+	UpdatePassword(user models.User) (models.User, error)
 }
 
 type authRepository struct {
@@ -63,6 +64,13 @@ func (r *authRepository) GetByVerificationToken(token string) (models.User, erro
 func (r *authRepository) VerifyUser(user models.User) (models.User, error) {
 	user.IsVerified = true
 	user.VerificationToken = ""
+
 	err := r.db.Save(&user).Error
+
+	return user, err
+}
+
+func (r *authRepository) UpdatePassword(user models.User) (models.User, error) {
+	err := r.db.Model(&user).Update("password", user.Password).Error
 	return user, err
 }

@@ -20,3 +20,11 @@ func NewBuildAuth(db *gorm.DB) *handlers.AuthHandler {
 	authHandler := handlers.NewAuthHandler(authService)
 	return authHandler
 }
+
+func NewBuildForgotPassword(db *gorm.DB) *handlers.ForgotPasswordHandler {
+	forgotPasswordRepository := repositories.NewForgotPasswordRepository(db)
+	authRepository := repositories.NewAuthRepository(db)
+	forgotPasswordService := services.NewForgotPasswordService(forgotPasswordRepository, authRepository)
+	forgotPasswordHandler := handlers.NewForgotPasswordHandler(forgotPasswordService)
+	return forgotPasswordHandler
+}

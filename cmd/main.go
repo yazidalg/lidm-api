@@ -13,6 +13,7 @@ func main() {
 
 	userHandler := helpers.NewBuildUser(db)
 	authHandler := helpers.NewBuildAuth(db)
+	forgotPasswordHandler := helpers.NewBuildForgotPassword(db)
 
-	routes.NewRoute(authHandler, userHandler)
+	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler)
 }
