@@ -28,3 +28,10 @@ func NewBuildForgotPassword(db *gorm.DB) *handlers.ForgotPasswordHandler {
 	forgotPasswordHandler := handlers.NewForgotPasswordHandler(forgotPasswordService)
 	return forgotPasswordHandler
 }
+
+func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
+	quizRepository := repositories.NewQuizRepository(db)
+	quizService := services.NewQuizService(quizRepository)
+	quizHandler := handlers.NewQuizHandler(quizService)
+	return quizHandler
+}

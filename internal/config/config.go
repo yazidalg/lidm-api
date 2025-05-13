@@ -32,8 +32,7 @@ func LoadEnv() {
 }
 
 func MigrateDb(db *gorm.DB) {
-	db.Migrator().DropTable(&models.User{}, &models.ForgotPassword{})
-	db.AutoMigrate(&models.User{}, &models.ForgotPassword{})
+	db.AutoMigrate(&models.User{}, &models.ForgotPassword{}, &models.Quiz{})
 }
 
 func ConnectDB() *gorm.DB {
