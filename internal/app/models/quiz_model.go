@@ -8,10 +8,9 @@ import (
 
 type Quiz struct {
 	gorm.Model
-	ID            int `json:"id" gorm:"primaryKey"`
 	Question      string
-	AnswerTime    time.Time
-	ReadTime      time.Time
+	AnswerTime    int32
+	ReadTime      int32
 	Options       Options `gorm:"embedded;"`
 	CorrectAnswer string
 	Explanation   string

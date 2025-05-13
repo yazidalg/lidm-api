@@ -1,13 +1,9 @@
 package request
 
-import (
-	"time"
-)
-
 type QuizRequest struct {
 	Question      string             `json:"question" binding:"required"`
-	AnswerTime    time.Time          `json:"answer_time" binding:"required"`
-	ReadTime      time.Time          `json:"read_time" binding:"required"`
+	AnswerTime    int32              `json:"answer_time" binding:"required"`
+	ReadTime      int32              `json:"read_time" binding:"required"`
 	Options       QuizOptionsRequest `json:"options" binding:"required"`
 	CorrectAnswer string             `json:"correct_answer" binding:"required"`
 	Explanation   string             `json:"explanation" binding:"required"`
