@@ -12,7 +12,7 @@ type QuizServiceInterface interface {
 	GetQuizByID(id int) (*models.Quiz, error)
 	GetAllQuizzes() (*[]models.Quiz, error)
 	CreateQuiz(quiz request.QuizRequest) (*models.Quiz, error)
-	UpdateQuiz(quiz models.Quiz) (*models.Quiz, error)
+	UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, error)
 }
 
 type quizService struct {
@@ -47,6 +47,17 @@ func (s *quizService) CreateQuiz(quiz request.QuizRequest) (*models.Quiz, error)
 	return s.quizRepository.CreateQuiz(quizData)
 }
 
-func (s *quizService) UpdateQuiz(quiz models.Quiz) (*models.Quiz, error) {
-	return s.quizRepository.UpdateQuiz(quiz)
+func (s *quizService) UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, error) {
+
+	quizModel := models.Quiz{
+		Question:      quiz.Question,
+		AnswerTime:    quiz.AnswerTime,
+		ReadTime:      quiz.ReadTime,
+		Options:       models.Options(quiz.Options),
+		CorrectAnswer: quiz.CorrectAnswer,
+		Explanation:   quiz.Explanation,
+		UpdatedAt:     time.Now(),
+	}
+
+	return s.quizRepository.UpdateQuiz(id, quizModel)
 }
