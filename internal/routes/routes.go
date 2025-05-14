@@ -36,6 +36,8 @@ func NewRoute(
 	// Quiz routes
 	quizGroup := router.Group("quiz")
 	quizGroup.POST("/create", quizHandler.CreateQuiz)
+	quizGroup.GET("/:id", quizHandler.GetQuizByID)
+	quizGroup.GET("/quizzess", quizHandler.GetAllQuizzes)
 
 	router.Run(":3000")
 }

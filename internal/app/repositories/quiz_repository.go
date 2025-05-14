@@ -22,34 +22,22 @@ func NewQuizRepository(db *gorm.DB) *quizRepository {
 
 func (r *quizRepository) GetQuizByID(id int) (*models.Quiz, error) {
 	var quiz models.Quiz
-	err := r.db.Find(&quiz, id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &quiz, nil
+	err := r.db.First(&quiz, "id = ?", id).Error
+	return &quiz, err
 }
 
 func (r *quizRepository) GetAllQuizzes() (*[]models.Quiz, error) {
 	var quizzes []models.Quiz
 	err := r.db.Find(&quizzes).Error
-	if err != nil {
-		return nil, err
-	}
-	return &quizzes, nil
+	return &quizzes, err
 }
 
 func (r *quizRepository) CreateQuiz(quiz models.Quiz) (*models.Quiz, error) {
 	err := r.db.Create(&quiz).Error
-	if err != nil {
-		return nil, err
-	}
-	return &quiz, nil
+	return &quiz, err
 }
 
 func (r *quizRepository) UpdateQuiz(quiz models.Quiz) (*models.Quiz, error) {
 	err := r.db.Save(&quiz).Error
-	if err != nil {
-		return nil, err
-	}
-	return &quiz, nil
+	return &quiz, err
 }
