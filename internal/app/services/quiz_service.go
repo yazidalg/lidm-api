@@ -13,6 +13,7 @@ type QuizServiceInterface interface {
 	GetAllQuizzes() (*[]models.Quiz, error)
 	CreateQuiz(quiz request.QuizRequest) (*models.Quiz, error)
 	UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, error)
+	DeleteQuiz(id int32, quiz models.Quiz) (*models.Quiz, error)
 }
 
 type quizService struct {
@@ -60,4 +61,8 @@ func (s *quizService) UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, erro
 	}
 
 	return s.quizRepository.UpdateQuiz(id, quizModel)
+}
+
+func (s *quizService) DeleteQuiz(id int32, quiz models.Quiz) (*models.Quiz, error) {
+	return s.quizRepository.DeleteQuiz(id, quiz)
 }

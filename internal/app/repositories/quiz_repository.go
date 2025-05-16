@@ -10,6 +10,7 @@ type QuizRepositoryInterface interface {
 	GetAllQuizzes() (*[]models.Quiz, error)
 	CreateQuiz(quiz models.Quiz) (*models.Quiz, error)
 	UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, error)
+	DeleteQuiz(id int32, quiz models.Quiz) (*models.Quiz, error)
 }
 
 type quizRepository struct {
@@ -39,5 +40,10 @@ func (r *quizRepository) CreateQuiz(quiz models.Quiz) (*models.Quiz, error) {
 
 func (r *quizRepository) UpdateQuiz(id int32, quiz models.Quiz) (*models.Quiz, error) {
 	err := r.db.Model(&quiz).Where("id = ?", id).Updates(quiz).Error
+	return &quiz, err
+}
+
+func (r *quizRepository) DeleteQuiz(id int32, quiz models.Quiz) (*models.Quiz, error) {
+	err := r.db.Where("id = ?", id).Delete(&quiz).Error
 	return &quiz, err
 }

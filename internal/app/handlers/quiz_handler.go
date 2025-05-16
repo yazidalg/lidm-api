@@ -163,3 +163,47 @@ func (h *QuizHandler) UpdateQuiz(c *gin.Context) {
 	})
 
 }
+
+func (h *QuizHandler) DeleteQuiz(c *gin.Context) {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid quiz ID",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	if id == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Quiz ID is required",
+		})
+		return
+	}
+
+	_, err = h.quizService.GetQuizByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "Quiz not found",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	quizModel := models.Quiz{}
+	quiz, err := h.quizService.DeleteQuiz(int32(id), quizModel)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Failed to delete quiz",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Quiz deleted successfully",
+		"data":    quiz,
+	})
+}
