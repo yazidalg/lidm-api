@@ -29,18 +29,9 @@ func NewBuildForgotPassword(db *gorm.DB) *handlers.ForgotPasswordHandler {
 	return forgotPasswordHandler
 }
 
-func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
-	quizRepository := repositories.NewQuizRepository(db)
-	quizService := services.NewQuizService(quizRepository)
-	quizHandler := handlers.NewQuizHandler(quizService)
-	return quizHandler
-}
-
-func NewBuildGame(db *gorm.DB) *handlers.GameHandler {
-	gameRepository := repositories.NewGameRepository(db)
-	userRepository := repositories.NewUserRepository(db)
-	quizRepository := repositories.NewQuizRepository(db)
-	gameService := services.NewGameService(gameRepository, userRepository, quizRepository)
-	gameHandler := handlers.NewGameHandler(gameService)
-	return gameHandler
-}
+// func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
+// 	quizRepository := repositories.NewQuizRepository(db)
+// 	quizService := services.NewQuizService(quizRepository)
+// 	quizHandler := handlers.NewQuizHandler(quizService)
+// 	return quizHandler
+// }

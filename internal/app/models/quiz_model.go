@@ -8,20 +8,10 @@ import (
 
 type Quiz struct {
 	gorm.Model
-	Question      string
-	AnswerTime    int32
-	ReadTime      int32
-	Options       Options `gorm:"embedded;"`
-	CorrectAnswer string
-	Explanation   string
-	Games         []Game    `gorm:"foreignKey:QuizID"`
-	CreatedAt     time.Time `gorm:"autoCreateTime"`
-	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
-}
-
-type Options struct {
-	OptionA string
-	OptionB string
-	OptionC string
-	OptionD string
+	Participants []Participant `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Questions    []Question    `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Answers      []Answer      `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Status       string        `gorm:"type:enum('draft','active','finished');default:'draft'"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }

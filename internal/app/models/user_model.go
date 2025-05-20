@@ -15,8 +15,7 @@ type User struct {
 	IsVerified        bool
 	VerificationToken string
 	Point             int32
-	Streak            int32
-	Games             []Game    `gorm:"foreignKey:UserID"`
+	TotalXP           int32
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
 }
