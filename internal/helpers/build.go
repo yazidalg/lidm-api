@@ -38,7 +38,9 @@ func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
 
 func NewBuildGame(db *gorm.DB) *handlers.GameHandler {
 	gameRepository := repositories.NewGameRepository(db)
-	gameService := services.NewGameService(gameRepository)
+	userRepository := repositories.NewUserRepository(db)
+	quizRepository := repositories.NewQuizRepository(db)
+	gameService := services.NewGameService(gameRepository, userRepository, quizRepository)
 	gameHandler := handlers.NewGameHandler(gameService)
 	return gameHandler
 }

@@ -16,6 +16,7 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	Streak            int32
+	Games             []Game    `gorm:"foreignKey:UserID"`
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
 }
