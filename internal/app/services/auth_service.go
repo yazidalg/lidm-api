@@ -37,7 +37,7 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		IsVerified:        false,
 		VerificationToken: token,
 		Point:             0,
-		Streak:            0,
+		TotalXP:           0,
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
 	}
