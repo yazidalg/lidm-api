@@ -11,7 +11,8 @@ type Answer struct {
 	QuestionID     uint
 	Question       Question `gorm:"foreignKey:QuestionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	UserID         uint
-	User           User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	User           User   `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	QuizID         []Quiz `gorm:"many2many:quiz_answers;"`
 	OptionSelected string
 	IsCorrect      bool
 	Score          int

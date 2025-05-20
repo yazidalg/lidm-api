@@ -10,6 +10,7 @@ func NewRoute(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
 	forgotPasswordHandler *handlers.ForgotPasswordHandler,
+	questionHandler *handlers.QuestionHandler,
 ) {
 	router := gin.Default()
 
@@ -31,6 +32,14 @@ func NewRoute(
 	forgotPasswordGroup.POST("/forgot", forgotPasswordHandler.RequestPasswordReset)
 	forgotPasswordGroup.POST("/verify-otp", forgotPasswordHandler.VerifyOTP)
 	forgotPasswordGroup.POST("/reset", forgotPasswordHandler.ResetPassword)
+
+	questionGroupHandler := router.Group("question")
+	questionGroupHandler.Use(middleware.AuthRequire)
+	questionGroupHandler.POST("/create", questionHandler.CreateQuestion)
+	questionGroupHandler.GET("/:id", questionHandler.GetQuestionByID)
+	questionGroupHandler.GET("/all", questionHandler.GetAllQuestions)
+	questionGroupHandler.PUT("/:id", questionHandler.UpdateQuestion)
+	questionGroupHandler.DELETE("/:id", questionHandler.DeleteQuestion)
 
 	router.Run(":3000")
 }

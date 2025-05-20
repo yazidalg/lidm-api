@@ -14,6 +14,7 @@ type Question struct {
 	Options       Options `gorm:"embedded;"`
 	CorrectAnswer string
 	Explanation   string
+	Quiz          []Quiz    `gorm:"many2many:quiz_questions;"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
 }
