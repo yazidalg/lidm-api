@@ -48,10 +48,6 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		return userData, err
 	}
 
-	if err := utils.SendVerificationEmail(user.Email, token); err != nil {
-		return userData, err
-	}
-
 	return createdUser, nil
 }
 

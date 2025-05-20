@@ -97,17 +97,7 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	verifiedUser, err := h.authService.GetVerifiedUser(findByEmail.Email)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "User is not verified",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(verifiedUser.Password), []byte(body.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(findByEmail.Password), []byte(body.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"message": "Email or Password is wrong",
@@ -116,7 +106,7 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": verifiedUser.ID,
+		"sub": findByEmail.ID,
 		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 	})
 
