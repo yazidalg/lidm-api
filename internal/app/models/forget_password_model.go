@@ -6,7 +6,7 @@ import (
 
 type ForgotPassword struct {
 	gorm.Model
-	UserID    uint `gorm:"not null"`
+	UserID    uint
 	User      User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Email     string
 	OTP       string

@@ -10,6 +10,8 @@ func NewRoute(
 	authHandler *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
 	forgotPasswordHandler *handlers.ForgotPasswordHandler,
+	quizHandler *handlers.QuizHandler,
+	gameHandler *handlers.GameHandler,
 ) {
 	router := gin.Default()
 
@@ -31,6 +33,22 @@ func NewRoute(
 	forgotPasswordGroup.POST("/forgot", forgotPasswordHandler.RequestPasswordReset)
 	forgotPasswordGroup.POST("/verify-otp", forgotPasswordHandler.VerifyOTP)
 	forgotPasswordGroup.POST("/reset", forgotPasswordHandler.ResetPassword)
+
+	// Quiz routes
+	quizGroup := router.Group("quiz")
+	quizGroup.POST("/create", quizHandler.CreateQuiz)
+	quizGroup.GET("/:id", quizHandler.GetQuizByID)
+	quizGroup.GET("/quizzess", quizHandler.GetAllQuizzes)
+	quizGroup.PUT("/:id", quizHandler.UpdateQuiz)
+	quizGroup.DELETE("/:id", quizHandler.DeleteQuiz)
+
+	// Game routes
+	gameGroup := router.Group("game")
+	gameGroup.POST("/create", gameHandler.CreateGame)
+	gameGroup.GET("/:id", gameHandler.GetGameById)
+	gameGroup.GET("/games", gameHandler.GetAllGames)
+	gameGroup.PUT("/:id", gameHandler.UpdateGame)
+	gameGroup.DELETE("/:id", gameHandler.DeleteGame)
 
 	router.Run(":3000")
 }
