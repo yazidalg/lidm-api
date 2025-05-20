@@ -14,6 +14,7 @@ type Quiz struct {
 	Options       Options `gorm:"embedded;"`
 	CorrectAnswer string
 	Explanation   string
+	Games         []Game    `gorm:"foreignKey:QuizID"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
+	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
@@ -18,8 +19,8 @@ func NewGameHandler(gameService services.GameServiceInterface) *GameHandler {
 }
 
 func (h *GameHandler) CreateGame(c *gin.Context) {
-	var game models.Game
-	if err := c.ShouldBindJSON(&game); err != nil {
+	var gameReq request.GameRequest
+	if err := c.ShouldBindJSON(&gameReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid request",
 			"error":   err.Error(),
@@ -27,10 +28,50 @@ func (h *GameHandler) CreateGame(c *gin.Context) {
 		return
 	}
 
+	// Convert string IDs to uint
+	userID, err := strconv.ParseUint(gameReq.UserID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID format",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	quizID, err := strconv.ParseUint(gameReq.QuizID, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid quiz ID format",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// Create the game model with proper ID types
+	game := models.Game{
+		UserID: uint(userID),
+		QuizID: uint(quizID),
+		Score:  gameReq.Score,
+		Answer: gameReq.Answer,
+	}
+
 	createdGame, err := h.gameService.CreateGame(&game)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to create game",
+		status := http.StatusInternalServerError
+		message := "Failed to create game"
+
+		// Check for specific error types
+		switch err.Error() {
+		case "user not found":
+			status = http.StatusBadRequest
+			message = "User not found - please use a valid user ID"
+		case "quiz not found":
+			status = http.StatusBadRequest
+			message = "Quiz not found - please use a valid quiz ID"
+		}
+
+		c.JSON(status, gin.H{
+			"message": message,
 			"error":   err.Error(),
 		})
 		return

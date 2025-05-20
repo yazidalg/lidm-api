@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 )
@@ -15,13 +17,35 @@ type GameServiceInterface interface {
 
 type gameService struct {
 	gameRepository repositories.GameRepositoryInterface
+	userRepository repositories.UserRepositoryInterface
+	quizRepository repositories.QuizRepositoryInterface
 }
 
-func NewGameService(gameRepository repositories.GameRepositoryInterface) *gameService {
-	return &gameService{gameRepository}
+func NewGameService(
+	gameRepository repositories.GameRepositoryInterface,
+	userRepository repositories.UserRepositoryInterface,
+	quizRepository repositories.QuizRepositoryInterface,
+) *gameService {
+	return &gameService{
+		gameRepository: gameRepository,
+		userRepository: userRepository,
+		quizRepository: quizRepository,
+	}
 }
 
 func (s *gameService) CreateGame(game *models.Game) (*models.Game, error) {
+	// Validate that user exists
+	_, err := s.userRepository.GetUserById(int(game.UserID))
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Validate that quiz exists
+	_, err = s.quizRepository.GetQuizByID(int(game.QuizID))
+	if err != nil {
+		return nil, errors.New("quiz not found")
+	}
+
 	return s.gameRepository.CreateGame(game)
 }
 

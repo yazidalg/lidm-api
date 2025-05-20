@@ -8,10 +8,10 @@ import (
 
 type Game struct {
 	gorm.Model
-	UserID    int
+	UserID    uint
 	User      User `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	GameID    int
-	Quiz      Quiz `gorm:"foreignKey:GameID"`
+	QuizID    uint
+	Quiz      Quiz `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Score     int
 	Answer    string
 	CreatedAt time.Time

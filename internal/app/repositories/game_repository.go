@@ -23,23 +23,35 @@ func NewGameRepository(db *gorm.DB) *gameRepository {
 
 func (r *gameRepository) CreateGame(game *models.Game) (*models.Game, error) {
 	err := r.db.Create(game).Error
+	if err != nil {
+		return game, err
+	}
+
+	// Reload the game with associations preloaded
+	err = r.db.Preload("User").Preload("Quiz").First(game, game.ID).Error
 	return game, err
 }
 
 func (r *gameRepository) GetGameById(id int) (*models.Game, error) {
 	var game models.Game
-	err := r.db.First(&game, "id = ?", id).Error
+	err := r.db.Preload("User").Preload("Quiz").First(&game, "id = ?", id).Error
 	return &game, err
 }
 
 func (r *gameRepository) GetAllGames() (*[]models.Game, error) {
 	var games []models.Game
-	err := r.db.Find(&games).Error
+	err := r.db.Preload("User").Preload("Quiz").Find(&games).Error
 	return &games, err
 }
 
 func (r *gameRepository) UpdateGame(id int, game *models.Game) (*models.Game, error) {
 	err := r.db.Model(&game).Where("id = ?", id).Updates(game).Error
+	if err != nil {
+		return game, err
+	}
+
+	// Reload the game with associations after update
+	err = r.db.Preload("User").Preload("Quiz").First(game, id).Error
 	return game, err
 }
 
