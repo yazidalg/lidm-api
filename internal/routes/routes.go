@@ -13,6 +13,7 @@ func NewRoute(
 	questionHandler *handlers.QuestionHandler,
 	answerHandler *handlers.AnswerHandler,
 	participantHandler *handlers.ParticipantHandler,
+	quizHandler *handlers.QuizHandler,
 ) {
 	router := gin.Default()
 
@@ -60,6 +61,14 @@ func NewRoute(
 	participantGroupHandler.GET("/user/:user_id", participantHandler.GetParticipantsByUserID)
 	participantGroupHandler.PUT("/:id", participantHandler.UpdateParticipant)
 	participantGroupHandler.DELETE("/:id", participantHandler.DeleteParticipant)
+
+	quizGroupHandler := router.Group("quiz")
+	quizGroupHandler.Use(middleware.AuthRequire)
+	quizGroupHandler.POST("/create", quizHandler.CreateQuiz)
+	quizGroupHandler.GET("/:id", quizHandler.GetQuizByID)
+	quizGroupHandler.GET("/all", quizHandler.GetAllQuizzes)
+	quizGroupHandler.PUT("/:id", quizHandler.UpdateQuiz)
+	quizGroupHandler.DELETE("/:id", quizHandler.DeleteQuiz)
 
 	router.Run(":3000")
 }

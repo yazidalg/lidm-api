@@ -17,6 +17,7 @@ func main() {
 	questionHandler := helpers.NewBuildQuestion(db)
 	answerHandler := helpers.NewBuildAnswer(db)
 	participantHandler := helpers.NewBuildParticipant(db)
+	quizHandler := helpers.NewBuildQuiz(db)
 
-	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler, questionHandler, answerHandler, participantHandler)
+	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler, questionHandler, answerHandler, participantHandler, quizHandler)
 }
