@@ -17,10 +17,10 @@ type QuestionOptions struct {
 }
 
 type UpdateQuestionRequest struct {
-	Question      string   `json:"question"`
-	AnswerTime    int32    `json:"answer_time"`
-	ReadTime      int32    `json:"read_time"`
-	CorrectAnswer string   `json:"correct_answer"`
-	Options       []string `json:"options"`
-	Explanation   string   `json:"explanation"`
+	Question      string          `json:"question"`
+	AnswerTime    int32           `json:"answer_time"`
+	ReadTime      int32           `json:"read_time"`
+	CorrectAnswer string          `json:"correct_answer"`
+	Options       QuestionOptions `json:"options" binding:"required"`
+	Explanation   string          `json:"explanation"`
 }
