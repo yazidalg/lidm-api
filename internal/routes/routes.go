@@ -14,6 +14,7 @@ func NewRoute(
 	answerHandler *handlers.AnswerHandler,
 	participantHandler *handlers.ParticipantHandler,
 	quizHandler *handlers.QuizHandler,
+	socketHandler *handlers.SocketHandler,
 ) {
 	router := gin.Default()
 

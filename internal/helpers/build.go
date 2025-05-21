@@ -56,3 +56,20 @@ func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
 	quizHandler := handlers.NewQuizHandler(quizService)
 	return quizHandler
 }
+
+func NewBuildSocket(db *gorm.DB) *handlers.SocketHandler {
+	questionRepository := repositories.NewQuestionRepository(db)
+	questionService := services.NewQuestionService(questionRepository)
+
+	quizRepository := repositories.NewQuizRepository(db)
+	quizService := services.NewQuizService(quizRepository)
+
+	participantRepository := repositories.NewParticipantRepository(db)
+	participantService := services.NewParticipantService(participantRepository)
+
+	answerRepository := repositories.NewAnswerRepository(db)
+	answerService := services.NewAnswerService(answerRepository)
+
+	socketHandler := handlers.NewSocketHandler(questionService, quizService, participantService, answerService)
+	return socketHandler
+}
