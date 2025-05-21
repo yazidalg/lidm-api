@@ -42,3 +42,10 @@ func NewBuildAnswer(db *gorm.DB) *handlers.AnswerHandler {
 	answerHandler := handlers.NewAnswerHandler(answerService)
 	return answerHandler
 }
+
+func NewBuildParticipant(db *gorm.DB) *handlers.ParticipantHandler {
+	participantRepository := repositories.NewParticipantRepository(db)
+	participantService := services.NewParticipantService(participantRepository)
+	participantHandler := handlers.NewParticipantHandler(participantService)
+	return participantHandler
+}
