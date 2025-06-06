@@ -1,4 +1,4 @@
-FROM golang:1.24.2-alpine AS builder
+FROM golang:1.24.4-alpine3.21 AS builder
 
 WORKDIR /app
 
@@ -10,11 +10,13 @@ RUN go mod download
 COPY . .
 
 ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
 
 RUN go build -ldflags="-s -w" -o main ./cmd
 
 # ✅ Ganti dari `scratch` ke `alpine` dan bawa certs
-FROM alpine:3.21.3
+FROM alpine:3.22.0
 
 WORKDIR /app
 COPY --from=builder /app/main .
