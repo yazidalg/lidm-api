@@ -1,46 +1,31 @@
-name: Build and Push to ACR
+name: Build and Push to Dockerfile
+
 on:
   push:
     tags:
-      - "acr-v*"
+      - v*
+
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
-      - name: "Checkout GitHub Action"
-        uses: actions/checkout@main
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: "Login via Azure CLI"
-        uses: azure/login@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: "Build and push image"
-        uses: azure/docker-login@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
         with:
-          login-server: ${{ secrets.AZURE_URL }}
-          username: ${{ secrets.ACR_USERNAME }}
-          password: ${{ secrets.ACR_PASSWORD }}
-      - run: |
-          docker build . -t ${{ secrets.AZURE_URL }}/lidm2025:${{ github.ref_name }}
-          docker push ${{ secrets.AZURE_URL }}/lidm2025:${{ github.ref_name }}
-
-  # deploy_k3s:
-  #   runs-on: ubuntu-24.04
-  #   needs: build
-  #   steps:
-  #     - name: Checkout GitHub Action
-  #       uses: actions/checkout@main
-
-  #     - name: SSH Into Digitalocean Droplets and Update Deployment
-  #       uses: appleboy/ssh-action@v1
-  #       with:
-  #         host: ${{ secrets.DROPLET_IP }}
-  #         username: ${{ secrets.DROPLET_USERNAME }}
-  #         key: ${{ secrets.DROPLET_SSH_KEY }}
-  #         script: |
-  #           cd deployment/lidm/
-  #           kubectl set image deployment/lidm-api-deployment lidm-api=lidm2025.azurecr.io/lidm2025:${{ github.ref_name }}
-  #           export LIDM_API_POD_NAME=$(kubectl get pods -n lidm --no-headers --field-selector=status.phase==Running -o custom-columns=":metadata.name")
-  #           kubectl delete pod $LIDM_API_POD_NAME -n lidm
-  #           kubectl apply -f deployment.yaml -n lidm
+          context: api
+          file: api/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:${{ github.ref_name }}
