@@ -29,3 +29,28 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}:${{ github.ref_name }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      ARGOCD_SERVER: argocd.motionlaboratory.com
+      ARGOCD_APP_NAME: lidm-api
+    needs: [build]
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+      - name: Update image with latest tags
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: app set ${{ env.ARGOCD_APP_NAME }} --project ${{ env.ARGOCD_APP_NAME }}-project --helm-set image.tag=${{ github.ref_name }}
+          options: --auth-token=${{ secrets.ARGOCD_TOKEN_AWS }} --server=${{ env.ARGOCD_SERVER }}
+      - name: Argo CD Action Sync
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: app sync ${{ env.ARGOCD_APP_NAME }} --project ${{ env.ARGOCD_APP_NAME }}-project
+          options: --auth-token=${{ secrets.ARGOCD_TOKEN_AWS }} --server=${{ env.ARGOCD_SERVER }}
+      - name: Argo CD Action Wait Healthy
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: app wait ${{ env.ARGOCD_APP_NAME }} --grpc-web --health
+          options: --auth-token=${{ secrets.ARGOCD_TOKEN_AWS }} --server=${{ env.ARGOCD_SERVER }}
