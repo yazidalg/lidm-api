@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/yazidalg/lidm_backend/internal/app/services"
 	"github.com/yazidalg/lidm_backend/internal/utils"
 )
 
@@ -33,20 +34,21 @@ type Hub struct {
 	// Counter Room Number
 	RoomNumber int
 
-	UserID uint
-
-	Username string
+	QuestionService services.QuestionServiceInterface
+	QuizSession     map[string]*QuizSession // Menyimpan sesi quiz untuk setiap room
 }
 
 // NewHub membuat instance Hub baru.
-func NewHub() *Hub {
+func NewHub(questionService services.QuestionServiceInterface) *Hub {
 	return &Hub{
 		Message:    make(chan *utils.Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		// Kita menggunakan map[*Client]bool sebagai 'set' untuk efisiensi.
-		Rooms:      make(map[string]map[*Client]bool),
-		RoomNumber: 1,
+		Rooms:           make(map[string]map[*Client]bool),
+		RoomNumber:      1,
+		QuestionService: questionService,
+		QuizSession:     make(map[string]*QuizSession),
 	}
 }
 
@@ -75,12 +77,38 @@ func (h *Hub) Run() {
 
 			joinMessage := &utils.Message{
 				Action:  "user_join",
-				Message: userJoinPayloadBytes,
+				Payload: userJoinPayloadBytes,
 				Target:  roomName,
 				Sender:  client.Username,
 			}
 
 			h.BroadcastToRoom(joinMessage)
+
+			if len(h.Rooms[roomName]) == 2 {
+				getQuestion, err := h.QuestionService.GetRandomQuestion(3)
+				if err != nil || len(*getQuestion) < 3 {
+					log.Printf("Gagal mendapatkan pertanyaan untuk room '%s': %v", roomName, err)
+					h.Mu.Unlock()
+					continue
+				}
+
+				players := make([]*Client, 0, 2)
+				for p := range h.Rooms[roomName] {
+					players = append(players, p)
+				}
+
+				session := &QuizSession{
+					Hub:       h,
+					RoomName:  roomName,
+					Players:   players,
+					Questions: *getQuestion,
+					State:     "waiting",
+				}
+
+				h.QuizSession[roomName] = session
+				go session.RunGameLoop()
+			}
+
 			h.Mu.Unlock()
 
 		case client := <-h.Unregister:
@@ -104,7 +132,7 @@ func (h *Hub) Run() {
 
 					leaveMessage := &utils.Message{
 						Action:  "user_leave",
-						Message: userLeavePayloadBytes,
+						Payload: userLeavePayloadBytes,
 						Target:  roomName,
 						Sender:  client.Username,
 					}
@@ -171,7 +199,7 @@ func (h *Hub) BroadcastToRoom(msg *utils.Message) {
 	// Cari room yang dituju oleh pesan.
 	roomName := msg.Target
 	if clients, ok := h.Rooms[roomName]; ok {
-		log.Printf("Broadcast pesan ke room '%s': %s", roomName, msg.Message)
+		log.Printf("Broadcast pesan ke room '%s': %s", roomName, msg.Payload)
 		// Kirim pesan ke setiap client di dalam room.
 		for client := range clients {
 			// Kirim pesan ke channel 'send' milik client.
@@ -217,4 +245,19 @@ func (h *Hub) FindAndAssignRoom() string {
 
 	log.Printf("Room baru '%s' dibuat", roomName)
 	return roomName
+}
+
+// Helper function untuk mengirim pesan ke client tertentu.
+func (h *Hub) SendMessage(client *Client, message *utils.Message) {
+	select {
+	case client.Send <- message:
+	default:
+		close(client.Send) // Jika channel penuh, tutup untuk menghindari deadlock
+	}
+}
+
+func (h *Hub) RemoveSession(roomName string) {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
+	delete(h.QuizSession, roomName)
 }

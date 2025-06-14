@@ -58,8 +58,8 @@ func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
 	return quizHandler
 }
 
-func NewBuildSocket(db *gorm.DB) *handlers.SocketHandler {
-	hub := socket.NewHub()
+func NewBuildSocket(questionService services.QuestionServiceInterface) *handlers.SocketHandler {
+	hub := socket.NewHub(questionService)
 	go hub.Run() // Jalankan Hub sebagai goroutine
 
 	// Daftarkan handler WebSocket
