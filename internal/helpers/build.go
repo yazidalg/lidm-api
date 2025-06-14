@@ -4,6 +4,7 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
+	"github.com/yazidalg/lidm_backend/internal/app/socket"
 	"gorm.io/gorm"
 )
 
@@ -58,18 +59,11 @@ func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
 }
 
 func NewBuildSocket(db *gorm.DB) *handlers.SocketHandler {
-	questionRepository := repositories.NewQuestionRepository(db)
-	questionService := services.NewQuestionService(questionRepository)
+	hub := socket.NewHub()
+	go hub.Run() // Jalankan Hub sebagai goroutine
 
-	quizRepository := repositories.NewQuizRepository(db)
-	quizService := services.NewQuizService(quizRepository)
+	// Daftarkan handler WebSocket
+	socketHandler := handlers.NewSocketHandler(hub)
 
-	participantRepository := repositories.NewParticipantRepository(db)
-	participantService := services.NewParticipantService(participantRepository)
-
-	answerRepository := repositories.NewAnswerRepository(db)
-	answerService := services.NewAnswerService(answerRepository)
-
-	socketHandler := handlers.NewSocketHandler(questionService, quizService, participantService, answerService)
 	return socketHandler
 }

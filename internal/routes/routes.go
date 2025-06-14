@@ -22,6 +22,8 @@ func NewRoute(
 		c.JSON(200, gin.H{"message": "Welcome to the API"})
 	})
 
+	router.GET("/ws/:room", socketHandler.ServeWs)
+
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(middleware.AuthRequire)
 	userGroupHandler.GET("/profile", userHandler.GetUserById)
