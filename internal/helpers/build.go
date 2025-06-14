@@ -30,11 +30,11 @@ func NewBuildForgotPassword(db *gorm.DB) *handlers.ForgotPasswordHandler {
 	return forgotPasswordHandler
 }
 
-func NewBuildQuestion(db *gorm.DB) *handlers.QuestionHandler {
+func NewBuildQuestion(db *gorm.DB) (*handlers.QuestionHandler, services.QuestionServiceInterface) {
 	questionRepository := repositories.NewQuestionRepository(db)
 	questionService := services.NewQuestionService(questionRepository)
 	questionHandler := handlers.NewQuestionHandler(questionService)
-	return questionHandler
+	return questionHandler, questionService
 }
 
 func NewBuildAnswer(db *gorm.DB) *handlers.AnswerHandler {
@@ -44,22 +44,26 @@ func NewBuildAnswer(db *gorm.DB) *handlers.AnswerHandler {
 	return answerHandler
 }
 
-func NewBuildParticipant(db *gorm.DB) *handlers.ParticipantHandler {
+func NewBuildParticipant(db *gorm.DB) (*handlers.ParticipantHandler, services.ParticipantServiceInterface) {
 	participantRepository := repositories.NewParticipantRepository(db)
 	participantService := services.NewParticipantService(participantRepository)
 	participantHandler := handlers.NewParticipantHandler(participantService)
-	return participantHandler
+	return participantHandler, participantService
 }
 
-func NewBuildQuiz(db *gorm.DB) *handlers.QuizHandler {
+func NewBuildQuiz(db *gorm.DB) (*handlers.QuizHandler, services.QuizServiceInterface) {
 	quizRepository := repositories.NewQuizRepository(db)
 	quizService := services.NewQuizService(quizRepository)
 	quizHandler := handlers.NewQuizHandler(quizService)
-	return quizHandler
+	return quizHandler, quizService
 }
 
-func NewBuildSocket(questionService services.QuestionServiceInterface) *handlers.SocketHandler {
-	hub := socket.NewHub(questionService)
+func NewBuildSocket(
+	questionService services.QuestionServiceInterface,
+	quizService services.QuizServiceInterface,
+	participantService services.ParticipantServiceInterface,
+) *handlers.SocketHandler {
+	hub := socket.NewHub(questionService, quizService, participantService)
 	go hub.Run() // Jalankan Hub sebagai goroutine
 
 	// Daftarkan handler WebSocket

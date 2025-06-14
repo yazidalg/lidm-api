@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/yazidalg/lidm_backend/internal/utils"
 )
 
 const (
@@ -26,13 +25,14 @@ type Client struct {
 	Conn *websocket.Conn
 
 	// Channel untuk mengirim pesan dari Hub ke client. Ini adalah buffered channel.
-	Send chan *utils.Message
+	Send chan *Message
 
 	// Room tempat client ini berada.
 	Room string
 
-	UserID   uint   // ID pengguna yang terhubung
-	Username string // Nama pengguna yang terhubung
+	UserID   uint         // ID pengguna yang terhubung
+	Username string       // Nama pengguna yang terhubung
+	Session  *QuizSession // Sesi quiz yang terkait dengan client ini
 }
 
 // readPump bertugas membaca pesan dari koneksi WebSocket dan mengirimkannya ke Hub.
@@ -59,7 +59,7 @@ func (c *Client) ReadPump() {
 			break // Keluar dari loop jika ada error (misal, client disConnect).
 		}
 
-		var msg utils.Message
+		var msg Message
 		if err := json.Unmarshal(messageBytes, &msg); err != nil {
 			log.Printf("Gagal unmarshal JSON: %v", err)
 			continue
@@ -67,10 +67,10 @@ func (c *Client) ReadPump() {
 
 		// Set target dan sender dari pesan.
 		msg.Target = c.Room
-		msg.Sender = c.Conn.RemoteAddr().String() // Gunakan alamat IP:Port sebagai identifier
+		msg.Sender = c // Gunakan pointer ke Client sebagai identifier
 
 		// Kirim pesan yang sudah di-parse ke Hub.
-		c.Hub.Message <- &msg
+		c.Hub.Message <- msg
 	}
 }
 

@@ -1,4 +1,4 @@
-package utils
+package socket
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ type Message struct {
 	Action  string          `json:"action"`            // Contoh: "send_message", "join_room"
 	Payload json.RawMessage `json:"payload,omitempty"` // Isi pesan teks
 	Target  string          `json:"target,omitempty"`  // Nama room yang dituju
-	Sender  string          `json:"sender"`            // (Opsional) Nama pengirim (gunakan string untuk menghindari import cycle)
+	Sender  *Client         `json:"-"`                 // (Opsional) Nama pengirim (gunakan string untuk menghindari import cycle)
 }
 
 // Payload for User Join and User Leave events

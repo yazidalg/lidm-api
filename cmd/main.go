@@ -14,11 +14,11 @@ func main() {
 	userHandler := helpers.NewBuildUser(db)
 	authHandler := helpers.NewBuildAuth(db)
 	forgotPasswordHandler := helpers.NewBuildForgotPassword(db)
-	questionHandler := helpers.NewBuildQuestion(db)
+	questionHandler, questionService := helpers.NewBuildQuestion(db)
 	answerHandler := helpers.NewBuildAnswer(db)
-	participantHandler := helpers.NewBuildParticipant(db)
-	quizHandler := helpers.NewBuildQuiz(db)
-	socketHandler := helpers.NewBuildSocket(db)
+	participantHandler, participantService := helpers.NewBuildParticipant(db)
+	quizHandler, quizService := helpers.NewBuildQuiz(db)
+	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService)
 
 	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler, questionHandler, answerHandler, participantHandler, quizHandler, socketHandler)
 }

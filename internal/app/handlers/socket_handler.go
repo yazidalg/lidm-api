@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/socket"
-	"github.com/yazidalg/lidm_backend/internal/utils"
 )
 
 // Upgrader untuk mengubah koneksi HTTP menjadi WebSocket.
@@ -62,7 +61,7 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 	client := &socket.Client{
 		Hub:  h.hub,
 		Conn: conn,
-		Send: make(chan *utils.Message, 256), // Buffered channel
+		Send: make(chan *socket.Message, 256), // Buffered channel
 		Room: roomName,
 	}
 
@@ -102,7 +101,7 @@ func (h *SocketHandler) MatchMaking(c *gin.Context) {
 	client := &socket.Client{
 		Hub:      h.hub,
 		Conn:     conn,
-		Send:     make(chan *utils.Message, 256), // Buffered channel
+		Send:     make(chan *socket.Message, 256), // Buffered channel
 		Room:     roomName,
 		UserID:   user.ID,
 		Username: user.Name,

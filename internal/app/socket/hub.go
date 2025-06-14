@@ -6,8 +6,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
-	"github.com/yazidalg/lidm_backend/internal/utils"
 )
 
 // Hub mengelola semua room, client, dan meneruskan pesan.
@@ -16,7 +16,7 @@ type Hub struct {
 	Clients map[*Client]bool
 
 	// Pesan masuk dari client yang akan di-broadcast ke room yang tepat.
-	Message chan *utils.Message
+	Message chan Message
 
 	// Channel untuk mendaftarkan client baru.
 	Register chan *Client
@@ -34,21 +34,29 @@ type Hub struct {
 	// Counter Room Number
 	RoomNumber int
 
-	QuestionService services.QuestionServiceInterface
-	QuizSession     map[string]*QuizSession // Menyimpan sesi quiz untuk setiap room
+	QuestionService    services.QuestionServiceInterface
+	QuizService        services.QuizServiceInterface
+	ParticipantService services.ParticipantServiceInterface
+	QuizSession        map[string]*QuizSession // Menyimpan sesi quiz untuk setiap room
 }
 
 // NewHub membuat instance Hub baru.
-func NewHub(questionService services.QuestionServiceInterface) *Hub {
+func NewHub(
+	questionService services.QuestionServiceInterface,
+	quizService services.QuizServiceInterface,
+	participantService services.ParticipantServiceInterface,
+) *Hub {
 	return &Hub{
-		Message:    make(chan *utils.Message),
+		Message:    make(chan Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		// Kita menggunakan map[*Client]bool sebagai 'set' untuk efisiensi.
-		Rooms:           make(map[string]map[*Client]bool),
-		RoomNumber:      1,
-		QuestionService: questionService,
-		QuizSession:     make(map[string]*QuizSession),
+		Rooms:              make(map[string]map[*Client]bool),
+		RoomNumber:         1,
+		QuestionService:    questionService,
+		QuizService:        quizService,
+		ParticipantService: participantService,
+		QuizSession:        make(map[string]*QuizSession),
 	}
 }
 
@@ -66,7 +74,7 @@ func (h *Hub) Run() {
 			h.Rooms[roomName][client] = true
 			log.Printf("Client terdaftar di room '%s'. Total di room: %d", roomName, len(h.Rooms[roomName]))
 
-			user_join_payload := &utils.UserEventPayload{
+			user_join_payload := UserEventPayload{
 				UserID:   client.UserID,
 				Username: client.Username,
 				Room:     roomName,
@@ -75,11 +83,11 @@ func (h *Hub) Run() {
 
 			userJoinPayloadBytes, _ := json.Marshal(user_join_payload)
 
-			joinMessage := &utils.Message{
+			joinMessage := Message{
 				Action:  "user_join",
 				Payload: userJoinPayloadBytes,
 				Target:  roomName,
-				Sender:  client.Username,
+				Sender:  client,
 			}
 
 			h.BroadcastToRoom(joinMessage)
@@ -98,14 +106,29 @@ func (h *Hub) Run() {
 				}
 
 				session := &QuizSession{
-					Hub:       h,
-					RoomName:  roomName,
-					Players:   players,
-					Questions: *getQuestion,
-					State:     "waiting",
+					Hub:           h,
+					RoomName:      roomName,
+					Players:       players,
+					Questions:     *getQuestion,
+					State:         "waiting",
+					Answers:       make(chan *AnswerEvent, 10), // Buffer untuk jawaban
+					PlayerAnswers: make(map[*Client]bool),
 				}
 
 				h.QuizSession[roomName] = session
+
+				for _, player := range players {
+					player.Session = session
+				}
+
+				createQuiz := request.CreateQuizRequest{
+					Status:          "running",
+					QuestionsIDs:    make([]uint, len(*getQuestion)),
+					ParticipantsIDs: make([]uint, len(players)),
+				}
+
+				h.QuizService.CreateQuiz(createQuiz)
+
 				go session.RunGameLoop()
 			}
 
@@ -121,7 +144,7 @@ func (h *Hub) Run() {
 					// Tutup channel send untuk menghentikan writePump goroutine client tersebut
 					close(client.Send)
 
-					user_leave_payload := &utils.UserEventPayload{
+					user_leave_payload := UserEventPayload{
 						UserID:   client.UserID,
 						Username: client.Username,
 						Room:     roomName,
@@ -130,11 +153,11 @@ func (h *Hub) Run() {
 
 					userLeavePayloadBytes, _ := json.Marshal(user_leave_payload)
 
-					leaveMessage := &utils.Message{
+					leaveMessage := Message{
 						Action:  "user_leave",
 						Payload: userLeavePayloadBytes,
 						Target:  roomName,
-						Sender:  client.Username,
+						Sender:  client,
 					}
 
 					h.BroadcastToRoom(leaveMessage)
@@ -149,22 +172,19 @@ func (h *Hub) Run() {
 			h.Mu.Unlock()
 
 		case msg := <-h.Message:
-			h.Mu.RLock() // Gunakan Read Lock untuk broadcast
-			roomName := msg.Target
-			if clients, ok := h.Rooms[roomName]; ok {
-				// Broadcast pesan ke semua client di room
-				for client := range clients {
-					select {
-					case client.Send <- msg:
-					default:
-						// Jika channel send client penuh (mungkin client lambat/hang),
-						// kita tutup koneksinya untuk mencegah Hub terblokir.
-						close(client.Send)
-						delete(clients, client)
-					}
+			if msg.Action == "send_message" {
+				var payload request.CreateAnswerRequest
+				if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+					log.Printf("Error unmarshaling submit_answer payload: %v", err)
+					continue
+				}
+
+				// Teruskan event jawaban ke channel milik session yang benar
+				msg.Sender.Session.Answers <- &AnswerEvent{
+					Player:  msg.Sender,
+					Payload: payload,
 				}
 			}
-			h.Mu.RUnlock()
 		}
 	}
 }
@@ -195,7 +215,7 @@ func (h *Hub) UnregisterClient(client *Client) {
 	}
 }
 
-func (h *Hub) BroadcastToRoom(msg *utils.Message) {
+func (h *Hub) BroadcastToRoom(msg Message) {
 	// Cari room yang dituju oleh pesan.
 	roomName := msg.Target
 	if clients, ok := h.Rooms[roomName]; ok {
@@ -204,7 +224,7 @@ func (h *Hub) BroadcastToRoom(msg *utils.Message) {
 		for client := range clients {
 			// Kirim pesan ke channel 'send' milik client.
 			// Client akan menanganinya secara asynchronous.
-			client.Send <- msg
+			client.Send <- &msg
 		}
 	}
 }
@@ -248,9 +268,9 @@ func (h *Hub) FindAndAssignRoom() string {
 }
 
 // Helper function untuk mengirim pesan ke client tertentu.
-func (h *Hub) SendMessage(client *Client, message *utils.Message) {
+func (h *Hub) SendMessage(client *Client, message Message) {
 	select {
-	case client.Send <- message:
+	case client.Send <- &message:
 	default:
 		close(client.Send) // Jika channel penuh, tutup untuk menghindari deadlock
 	}
