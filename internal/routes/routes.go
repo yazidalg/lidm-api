@@ -72,6 +72,7 @@ func NewRoute(
 	quizGroupHandler.DELETE("/:id", quizHandler.DeleteQuiz)
 
 	socketGroupHandler := router.Group("ws")
+	socketGroupHandler.Use(middleware.AuthRequire)
 	socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
 	socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
 

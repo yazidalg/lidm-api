@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -31,6 +32,10 @@ type Hub struct {
 
 	// Counter Room Number
 	RoomNumber int
+
+	UserID uint
+
+	Username string
 }
 
 // NewHub membuat instance Hub baru.
@@ -58,6 +63,24 @@ func (h *Hub) Run() {
 			}
 			h.Rooms[roomName][client] = true
 			log.Printf("Client terdaftar di room '%s'. Total di room: %d", roomName, len(h.Rooms[roomName]))
+
+			user_join_payload := &utils.UserEventPayload{
+				UserID:   client.UserID,
+				Username: client.Username,
+				Room:     roomName,
+				Message:  fmt.Sprintf("%s telah bergabung ke room %s", client.Username, roomName),
+			}
+
+			userJoinPayloadBytes, _ := json.Marshal(user_join_payload)
+
+			joinMessage := &utils.Message{
+				Action:  "user_join",
+				Message: userJoinPayloadBytes,
+				Target:  roomName,
+				Sender:  client.Username,
+			}
+
+			h.BroadcastToRoom(joinMessage)
 			h.Mu.Unlock()
 
 		case client := <-h.Unregister:
@@ -69,6 +92,25 @@ func (h *Hub) Run() {
 					delete(clients, client)
 					// Tutup channel send untuk menghentikan writePump goroutine client tersebut
 					close(client.Send)
+
+					user_leave_payload := &utils.UserEventPayload{
+						UserID:   client.UserID,
+						Username: client.Username,
+						Room:     roomName,
+						Message:  fmt.Sprintf("%s telah meninggalkan room %s", client.Username, roomName),
+					}
+
+					userLeavePayloadBytes, _ := json.Marshal(user_leave_payload)
+
+					leaveMessage := &utils.Message{
+						Action:  "user_leave",
+						Message: userLeavePayloadBytes,
+						Target:  roomName,
+						Sender:  client.Username,
+					}
+
+					h.BroadcastToRoom(leaveMessage)
+
 					// Jika room menjadi kosong, hapus room dari memori
 					if len(clients) == 0 {
 						delete(h.Rooms, roomName)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/socket"
 	"github.com/yazidalg/lidm_backend/internal/utils"
 )
@@ -75,6 +76,20 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 }
 
 func (h *SocketHandler) MatchMaking(c *gin.Context) {
+	userVal, exists := c.Get("user")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
+		return
+	}
+
+	user, ok := userVal.(models.User)
+
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user data"})
+		return
+	}
+
 	roomName := h.hub.FindAndAssignRoom()
 
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -85,10 +100,12 @@ func (h *SocketHandler) MatchMaking(c *gin.Context) {
 	}
 
 	client := &socket.Client{
-		Hub:  h.hub,
-		Conn: conn,
-		Send: make(chan *utils.Message, 256), // Buffered channel
-		Room: roomName,
+		Hub:      h.hub,
+		Conn:     conn,
+		Send:     make(chan *utils.Message, 256), // Buffered channel
+		Room:     roomName,
+		UserID:   user.ID,
+		Username: user.Name,
 	}
 
 	client.Hub.Register <- client

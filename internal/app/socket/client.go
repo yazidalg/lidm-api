@@ -30,6 +30,9 @@ type Client struct {
 
 	// Room tempat client ini berada.
 	Room string
+
+	UserID   uint   // ID pengguna yang terhubung
+	Username string // Nama pengguna yang terhubung
 }
 
 // readPump bertugas membaca pesan dari koneksi WebSocket dan mengirimkannya ke Hub.
