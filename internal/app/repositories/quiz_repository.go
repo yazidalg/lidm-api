@@ -127,5 +127,10 @@ func (r *quizRepository) DeleteQuiz(id uint) error {
 		return err
 	}
 
+	if err := tx.Unscoped().Delete(&quiz).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
 	return tx.Commit().Error
 }

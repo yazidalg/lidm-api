@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/gorm"
 )
@@ -24,26 +26,44 @@ func NewParticipantRepository(db *gorm.DB) *participantRepository {
 }
 
 func (r *participantRepository) CreateParticipant(participant *models.Participant) (*models.Participant, error) {
-	// Use a transaction to ensure data integrity
+	// Begin transaction for database integrity
 	tx := r.db.Begin()
 
-	if err := tx.Create(participant).Error; err != nil {
+	// First check if the quiz exists
+	var quiz models.Quiz
+	if err := tx.Where("id = ?", participant.QuizID).First(&quiz).Error; err != nil {
 		tx.Rollback()
-		return nil, err
+		return nil, fmt.Errorf("quiz with ID %d not found: %w", participant.QuizID, err)
 	}
 
-	// Commit the transaction
+	// Also check if the user exists
+	var user models.User
+	if err := tx.Where("id = ?", participant.UserID).First(&user).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("user with ID %d not found: %w", participant.UserID, err)
+	}
+
+	// Create the participant
+	if err := tx.Create(participant).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to create participant: %w", err)
+	}
+
+	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
-	// Fetch the created participant with preloaded relationships
+	// Now load the complete participant with all relations
 	var createdParticipant models.Participant
-	if err := r.db.Preload("User.Leaderboard").
-		Preload("Quiz").
+	if err := r.db.
+		Preload("User").
 		First(&createdParticipant, participant.ID).Error; err != nil {
 		return nil, err
 	}
+
+	// Manually set the quiz since preloading didn't work correctly
+	createdParticipant.Quiz = quiz
 
 	return &createdParticipant, nil
 }

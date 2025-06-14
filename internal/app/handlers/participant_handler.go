@@ -3,9 +3,11 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"github.com/yazidalg/lidm_backend/internal/app/response"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
@@ -27,16 +29,47 @@ func (h *ParticipantHandler) CreateParticipant(c *gin.Context) {
 
 	result, err := h.participantService.CreateParticipant(request)
 	if err != nil {
+		// Check if this is a "record not found" error
+		errMsg := err.Error()
+		if errMsg == "record not found" || errMsg == "sql: no rows in result set" ||
+			strings.Contains(errMsg, "not found") {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error":   errMsg,
+				"message": "The quiz or user you're trying to add does not exist. Please check the quiz_id and user_id values.",
+				"details": "Make sure to create the quiz first before adding participants to it.",
+			})
+			return
+		}
+
+		// For other types of errors
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   err.Error(),
+			"error":   errMsg,
 			"message": "Failed to create participant",
 		})
 		return
 	}
 
+	resultData := response.ParticipantResponse{
+		ID:         result.ID,
+		UserID:     result.UserID,
+		QuizID:     result.QuizID, // Always use the participant's QuizID
+		TotalScore: result.TotalScore,
+		CreatedAt:  result.CreatedAt,
+		User: response.User{
+			ID:    result.User.ID,
+			Name:  result.User.Name,
+			Email: result.User.Email,
+			Class: result.User.Class,
+		},
+		Quiz: response.Quiz{
+			ID:     result.QuizID,
+			Status: result.Quiz.Status,
+		},
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Participant created successfully",
-		"data":    result,
+		"data":    resultData,
 	})
 }
 
