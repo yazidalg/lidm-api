@@ -4,7 +4,6 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
-	"gorm.io/gorm"
 )
 
 type AnswerServiceInterface interface {
@@ -27,15 +26,9 @@ func (s *answerService) CreateAnswer(request request.CreateAnswerRequest) (*mode
 	// Convert request to model
 	answerData := models.Answer{
 		QuestionID:     request.QuestionID,
-		UserID:         request.UserID,
 		OptionSelected: request.OptionSelected,
 		IsCorrect:      request.IsCorrect,
 		Score:          request.Score,
-	}
-
-	// Add quiz associations
-	for _, quizID := range request.QuizID {
-		answerData.QuizID = append(answerData.QuizID, models.Quiz{Model: gorm.Model{ID: quizID}})
 	}
 
 	// Delegate to repository

@@ -8,11 +8,13 @@ import (
 
 type Quiz struct {
 	gorm.Model
-	ParticipantID uint          `gorm:"not null"`
-	Participants  []Participant `gorm:"foreignKey:QuizID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	Answers       []Answer      `gorm:"many2many:quiz_answers;"`
-	Questions     []*Question   `gorm:"many2many:quiz_questions;"`
-	Status        string        `gorm:"type:enum('draft','active','finished');default:'draft'"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Status    string `gorm:"type:enum('pending','in_progress','completed', 'cancelled');default:'pending'"`
+	WinnerID  *uint  `gorm:"index"`
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+
+	// Relationships
+	Participants []Participant `gorm:"foreignKey:QuizID"`
+	Questions    []Question    `gorm:"many2many:quiz_questions;"`
+	Winner       *User         `gorm:"foreignKey:WinnerID"`
 }

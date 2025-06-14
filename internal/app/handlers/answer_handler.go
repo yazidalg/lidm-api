@@ -5,10 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
-	"gorm.io/gorm"
 )
 
 type AnswerHandler struct {
@@ -132,16 +130,9 @@ func (h *AnswerHandler) UpdateAnswer(c *gin.Context) {
 
 	// Convert request to model
 	existingAnswer.QuestionID = request.QuestionID
-	existingAnswer.UserID = request.UserID
 	existingAnswer.OptionSelected = request.OptionSelected
 	existingAnswer.IsCorrect = request.IsCorrect
 	existingAnswer.Score = request.Score
-
-	// Clear existing quizzes and add new ones
-	existingAnswer.QuizID = nil
-	for _, quizID := range request.QuizID {
-		existingAnswer.QuizID = append(existingAnswer.QuizID, models.Quiz{Model: gorm.Model{ID: quizID}})
-	}
 
 	result, err := h.answerService.UpdateAnswer(int32(id), existingAnswer)
 	if err != nil {

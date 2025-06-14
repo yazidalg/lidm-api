@@ -18,4 +18,8 @@ type User struct {
 	TotalXP           int32
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
+
+	// Relationships
+	Leaderboard  Leaderboard   `gorm:"foreignKey:UserID"`
+	Participants []Participant `gorm:"foreignKey:UserID"`
 }

@@ -75,5 +75,5 @@ func NewRoute(
 	socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
 	socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
 
-	router.Run(":3000")
+	router.Run(":3000") // Use PORT from environment variable, default to 8080 if not set
 }

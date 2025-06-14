@@ -37,15 +37,25 @@ func (r *participantRepository) CreateParticipant(participant *models.Participan
 		return nil, err
 	}
 
-	return participant, nil
+	// Fetch the created participant with preloaded relationships
+	var createdParticipant models.Participant
+	if err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz").
+		First(&createdParticipant, participant.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &createdParticipant, nil
 }
 
 func (r *participantRepository) GetParticipantByID(id int32) (*models.Participant, error) {
 	var participant models.Participant
 
 	// Preload related entities
-	err := r.db.Preload("User").
-		Preload("Quiz").
+	err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz.Questions").
+		Preload("Quiz.Participants").
+		Preload("Quiz.Winner").
 		First(&participant, id).Error
 
 	if err != nil {
@@ -59,8 +69,10 @@ func (r *participantRepository) GetAllParticipants() ([]models.Participant, erro
 	var participants []models.Participant
 
 	// Preload related entities
-	err := r.db.Preload("User").
-		Preload("Quiz").
+	err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz.Questions").
+		Preload("Quiz.Participants").
+		Preload("Quiz.Winner").
 		Find(&participants).Error
 
 	return participants, err
@@ -70,8 +82,10 @@ func (r *participantRepository) GetParticipantsByQuizID(quizID uint) ([]models.P
 	var participants []models.Participant
 
 	// Preload related entities
-	err := r.db.Preload("User").
-		Preload("Quiz").
+	err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz.Questions").
+		Preload("Quiz.Participants").
+		Preload("Quiz.Winner").
 		Where("quiz_id = ?", quizID).
 		Find(&participants).Error
 
@@ -82,8 +96,10 @@ func (r *participantRepository) GetParticipantsByUserID(userID uint) ([]models.P
 	var participants []models.Participant
 
 	// Preload related entities
-	err := r.db.Preload("User").
-		Preload("Quiz").
+	err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz.Questions").
+		Preload("Quiz.Participants").
+		Preload("Quiz.Winner").
 		Where("user_id = ?", userID).
 		Find(&participants).Error
 
@@ -106,8 +122,6 @@ func (r *participantRepository) UpdateParticipant(id int32, participant *models.
 		"user_id":     participant.UserID,
 		"quiz_id":     participant.QuizID,
 		"total_score": participant.TotalScore,
-		"total_xp":    participant.TotalXP,
-		"result":      participant.Result,
 	}).Error; err != nil {
 		tx.Rollback()
 		return nil, err
@@ -120,8 +134,10 @@ func (r *participantRepository) UpdateParticipant(id int32, participant *models.
 
 	// Reload the participant with associations
 	var updatedParticipant models.Participant
-	if err := r.db.Preload("User").
-		Preload("Quiz").
+	if err := r.db.Preload("User.Leaderboard").
+		Preload("Quiz.Questions").
+		Preload("Quiz.Participants").
+		Preload("Quiz.Winner").
 		First(&updatedParticipant, id).Error; err != nil {
 		return nil, err
 	}
@@ -139,8 +155,8 @@ func (r *participantRepository) DeleteParticipant(id int32) error {
 		return err
 	}
 
-	// Delete the participant
-	if err := tx.Delete(&participant).Error; err != nil {
+	// Hard delete the participant (physically remove from database)
+	if err := tx.Unscoped().Delete(&participant).Error; err != nil {
 		tx.Rollback()
 		return err
 	}

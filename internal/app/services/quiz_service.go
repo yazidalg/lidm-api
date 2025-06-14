@@ -26,15 +26,14 @@ func NewQuizService(quizRepository repositories.QuizRepositoryInterface) *quizSe
 func (s *quizService) CreateQuiz(request request.CreateQuizRequest) (*models.Quiz, error) {
 	// Convert request to model
 	quizData := models.Quiz{
-		ParticipantID: request.ParticipantID,
-		Status:        request.Status,
+		Status: request.Status,
 	}
 
 	// Convert question IDs to Question pointers
 	if len(request.QuestionsIDs) > 0 {
-		questions := make([]*models.Question, len(request.QuestionsIDs))
+		questions := make([]models.Question, len(request.QuestionsIDs))
 		for i, id := range request.QuestionsIDs {
-			questions[i] = &models.Question{
+			questions[i] = models.Question{
 				Model: gorm.Model{
 					ID: id,
 				},
@@ -43,22 +42,9 @@ func (s *quizService) CreateQuiz(request request.CreateQuizRequest) (*models.Qui
 		quizData.Questions = questions
 	}
 
-	// Convert answer IDs to Answer objects
-	if len(request.AnswersIDs) > 0 {
-		answers := make([]models.Answer, len(request.AnswersIDs))
-		for i, id := range request.AnswersIDs {
-			answers[i] = models.Answer{
-				Model: gorm.Model{
-					ID: id,
-				},
-			}
-		}
-		quizData.Answers = answers
-	}
-
 	// Set default status if not provided
 	if quizData.Status == "" {
-		quizData.Status = "draft"
+		quizData.Status = "pending"
 	}
 
 	// Delegate to repository
@@ -77,38 +63,21 @@ func (s *quizService) UpdateQuiz(id uint, request request.UpdateQuizRequest) (*m
 	// Initialize quiz model for update
 	quizData := models.Quiz{}
 
-	// Set fields from request
-	if request.ParticipantID != 0 {
-		quizData.ParticipantID = request.ParticipantID
-	}
 	if request.Status != "" {
 		quizData.Status = request.Status
 	}
 
 	// Convert question IDs to Question pointers if provided
 	if len(request.QuestionsIDs) > 0 {
-		questions := make([]*models.Question, len(request.QuestionsIDs))
+		questions := make([]models.Question, len(request.QuestionsIDs))
 		for i, id := range request.QuestionsIDs {
-			questions[i] = &models.Question{
+			questions[i] = models.Question{
 				Model: gorm.Model{
 					ID: id,
 				},
 			}
 		}
 		quizData.Questions = questions
-	}
-
-	// Convert answer IDs to Answer objects if provided
-	if len(request.AnswersIDs) > 0 {
-		answers := make([]models.Answer, len(request.AnswersIDs))
-		for i, id := range request.AnswersIDs {
-			answers[i] = models.Answer{
-				Model: gorm.Model{
-					ID: id,
-				},
-			}
-		}
-		quizData.Answers = answers
 	}
 
 	// Delegate to repository

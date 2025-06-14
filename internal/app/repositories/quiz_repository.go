@@ -35,7 +35,13 @@ func (r *quizRepository) CreateQuiz(quiz *models.Quiz) (*models.Quiz, error) {
 		return nil, err
 	}
 
-	return quiz, nil
+	// Fetch the created quiz with all relationships loaded
+	var createdQuiz models.Quiz
+	if err := r.db.Preload("Questions").Preload("Winner").First(&createdQuiz, quiz.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &createdQuiz, nil
 }
 
 func (r *quizRepository) GetQuizByID(id uint) (*models.Quiz, error) {
@@ -43,8 +49,8 @@ func (r *quizRepository) GetQuizByID(id uint) (*models.Quiz, error) {
 
 	// Preload related entities
 	err := r.db.Preload("Participants").
-		Preload("Answers").
 		Preload("Questions").
+		Preload("Winner").
 		First(&quiz, id).Error
 
 	if err != nil {
@@ -59,8 +65,8 @@ func (r *quizRepository) GetAllQuizzes() ([]models.Quiz, error) {
 
 	// Preload related entities
 	err := r.db.Preload("Participants").
-		Preload("Answers").
 		Preload("Questions").
+		Preload("Winner").
 		Find(&quizzes).Error
 
 	return quizzes, err
@@ -77,10 +83,6 @@ func (r *quizRepository) UpdateQuiz(id uint, quiz *models.Quiz) (*models.Quiz, e
 		return nil, err
 	}
 
-	// Update quiz fields
-	if quiz.ParticipantID != 0 {
-		existingQuiz.ParticipantID = quiz.ParticipantID
-	}
 	if quiz.Status != "" {
 		existingQuiz.Status = quiz.Status
 	}
@@ -92,18 +94,9 @@ func (r *quizRepository) UpdateQuiz(id uint, quiz *models.Quiz) (*models.Quiz, e
 	}
 
 	// Handle questions association if needed
-	if quiz.Questions != nil && len(quiz.Questions) > 0 {
+	if len(quiz.Questions) > 0 {
 		// Replace questions association
 		if err := tx.Model(&existingQuiz).Association("Questions").Replace(quiz.Questions); err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-	}
-
-	// Handle answers association if needed
-	if quiz.Answers != nil && len(quiz.Answers) > 0 {
-		// Replace answers association
-		if err := tx.Model(&existingQuiz).Association("Answers").Replace(quiz.Answers); err != nil {
 			tx.Rollback()
 			return nil, err
 		}

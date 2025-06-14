@@ -30,8 +30,6 @@ func (s *participantService) CreateParticipant(request request.CreateParticipant
 		UserID:     request.UserID,
 		QuizID:     request.QuizID,
 		TotalScore: request.TotalScore,
-		TotalXP:    request.TotalXP,
-		Result:     request.Result,
 	}
 
 	// Delegate to repository
@@ -72,14 +70,6 @@ func (s *participantService) UpdateParticipant(id int32, request request.UpdateP
 
 	if request.TotalScore != 0 {
 		existingParticipant.TotalScore = request.TotalScore
-	}
-
-	if request.TotalXP != 0 {
-		existingParticipant.TotalXP = request.TotalXP
-	}
-
-	if request.Result != "" {
-		existingParticipant.Result = request.Result
 	}
 
 	// Delegate to repository

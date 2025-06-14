@@ -86,17 +86,10 @@ func (r *answerRepository) UpdateAnswer(id int32, answer *models.Answer) (*model
 	// Update the answer fields
 	if err := tx.Model(&existingAnswer).Updates(map[string]interface{}{
 		"question_id":     answer.QuestionID,
-		"user_id":         answer.UserID,
 		"option_selected": answer.OptionSelected,
 		"is_correct":      answer.IsCorrect,
 		"score":           answer.Score,
 	}).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	// Add quiz associations
-	if err := tx.Model(&existingAnswer).Association("QuizID").Replace(answer.QuizID); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
