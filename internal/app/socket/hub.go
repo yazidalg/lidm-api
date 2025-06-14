@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -25,7 +26,11 @@ type Hub struct {
 	// value adalah sebuah set dari client di dalam room tersebut.
 	Rooms map[string]map[*Client]bool
 
+	// Mu adalah mutex untuk mengamankan akses ke Rooms dan Clients.
 	Mu sync.RWMutex
+
+	// Counter Room Number
+	RoomNumber int
 }
 
 // NewHub membuat instance Hub baru.
@@ -35,7 +40,8 @@ func NewHub() *Hub {
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		// Kita menggunakan map[*Client]bool sebagai 'set' untuk efisiensi.
-		Rooms: make(map[string]map[*Client]bool),
+		Rooms:      make(map[string]map[*Client]bool),
+		RoomNumber: 1,
 	}
 }
 
@@ -140,4 +146,33 @@ func (h *Hub) GetClientsInRoom(roomName string) int {
 
 	// Kode di dalam RLock dan RUnlock dijamin aman dari race conditions.
 	return len(h.Rooms[roomName])
+}
+
+func (h *Hub) FindAndAssignRoom() string {
+	h.Mu.Lock()
+	defer h.Mu.Unlock()
+	fmt.Printf("Jumlah rooms: %d\n", len(h.Rooms))
+
+	for name, clients := range h.Rooms {
+		if len(h.Rooms) == 0 {
+			log.Println("Tidak ada room yang tersedia, membuat room baru")
+			roomName := fmt.Sprintf("Room-%d", h.RoomNumber)
+			h.Rooms[roomName] = make(map[*Client]bool)
+			h.RoomNumber++
+			log.Printf("Room baru '%s' dibuat", roomName)
+		} else if len(clients) == 1 {
+			log.Printf("Room '%s' ditemukan dengan %d client, akan digunakan. menambahkan 1 pemain", name, len(clients))
+			return name
+		} else {
+			log.Printf("Room '%s' penuh dengan %d client, mencari room lain", name, len(clients))
+		}
+	}
+
+	log.Println("Semua room penuh, membuat room baru")
+	roomName := fmt.Sprintf("Room-%d", h.RoomNumber)
+	h.Rooms[roomName] = make(map[*Client]bool)
+	h.RoomNumber++
+
+	log.Printf("Room baru '%s' dibuat", roomName)
+	return roomName
 }

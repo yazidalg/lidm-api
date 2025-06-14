@@ -40,8 +40,10 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 		return
 	}
 
+	// Mendapatkan jumlah client yang sudah ada di room.
 	clientCount := h.hub.GetClientsInRoom(roomName)
 
+	// Jika jumlah client sudah mencapai batas (2), tolak permintaan.
 	if clientCount >= 2 {
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "room is full"})
 		return
@@ -68,6 +70,29 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 
 	// Jalankan readPump dan writePump sebagai goroutine.
 	// Ini memungkinkan client untuk membaca dan menulis secara bersamaan.
+	go client.WritePump()
+	go client.ReadPump()
+}
+
+func (h *SocketHandler) MatchMaking(c *gin.Context) {
+	roomName := h.hub.FindAndAssignRoom()
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+
+	if err != nil {
+		log.Printf("Failed to upgrade connection for matchmaking: %v", err)
+		return
+	}
+
+	client := &socket.Client{
+		Hub:  h.hub,
+		Conn: conn,
+		Send: make(chan *utils.Message, 256), // Buffered channel
+		Room: roomName,
+	}
+
+	client.Hub.Register <- client
+
 	go client.WritePump()
 	go client.ReadPump()
 }

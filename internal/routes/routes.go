@@ -22,8 +22,6 @@ func NewRoute(
 		c.JSON(200, gin.H{"message": "Welcome to the API"})
 	})
 
-	router.GET("/ws/:room", socketHandler.ServeWs)
-
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(middleware.AuthRequire)
 	userGroupHandler.GET("/profile", userHandler.GetUserById)
@@ -72,6 +70,10 @@ func NewRoute(
 	quizGroupHandler.GET("/all", quizHandler.GetAllQuizzes)
 	quizGroupHandler.PUT("/:id", quizHandler.UpdateQuiz)
 	quizGroupHandler.DELETE("/:id", quizHandler.DeleteQuiz)
+
+	socketGroupHandler := router.Group("ws")
+	socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
+	socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
 
 	router.Run(":3000")
 }
