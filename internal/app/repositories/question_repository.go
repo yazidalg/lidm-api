@@ -11,6 +11,7 @@ type QuestionRepositoryInterface interface {
 	GetAllQuestions() ([]models.Question, error)
 	UpdateQuestion(id int32, question *models.Question) (*models.Question, error)
 	DeleteQuestion(id int32) error
+	GetRandomQuestion(count int) (*[]models.Question, error)
 }
 
 type questionRepository struct {
@@ -45,4 +46,13 @@ func (r *questionRepository) UpdateQuestion(id int32, question *models.Question)
 
 func (r *questionRepository) DeleteQuestion(id int32) error {
 	return r.db.Delete(&models.Question{}, id).Error
+}
+
+func (r *questionRepository) GetRandomQuestion(count int) (*[]models.Question, error) {
+	var question []models.Question
+	err := r.db.Order("RAND()").Limit(count).Find(&question).Error
+	if err != nil {
+		return nil, err
+	}
+	return &question, nil
 }

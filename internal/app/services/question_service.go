@@ -12,6 +12,7 @@ type QuestionServiceInterface interface {
 	GetAllQuestions() ([]models.Question, error)
 	UpdateQuestion(id int32, request request.UpdateQuestionRequest) (*models.Question, error)
 	DeleteQuestion(id int32) error
+	GetRandomQuestion(count int) (*[]models.Question, error)
 }
 
 type questionService struct {
@@ -59,4 +60,8 @@ func (s *questionService) UpdateQuestion(id int32, request request.UpdateQuestio
 
 func (s *questionService) DeleteQuestion(id int32) error {
 	return s.questionRepository.DeleteQuestion(id)
+}
+
+func (s *questionService) GetRandomQuestion(count int) (*[]models.Question, error) {
+	return s.questionRepository.GetRandomQuestion(count)
 }

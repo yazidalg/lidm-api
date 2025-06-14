@@ -44,6 +44,7 @@ func NewRoute(
 	questionGroupHandler.GET("/all", questionHandler.GetAllQuestions)
 	questionGroupHandler.PUT("/:id", questionHandler.UpdateQuestion)
 	questionGroupHandler.DELETE("/:id", questionHandler.DeleteQuestion)
+	questionGroupHandler.GET("/random", questionHandler.GetRandomQuestion)
 
 	answerGroupHandler := router.Group("answer")
 	answerGroupHandler.Use(middleware.AuthRequire)
