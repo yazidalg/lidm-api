@@ -87,6 +87,10 @@ func (r *quizRepository) UpdateQuiz(id uint, quiz *models.Quiz) (*models.Quiz, e
 		existingQuiz.Status = quiz.Status
 	}
 
+	if quiz.WinnerID != nil {
+		existingQuiz.WinnerID = quiz.WinnerID
+	}
+
 	// Save the updated quiz
 	if err := tx.Save(&existingQuiz).Error; err != nil {
 		tx.Rollback()

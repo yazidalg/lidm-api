@@ -9,4 +9,5 @@ type CreateQuizRequest struct {
 type UpdateQuizRequest struct {
 	QuestionsIDs []uint `json:"questions_ids"`
 	Status       string `json:"status"`
+	WinnerID     *uint  `json:"winner_id"`
 }

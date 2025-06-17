@@ -67,6 +67,10 @@ func (s *quizService) UpdateQuiz(id uint, request request.UpdateQuizRequest) (*m
 		quizData.Status = request.Status
 	}
 
+	if request.WinnerID != nil {
+		quizData.WinnerID = request.WinnerID
+	}
+
 	// Convert question IDs to Question pointers if provided
 	if len(request.QuestionsIDs) > 0 {
 		questions := make([]models.Question, len(request.QuestionsIDs))
