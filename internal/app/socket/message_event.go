@@ -27,3 +27,22 @@ type UserInRoomPayload struct {
 	Room           string `json:"room"`           // Nama room tempat kedua pengguna berada
 	Message        string `json:"message"`        // Pesan yang ditampilkan saat kedua pengguna berada di room yang sama
 }
+
+type AnsweredQuestionEvent struct {
+	QuestionID uint `json:"question_id"` // ID pertanyaan yang dijawab
+	UserID     uint `json:"user_id"`     // ID pengguna yang menjawab
+	IsCorrect  bool `json:"is_correct"`  // Apakah jawaban benar
+	Score      int  `json:"score"`       // Skor yang diberikan untuk jawaban
+}
+
+type QuizCompletedPayload struct {
+	FinalScores map[string]int `json:"final_scores"` // Skor akhir untuk setiap pemain
+	Winner      string         `json:"winner"`       // Nama pemenang
+	Message     string         `json:"message"`      // Pesan yang ditampilkan saat quiz selesai
+}
+
+type AnswerPayload struct {
+	QuestionID     uint   `json:"question_id"`
+	UserID         uint   `json:"user_id"`
+	OptionSelected string `json:"option_selected"`
+}

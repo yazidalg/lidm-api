@@ -113,6 +113,7 @@ func (h *Hub) Run() {
 					State:         "waiting",
 					Answers:       make(chan *AnswerEvent, 10), // Buffer untuk jawaban
 					PlayerAnswers: make(map[*Client]bool),
+					PlayerScores:  make(map[*Client]int),
 				}
 
 				h.QuizSession[roomName] = session
@@ -172,18 +173,25 @@ func (h *Hub) Run() {
 			h.Mu.Unlock()
 
 		case msg := <-h.Message:
-			if msg.Action == "send_message" {
-				var payload request.CreateAnswerRequest
+			if msg.Sender.Session == nil {
+				log.Printf("Pesan dari client tanpa sesi: %s", msg.Sender.Username)
+				continue
+			}
+
+			if msg.Action == "submit_answer" {
+				var payload AnswerPayload
 				if err := json.Unmarshal(msg.Payload, &payload); err != nil {
-					log.Printf("Error unmarshaling submit_answer payload: %v", err)
+					log.Printf("Gagal unmarshal payload: %v", err)
 					continue
 				}
 
-				// Teruskan event jawaban ke channel milik session yang benar
-				msg.Sender.Session.Answers <- &AnswerEvent{
-					Player:  msg.Sender,
-					Payload: payload,
+				if msg.Sender.Session.State == "running" {
+					msg.Sender.Session.Answers <- &AnswerEvent{
+						Player:  msg.Sender,
+						Payload: payload,
+					}
 				}
+
 			}
 		}
 	}
