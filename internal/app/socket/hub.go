@@ -6,6 +6,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
@@ -100,9 +101,49 @@ func (h *Hub) Run() {
 					continue
 				}
 
+				questionIDs := make([]uint, len(*getQuestion))
+				for i, q := range *getQuestion {
+					questionIDs[i] = q.ID
+				}
+
+				createQuizReq := request.CreateQuizRequest{
+					Status:       "in_progress", // Langsung set in_progress
+					QuestionsIDs: questionIDs,
+				}
+
+				newQuiz, err := h.QuizService.CreateQuiz(createQuizReq)
+
+				if err != nil {
+					log.Printf("Gagal membuat quiz di database: %v", err)
+					h.Mu.Unlock()
+					continue
+				}
+				log.Printf("Quiz dengan ID %d berhasil dibuat di database.", newQuiz.ID)
+
 				players := make([]*Client, 0, 2)
 				for p := range h.Rooms[roomName] {
 					players = append(players, p)
+				}
+
+				participants := make([]*models.Participant, 0, len(players))
+				for _, player := range players {
+					createParticipantReq := request.CreateParticipantRequest{
+						UserID: player.UserID,
+						QuizID: newQuiz.ID,
+					}
+					newParticipant, err := h.ParticipantService.CreateParticipant(createParticipantReq)
+					if err != nil {
+						log.Printf("Gagal membuat participant di database untuk user %d: %v", player.UserID, err)
+						continue // Lanjutkan ke pemain berikutnya
+					}
+					participants = append(participants, newParticipant)
+				}
+
+				if len(participants) != 2 {
+					log.Printf("Gagal membuat semua participant, membatalkan quiz.")
+					// TODO: Hapus quiz yang sudah terlanjur dibuat
+					h.Mu.Unlock()
+					continue
 				}
 
 				session := &QuizSession{
@@ -110,6 +151,7 @@ func (h *Hub) Run() {
 					RoomName:      roomName,
 					Players:       players,
 					Questions:     *getQuestion,
+					QuizID:        newQuiz.ID,
 					State:         "waiting",
 					Answers:       make(chan *AnswerEvent, 10), // Buffer untuk jawaban
 					PlayerAnswers: make(map[*Client]bool),
@@ -121,14 +163,6 @@ func (h *Hub) Run() {
 				for _, player := range players {
 					player.Session = session
 				}
-
-				createQuiz := request.CreateQuizRequest{
-					Status:          "running",
-					QuestionsIDs:    make([]uint, len(*getQuestion)),
-					ParticipantsIDs: make([]uint, len(players)),
-				}
-
-				h.QuizService.CreateQuiz(createQuiz)
 
 				go session.RunGameLoop()
 			}

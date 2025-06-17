@@ -12,6 +12,7 @@ type QuizSession struct {
 	RoomName             string
 	Players              []*Client
 	Questions            []models.Question
+	Participants         []*models.Participant
 	QuizID               uint
 	CurrentQuestionIndex int
 	State                string
@@ -29,6 +30,8 @@ func (s *QuizSession) RunGameLoop() {
 	log.Printf("Room '%s': Memulai sesi quiz", s.RoomName)
 	s.State = "running"
 	s.InitializeScores()
+
+	log.Println("hahsdhasdhsa", s.QuizID, s.Questions)
 
 	for i, question := range s.Questions {
 		s.CurrentQuestionIndex = i

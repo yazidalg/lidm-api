@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
+	"github.com/yazidalg/lidm_backend/internal/app/request"
 )
 
 // Inisialisasi Score untuk setiap pemain
@@ -82,24 +83,65 @@ func (s *QuizSession) ConcludeQuestion(question *models.Question) {
 
 func (s *QuizSession) ConcludeQuiz() {
 	s.State = "finished"
-	log.Printf("Quiz di room '%s' selesai!", s.RoomName)
+	log.Printf("Quiz di room '%s' (ID: %d) selesai! Menyimpan hasil...", s.RoomName, s.QuizID)
 
 	finalScores := make(map[string]int)
 	winnerUsername := "Seri"
+	var winnerID *uint
 	maxScore := -1
 
+	// Hitung skor akhir dan tentukan pemenang
 	for player, score := range s.PlayerScores {
 		finalScores[player.Username] = score
 		if score > maxScore {
 			maxScore = score
 			winnerUsername = player.Username
+			// Ambil ID pemenang
+			id := player.UserID
+			winnerID = &id
 		} else if score == maxScore && maxScore != -1 {
 			winnerUsername = "Seri"
+			winnerID = nil
 		}
 	}
 
-	// TODO: Simpan `finalScores` ke database untuk setiap partisipan.
+	// 1. Update setiap participant dengan skor akhirnya
+	for _, p := range s.Participants {
+		// Cari client yang sesuai dengan participant
+		for client, score := range s.PlayerScores {
+			if client.UserID == p.UserID {
+				updateReq := request.UpdateParticipantRequest{
+					TotalScore: score,
+				}
+				_, err := s.Hub.ParticipantService.UpdateParticipant(int32(p.ID), updateReq)
+				if err != nil {
+					log.Printf("Gagal update skor untuk participant %d: %v", p.ID, err)
+				} else {
+					log.Printf("Skor untuk participant %d (User: %d) berhasil diupdate menjadi %d.", p.ID, p.UserID, score)
+				}
+				break // Lanjut ke participant berikutnya
+			}
+		}
+	}
 
+	// 2. Update status quiz dan pemenangnya
+	updateQuizReq := request.UpdateQuizRequest{
+		Status:   "completed",
+		WinnerID: winnerID,
+	}
+	// GORM akan handle jika winnerID adalah nil (tidak akan update field)
+	// Kita harus memodifikasi QuizService untuk menerima WinnerID
+	// Namun, untuk sementara kita bisa modifikasi modelnya langsung di service
+	// Mari kita asumsikan service bisa meng-handle ini
+	// TODO: Pastikan UpdateQuiz di service bisa update WinnerID
+	_, err := s.Hub.QuizService.UpdateQuiz(s.QuizID, updateQuizReq)
+	if err != nil {
+		log.Printf("Gagal update status quiz %d: %v", s.QuizID, err)
+	} else {
+		log.Printf("Quiz %d berhasil diupdate dengan status 'completed'. Pemenang: %s", s.QuizID, winnerUsername)
+	}
+
+	// Kirim pesan ke client
 	completedPayload := QuizCompletedPayload{
 		FinalScores: finalScores,
 		Winner:      winnerUsername,
