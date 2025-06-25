@@ -21,6 +21,7 @@ func (s *QuizSession) SendQuestion(question *models.Question) {
 	log.Printf("Room '%s': Mengirim pertanyaan #%d", s.RoomName, s.CurrentQuestionIndex+1)
 	questionPayload, _ := json.Marshal(question)
 	s.Hub.BroadcastToRoom(Message{Action: "question", Payload: questionPayload, Target: s.RoomName})
+	s.QuestionStartTime = time.Now()
 }
 
 func (s *QuizSession) HandleAnswer(currentQuestion *models.Question) {

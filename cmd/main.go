@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yazidalg/lidm_backend/internal/config"
+	"github.com/yazidalg/lidm_backend/internal/database"
 	"github.com/yazidalg/lidm_backend/internal/helpers"
 	"github.com/yazidalg/lidm_backend/internal/routes"
 )
@@ -9,7 +10,7 @@ import (
 func main() {
 	config.LoadEnv()
 	db := config.ConnectDB()
-	config.MigrateDb(db)
+	database.Migrate(db)
 
 	userHandler := helpers.NewBuildUser(db)
 	authHandler := helpers.NewBuildAuth(db)
@@ -19,6 +20,7 @@ func main() {
 	participantHandler, participantService := helpers.NewBuildParticipant(db)
 	quizHandler, quizService := helpers.NewBuildQuiz(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService)
+	courseHandler := helpers.NewBuildCourse(db)
 
-	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler, questionHandler, answerHandler, participantHandler, quizHandler, socketHandler)
+	routes.NewRoute(authHandler, userHandler, forgotPasswordHandler, questionHandler, answerHandler, participantHandler, quizHandler, socketHandler, courseHandler)
 }

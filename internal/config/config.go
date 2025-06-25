@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -29,11 +28,6 @@ func LoadEnv() {
 	} else {
 		log.Println("Production environment, skipping .env load")
 	}
-}
-
-func MigrateDb(db *gorm.DB) {
-	db.AutoMigrate(&models.User{}, &models.Quiz{}, &models.Participant{}, &models.Question{}, &models.Answer{}, &models.Leaderboard{})
-	// db.Migrator().DropTable(&models.User{}, &models.Quiz{}, &models.Participant{}, &models.Question{}, &models.Answer{}, &models.Leaderboard{})
 }
 
 func ConnectDB() *gorm.DB {

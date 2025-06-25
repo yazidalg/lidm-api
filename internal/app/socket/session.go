@@ -2,6 +2,7 @@ package socket
 
 import (
 	"log"
+	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 )
@@ -19,6 +20,7 @@ type QuizSession struct {
 	Answers              chan *AnswerEvent
 	PlayerAnswers        map[*Client]bool
 	PlayerScores         map[*Client]int
+	QuestionStartTime    time.Time
 }
 
 type AnswerEvent struct {

@@ -71,3 +71,10 @@ func NewBuildSocket(
 
 	return socketHandler
 }
+
+func NewBuildCourse(db *gorm.DB) *handlers.CourseHandler {
+	courseRepository := repositories.NewCourseRepository(db)
+	courseService := services.NewCourseService(courseRepository)
+	courseHandler := handlers.NewCourseHandler(courseService)
+	return courseHandler
+}
