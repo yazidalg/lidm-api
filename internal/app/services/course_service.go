@@ -10,7 +10,7 @@ type CourseServiceInterface interface {
 	CreateCourse(request request.CreateCourseRequest) (*models.Course, error)
 	GetCourseByID(id uint32) (*models.Course, error)
 	GetAllCourses() ([]models.Course, error)
-	UpdateCourse(id uint32, course *models.Course) (*models.Course, error)
+	UpdateCourse(id uint32, course request.UpdateCourseRequest) (*models.Course, error)
 	DeleteCourse(id uint32) error
 }
 
@@ -42,8 +42,14 @@ func (s *courseService) GetAllCourses() ([]models.Course, error) {
 	return s.courseRepository.GetAllCourses()
 }
 
-func (s *courseService) UpdateCourse(id uint32, course *models.Course) (*models.Course, error) {
-	return s.courseRepository.UpdateCourse(id, course)
+func (s *courseService) UpdateCourse(id uint32, course request.UpdateCourseRequest) (*models.Course, error) {
+	courseData := models.Course{
+		Title:       course.Title,
+		Description: course.Description,
+		Thumbnail:   course.Thumbnail,
+	}
+
+	return s.courseRepository.UpdateCourse(id, &courseData)
 }
 
 func (s *courseService) DeleteCourse(id uint32) error {
