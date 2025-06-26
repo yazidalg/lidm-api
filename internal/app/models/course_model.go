@@ -15,5 +15,5 @@ type Course struct {
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 
 	// Relationships
-	Modules []Module `gorm:"foreignKey:CourseID"` // Relationship to Module
+	Modules []Module `gorm:"foreignKey:CourseID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // Relationship to Module
 }

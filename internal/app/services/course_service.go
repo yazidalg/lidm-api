@@ -7,10 +7,10 @@ import (
 )
 
 type CourseServiceInterface interface {
-	CreateCourse(request request.CreateCourseRequest) (*models.Course, error)
+	CreateCourse(request request.CourseRequest) (*models.Course, error)
 	GetCourseByID(id uint32) (*models.Course, error)
 	GetAllCourses() ([]models.Course, error)
-	UpdateCourse(id uint32, course request.UpdateCourseRequest) (*models.Course, error)
+	UpdateCourse(id uint32, course request.CourseRequest) (*models.Course, error)
 	DeleteCourse(id uint32) error
 }
 
@@ -22,12 +22,20 @@ func NewCourseService(courseRepository repositories.CourseRepositoryInterface) *
 	return &courseService{courseRepository}
 }
 
-func (s *courseService) CreateCourse(request request.CreateCourseRequest) (*models.Course, error) {
+func (s *courseService) CreateCourse(request request.CourseRequest) (*models.Course, error) {
 	// Convert request to model
 	courseData := models.Course{
 		Title:       request.Title,
 		Description: request.Description,
 		Thumbnail:   request.Thumbnail,
+	}
+
+	for _, module := range request.Modules {
+		courseData.Modules = append(courseData.Modules, models.Module{
+			Title:       module.Title,
+			Description: module.Description,
+			SortOrder:   uint16(module.SortOrder),
+		})
 	}
 
 	// Delegate to repository
@@ -42,11 +50,19 @@ func (s *courseService) GetAllCourses() ([]models.Course, error) {
 	return s.courseRepository.GetAllCourses()
 }
 
-func (s *courseService) UpdateCourse(id uint32, course request.UpdateCourseRequest) (*models.Course, error) {
+func (s *courseService) UpdateCourse(id uint32, course request.CourseRequest) (*models.Course, error) {
 	courseData := models.Course{
 		Title:       course.Title,
 		Description: course.Description,
 		Thumbnail:   course.Thumbnail,
+	}
+
+	for _, module := range course.Modules {
+		courseData.Modules = append(courseData.Modules, models.Module{
+			Title:       module.Title,
+			Description: module.Description,
+			SortOrder:   uint16(module.SortOrder),
+		})
 	}
 
 	return s.courseRepository.UpdateCourse(id, &courseData)

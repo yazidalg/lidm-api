@@ -19,7 +19,7 @@ func NewCourseHandler(courseService services.CourseServiceInterface) *CourseHand
 }
 
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
-	var request request.CreateCourseRequest
+	var request request.CourseRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -83,7 +83,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 }
 
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
-	var request request.UpdateCourseRequest
+	var request request.CourseRequest
 	log.Println("Updating course...")
 	if c.Bind(&request) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

@@ -16,6 +16,7 @@ func NewRoute(
 	quizHandler *handlers.QuizHandler,
 	socketHandler *handlers.SocketHandler,
 	courseHandler *handlers.CourseHandler,
+	moduleHandler *handlers.ModuleHandler,
 ) {
 	router := gin.Default()
 
@@ -85,6 +86,13 @@ func NewRoute(
 	courseGroupHandler.GET("/all", courseHandler.GetAllCourses)
 	courseGroupHandler.PUT("/:id", courseHandler.UpdateCourse)
 	courseGroupHandler.DELETE("/:id", courseHandler.DeleteCourse)
+
+	moduleGroupHandler := router.Group("module")
+	moduleGroupHandler.Use(middleware.AuthRequire)
+	moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
+	moduleGroupHandler.GET("/all", moduleHandler.GetAllModules)
+	moduleGroupHandler.PUT("/:id", moduleHandler.UpdateModule)
+	moduleGroupHandler.DELETE("/:id", moduleHandler.DeleteModule)
 
 	router.Run(":3000") // Use PORT from environment variable, default to 8080 if not set
 }
