@@ -37,7 +37,7 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 	var modules []models.Module
 
 	// Preload related entities if necessary
-	err := r.db.Find(&modules).Error
+	err := r.db.Preload("Lessons").Find(&modules).Error
 
 	if err != nil {
 		return nil, err

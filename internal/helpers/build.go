@@ -85,3 +85,10 @@ func NewBuildModule(db *gorm.DB) *handlers.ModuleHandler {
 	moduleHandler := handlers.NewModuleHandler(moduleService)
 	return moduleHandler
 }
+
+func NewBuildLesson(db *gorm.DB) *handlers.LessonHandler {
+	lessonRepository := repositories.NewLessonRepository(db)
+	lessonService := services.NewLessonService(lessonRepository)
+	lessonHandler := handlers.NewLessonHandler(lessonService)
+	return lessonHandler
+}

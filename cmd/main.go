@@ -22,6 +22,7 @@ func main() {
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService)
 	courseHandler := helpers.NewBuildCourse(db)
 	moduleHandler := helpers.NewBuildModule(db)
+	lessonHandler := helpers.NewBuildLesson(db)
 
 	routes.NewRoute(
 		authHandler,
@@ -34,5 +35,6 @@ func main() {
 		socketHandler,
 		courseHandler,
 		moduleHandler,
+		lessonHandler,
 	)
 }
