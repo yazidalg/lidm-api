@@ -16,18 +16,24 @@ type LessonServiceInterface interface {
 
 type lessonService struct {
 	lessonRepo repositories.LessonRepositoryInterface
+	moduleRepo repositories.ModuleRepositoryInterface
 }
 
-func NewLessonService(lessonRepo repositories.LessonRepositoryInterface) *lessonService {
-	return &lessonService{lessonRepo: lessonRepo}
+func NewLessonService(
+	lessonRepo repositories.LessonRepositoryInterface,
+	moduleRepo repositories.ModuleRepositoryInterface,
+) *lessonService {
+	return &lessonService{
+		lessonRepo: lessonRepo,
+		moduleRepo: moduleRepo,
+	}
 }
 
 func (s *lessonService) CreateLesson(lesson request.LessonRequest) (*models.Lesson, error) {
 	lessonModel := &models.Lesson{
-		ModuleID:  lesson.ModuleID,
-		Title:     lesson.Title,
-		Content:   lesson.Content,
-		SortOrder: lesson.SortOrder,
+		ModuleID: lesson.ModuleID,
+		Title:    lesson.Title,
+		Content:  lesson.Content,
 	}
 
 	return s.lessonRepo.CreateLesson(lessonModel)
@@ -43,10 +49,9 @@ func (s *lessonService) GetAllLessons() ([]models.Lesson, error) {
 
 func (s *lessonService) UpdateLesson(id uint32, lesson request.LessonRequest) (*models.Lesson, error) {
 	lessonModel := &models.Lesson{
-		ModuleID:  lesson.ModuleID,
-		Title:     lesson.Title,
-		Content:   lesson.Content,
-		SortOrder: lesson.SortOrder,
+		ModuleID: lesson.ModuleID,
+		Title:    lesson.Title,
+		Content:  lesson.Content,
 	}
 
 	return s.lessonRepo.UpdateLesson(id, lessonModel)

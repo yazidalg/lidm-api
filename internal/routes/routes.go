@@ -81,6 +81,7 @@ func NewRoute(
 
 	moduleGroupHandler := router.Group("module")
 	moduleGroupHandler.Use(middleware.AuthRequire)
+	moduleGroupHandler.POST("/create", moduleHandler.CreateModule)
 	moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
 	moduleGroupHandler.GET("/all", moduleHandler.GetAllModules)
 	moduleGroupHandler.PUT("/:id", moduleHandler.UpdateModule)

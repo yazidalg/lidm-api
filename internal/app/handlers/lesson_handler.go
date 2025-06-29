@@ -11,14 +11,31 @@ import (
 
 type LessonHandler struct {
 	lessonService services.LessonServiceInterface
+	moduleService services.ModuleServiceInterface
 }
 
-func NewLessonHandler(lessonService services.LessonServiceInterface) *LessonHandler {
-	return &LessonHandler{lessonService: lessonService}
+func NewLessonHandler(
+	lessonService services.LessonServiceInterface,
+	moduleService services.ModuleServiceInterface,
+) *LessonHandler {
+	return &LessonHandler{
+		lessonService: lessonService,
+		moduleService: moduleService,
+	}
 }
 
 func (h *LessonHandler) CreateLesson(c *gin.Context) {
 	var lessonRequest request.LessonRequest
+
+	module, err := h.moduleService.GetModuleByID(uint32(lessonRequest.ModuleID))
+
+	if err != nil && module == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   err.Error(),
+			"message": "Module not found",
+		})
+		return
+	}
 
 	if err := c.ShouldBindJSON(&lessonRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})

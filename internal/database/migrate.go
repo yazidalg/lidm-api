@@ -15,7 +15,6 @@ func Migrate(db *gorm.DB) error {
 		&models.Question{},
 		&models.Answer{},
 		&models.Leaderboard{},
-		&models.Module{},
 		&models.Lesson{},
 		&models.Resource{},
 		&models.Progress{},

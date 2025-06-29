@@ -6,6 +6,7 @@ import (
 )
 
 type ModuleRepositoryInterface interface {
+	CreateModule(module *models.Module) (*models.Module, error)
 	GetModuleByID(id uint32) (*models.Module, error)
 	GetAllModules() ([]models.Module, error)
 	UpdateModule(id uint32, module *models.Module) (*models.Module, error)
@@ -20,11 +21,28 @@ func NewModuleRepository(db *gorm.DB) *moduleRepository {
 	return &moduleRepository{db}
 }
 
+func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, error) {
+	// Use a transaction to ensure data integrity
+	tx := r.db.Begin()
+
+	if err := tx.Create(module).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return module, nil
+}
+
 func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
 	// Preload related entities if necessary
-	err := r.db.First(&module, id).Error
+	err := r.db.Preload("Lessons").First(&module, id).Error
 
 	if err != nil {
 		return nil, err
@@ -56,7 +74,6 @@ func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*mode
 	// Update the module fields
 	existingModule.Title = module.Title
 	existingModule.Description = module.Description
-	existingModule.SortOrder = module.SortOrder
 
 	// Use a transaction to ensure data integrity
 	tx := r.db.Begin()

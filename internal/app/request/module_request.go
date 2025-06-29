@@ -1,14 +1,8 @@
 package request
 
-type CreateModuleRequest struct {
-	Title       string `json:"title" binding:"required"`
-	Description string `json:"description" binding:"required"`
-	SortOrder   uint   `json:"sort_order" binding:"required"`
-	CourseID    uint   `json:"course_id" binding:"required"`
-}
-
-type UpdateModuleRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	SortOrder   uint   `json:"sort_order"`
+type ModuleRequest struct {
+	Title       string          `json:"title" binding:"required"`
+	Description string          `json:"description" binding:"required"`
+	Thumbnail   string          `json:"thumbnail" binding:"omitempty"`    // Optional field for thumbnail URL
+	Lessons     []LessonRequest `json:"lessons" binding:"omitempty,dive"` // Optional field for lessons
 }

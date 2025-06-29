@@ -17,6 +17,29 @@ func NewModuleHandler(moduleService services.ModuleServiceInterface) *ModuleHand
 	return &ModuleHandler{moduleService}
 }
 
+func (h *ModuleHandler) CreateModule(c *gin.Context) {
+	var moduleRequest request.ModuleRequest
+
+	if err := c.ShouldBindJSON(&moduleRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	result, err := h.moduleService.CreateModule(moduleRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   err.Error(),
+			"message": "Failed to create module",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Module created successfully",
+		"data":    result,
+	})
+}
+
 func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 	idParam := c.Param("id")
 
@@ -66,7 +89,7 @@ func (h *ModuleHandler) UpdateModule(c *gin.Context) {
 		return
 	}
 
-	var request request.UpdateModuleRequest
+	var request request.ModuleRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
