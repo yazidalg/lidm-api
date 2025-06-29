@@ -20,7 +20,6 @@ func main() {
 	participantHandler, participantService := helpers.NewBuildParticipant(db)
 	quizHandler, quizService := helpers.NewBuildQuiz(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService)
-	courseHandler := helpers.NewBuildCourse(db)
 	moduleHandler := helpers.NewBuildModule(db)
 	lessonHandler := helpers.NewBuildLesson(db)
 
@@ -33,7 +32,6 @@ func main() {
 		participantHandler,
 		quizHandler,
 		socketHandler,
-		courseHandler,
 		moduleHandler,
 		lessonHandler,
 	)

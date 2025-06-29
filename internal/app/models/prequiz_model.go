@@ -10,7 +10,5 @@ type Prequiz struct {
 	CorrectAnswer string  `gorm:"not null"`       // Correct answer for the quiz
 	Explanation   string  `gorm:"type:text"`      // Explanation for the correct answer
 
-	// Relationships
-	Course *Course `gorm:"foreignKey:CourseID"` // Relationship to Course
 	Module *Module `gorm:"foreignKey:ModuleID"` // Relationship to Module
 }

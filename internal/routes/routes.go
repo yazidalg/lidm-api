@@ -15,7 +15,6 @@ func NewRoute(
 	participantHandler *handlers.ParticipantHandler,
 	quizHandler *handlers.QuizHandler,
 	socketHandler *handlers.SocketHandler,
-	courseHandler *handlers.CourseHandler,
 	moduleHandler *handlers.ModuleHandler,
 	lessonHandler *handlers.LessonHandler,
 ) {
@@ -79,14 +78,6 @@ func NewRoute(
 	socketGroupHandler.Use(middleware.AuthRequire)
 	socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
 	socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
-
-	courseGroupHandler := router.Group("course")
-	courseGroupHandler.Use(middleware.AuthRequire)
-	courseGroupHandler.POST("/create", courseHandler.CreateCourse)
-	courseGroupHandler.GET("/:id", courseHandler.GetCourseByID)
-	courseGroupHandler.GET("/all", courseHandler.GetAllCourses)
-	courseGroupHandler.PUT("/:id", courseHandler.UpdateCourse)
-	courseGroupHandler.DELETE("/:id", courseHandler.DeleteCourse)
 
 	moduleGroupHandler := router.Group("module")
 	moduleGroupHandler.Use(middleware.AuthRequire)

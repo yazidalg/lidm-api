@@ -9,14 +9,12 @@ func Migrate(db *gorm.DB) error {
 	// Migrate the database schema
 	if err := db.AutoMigrate(
 		&models.User{},
-		&models.Course{},
 		&models.Module{},
 		&models.Quiz{},
 		&models.Participant{},
 		&models.Question{},
 		&models.Answer{},
 		&models.Leaderboard{},
-		&models.Course{},
 		&models.Module{},
 		&models.Lesson{},
 		&models.Resource{},
