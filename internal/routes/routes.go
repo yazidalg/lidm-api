@@ -98,7 +98,8 @@ func NewRoute(
 
 	progressGroupHandler := router.Group("progress")
 	progressGroupHandler.Use(middleware.AuthRequire)
-	progressGroupHandler.POST("/update", progressHandler.UpdateProgress)
+	progressGroupHandler.POST("/create", progressHandler.CreateProgress)
+	progressGroupHandler.PUT("/:id", progressHandler.UpdateProgress)
 	progressGroupHandler.GET("/all", progressHandler.GetAllProgress)
 
 	router.Run(":3000") // Use PORT from environment variable, default to 8080 if not set

@@ -8,15 +8,14 @@ import (
 
 type Lesson struct {
 	gorm.Model
-	ModuleID   uint `gorm:"not null;index"` // Foreign key to Module
-	ProgressID uint `gorm:"not null;index"` // Foreign key to Progress
-	Title      string
-	Content    string
-	SortOrder  uint16    `gorm:"default:0"` // Order of the lesson within the
-	CreatedAt  time.Time `gorm:"autoCreateTime"`
-	UpdatedAt  time.Time `gorm:"autoUpdateTime"`
+	ModuleID  uint `gorm:"not null;index"` // Foreign key to Module
+	Title     string
+	Content   string
+	SortOrder uint16    `gorm:"default:0"` // Order of the lesson within the
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 
 	// Relationships
-	Module     *Module   `gorm:"foreignKey:ModuleID"` // Relationship to Module
-	Progresses *Progress `gorm:"foreignKey:LessonID"` // Relationship to Progress
+	Module   *Module    `gorm:"foreignKey:ModuleID"` // Relationship to Module
+	Progress []Progress `gorm:"foreignKey:LessonID"` // Relationship to Progress
 }
