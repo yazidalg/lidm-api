@@ -17,6 +17,7 @@ func NewRoute(
 	socketHandler *handlers.SocketHandler,
 	moduleHandler *handlers.ModuleHandler,
 	lessonHandler *handlers.LessonHandler,
+	progressHandler *handlers.ProgressHandler,
 ) {
 	router := gin.Default()
 
@@ -94,6 +95,11 @@ func NewRoute(
 	lessonGroupHandler.GET("/all", lessonHandler.GetAllLessons)
 	lessonGroupHandler.PUT("/:id", lessonHandler.UpdateLesson)
 	lessonGroupHandler.DELETE("/:id", lessonHandler.DeleteLesson)
+
+	progressGroupHandler := router.Group("progress")
+	progressGroupHandler.Use(middleware.AuthRequire)
+	progressGroupHandler.POST("/update", progressHandler.UpdateProgress)
+	progressGroupHandler.GET("/all", progressHandler.GetAllProgress)
 
 	router.Run(":3000") // Use PORT from environment variable, default to 8080 if not set
 }

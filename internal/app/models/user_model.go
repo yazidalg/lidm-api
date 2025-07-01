@@ -22,4 +22,5 @@ type User struct {
 	// Relationships
 	Leaderboard  Leaderboard   `gorm:"foreignKey:UserID"`
 	Participants []Participant `gorm:"foreignKey:UserID"`
+	Progress     Progress      `gorm:"foreignKey:UserID"`
 }

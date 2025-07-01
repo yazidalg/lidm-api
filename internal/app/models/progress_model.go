@@ -14,6 +14,6 @@ type Progress struct {
 	CompletedAt *time.Time // Timestamp when the lesson was completed
 
 	// Relationships
-	User   User   `gorm:"foreignKey:UserID"`   // Relationship to User
-	Lesson Lesson `gorm:"foreignKey:LessonID"` // Relationship to Lesson
+	User   *User   `gorm:"foreignKey:UserID"`   // Relationship to User
+	Lesson *Lesson `gorm:"foreignKey:LessonID"` // Relationship to Lesson
 }

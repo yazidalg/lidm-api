@@ -87,3 +87,19 @@ func NewBuildLesson(db *gorm.DB) *handlers.LessonHandler {
 	lessonHandler := handlers.NewLessonHandler(lessonService, moduleService)
 	return lessonHandler
 }
+
+func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
+	moduleRepository := repositories.NewModuleRepository(db)
+
+	userRepository := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepository)
+
+	lessonRepository := repositories.NewLessonRepository(db)
+	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
+
+	progressRepository := repositories.NewProgressRepository(db)
+	progressService := services.NewProgressService(progressRepository, userRepository, lessonRepository)
+	progressHandler := handlers.NewProgressHandler(progressService, userService, lessonService)
+
+	return progressHandler
+}
