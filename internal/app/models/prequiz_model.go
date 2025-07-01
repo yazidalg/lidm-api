@@ -4,11 +4,12 @@ import "gorm.io/gorm"
 
 type Prequiz struct {
 	gorm.Model
-	CourseID      uint    `gorm:"not null;index"` // Foreign key to Course
-	ModuleID      uint    `gorm:"not null;index"` // Foreign key to Module
-	Options       Options `gorm:"type:text"`      // JSON string containing quiz options
-	CorrectAnswer string  `gorm:"not null"`       // Correct answer for the quiz
-	Explanation   string  `gorm:"type:text"`      // Explanation for the correct answer
+	LessonID      uint    `gorm:"not null;index"` // Foreign key to Course
+	UserID        uint    `gorm:"not null;index"` // Foreign key to User
+	Question      string  `gorm:"not null"`       // Quiz question
+	Options       Options `gorm:"embedded;"`
+	CorrectAnswer string  `gorm:"not null"`  // Correct answer for the quiz
+	Explanation   string  `gorm:"type:text"` // Explanation for the correct answer
 
-	Module *Module `gorm:"foreignKey:ModuleID"` // Relationship to Module
+	Lesson *Lesson `gorm:"foreignKey:LessonID"` // Relationship to Lesson
 }
