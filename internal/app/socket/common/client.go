@@ -1,4 +1,4 @@
-package socket
+package common
 
 import (
 	"encoding/json"
@@ -30,9 +30,13 @@ type Client struct {
 	// Room tempat client ini berada.
 	Room string
 
-	UserID   uint         // ID pengguna yang terhubung
-	Username string       // Nama pengguna yang terhubung
-	Session  *QuizSession // Sesi quiz yang terkait dengan client ini
+	UserID      uint   // ID pengguna yang terhubung
+	Username    string // Nama pengguna yang terhubung
+	RightAnswer uint
+	WrongAnswer uint
+
+	// Session can be either QuizSession or PrequizSession
+	Session Session
 }
 
 // readPump bertugas membaca pesan dari koneksi WebSocket dan mengirimkannya ke Hub.

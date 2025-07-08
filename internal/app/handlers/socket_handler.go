@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
-	"github.com/yazidalg/lidm_backend/internal/app/socket"
+	"github.com/yazidalg/lidm_backend/internal/app/socket/common"
 )
 
-// Upgrader untuk mengubah koneksi HTTP menjadi WebSocket.
+// Upgrader untuk mengubah koneksi HTTP menjadi Webcommon.
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -22,16 +22,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// SocketHandler menangani logika terkait WebSocket.
+// SocketHandler menangani logika terkait Webcommon.
 type SocketHandler struct {
-	hub *socket.Hub
+	hub *common.Hub
 }
 
-func NewSocketHandler(hub *socket.Hub) *SocketHandler {
+func NewSocketHandler(hub *common.Hub) *SocketHandler {
 	return &SocketHandler{hub: hub}
 }
 
-// ServeWs adalah handler Gin untuk endpoint WebSocket.
+// ServeWs adalah handler Gin untuk endpoint Webcommon.
 // Ia akan meng-upgrade koneksi dan mendaftarkan client ke Hub.
 func (h *SocketHandler) ServeWs(c *gin.Context) {
 	// Ekstrak nama room dari URL.
@@ -50,7 +50,7 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 		return
 	}
 
-	// Upgrade koneksi HTTP ke WebSocket.
+	// Upgrade koneksi HTTP ke Webcommon.
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection for room %s: %v", roomName, err)
@@ -59,10 +59,10 @@ func (h *SocketHandler) ServeWs(c *gin.Context) {
 	}
 
 	// Buat client baru.
-	client := &socket.Client{
+	client := &common.Client{
 		Hub:  h.hub,
 		Conn: conn,
-		Send: make(chan *socket.Message, 256), // Buffered channel
+		Send: make(chan *common.Message, 256), // Buffered channel
 		Room: roomName,
 	}
 
@@ -99,10 +99,10 @@ func (h *SocketHandler) MatchMaking(c *gin.Context) {
 		return
 	}
 
-	client := &socket.Client{
+	client := &common.Client{
 		Hub:      h.hub,
 		Conn:     conn,
-		Send:     make(chan *socket.Message, 256), // Buffered channel
+		Send:     make(chan *common.Message, 256), // Buffered channel
 		Room:     roomName,
 		UserID:   user.ID,
 		Username: user.Name,
@@ -138,10 +138,10 @@ func (h *SocketHandler) PreQuiz(c *gin.Context) {
 
 	roomName := fmt.Sprintf("prequiz-%d", user.ID)
 
-	client := &socket.Client{
+	client := &common.Client{
 		Hub:      h.hub,
 		Conn:     conn,
-		Send:     make(chan *socket.Message, 256), // Buffered channel
+		Send:     make(chan *common.Message, 256), // Buffered channel
 		Room:     roomName,
 		UserID:   user.ID,
 		Username: user.Name,

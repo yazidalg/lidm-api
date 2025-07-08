@@ -1,4 +1,4 @@
-package socket
+package common
 
 import (
 	"encoding/json"
@@ -11,6 +11,28 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
+
+// Session interface for both quiz and prequiz sessions
+type Session interface {
+	GetState() string
+	GetAnswersChannel() chan *AnswerEvent
+}
+
+// QuizSessionInterface for quiz sessions
+type QuizSessionInterface interface {
+	Session
+	RunQuizLoop()
+}
+
+// PrequizSessionInterface for prequiz sessions
+type PrequizSessionInterface interface {
+	Session
+	RunPrequizLoop()
+}
+
+// Factory functions for creating sessions
+type QuizSessionFactory func(hub *Hub, roomName string, players []*Client, questions []models.Question, participants []*models.Participant, quizID uint) QuizSessionInterface
+type PrequizSessionFactory func(hub *Hub, roomName string, player *Client, questions []models.Prequiz) PrequizSessionInterface
 
 // Hub mengelola semua room, client, dan meneruskan pesan.
 type Hub struct {
@@ -40,7 +62,13 @@ type Hub struct {
 	QuizService        services.QuizServiceInterface
 	PreQuizService     services.PrequizServiceInterface
 	ParticipantService services.ParticipantServiceInterface
-	QuizSession        map[string]*QuizSession // Menyimpan sesi quiz untuk setiap room
+
+	QuizSession    map[string]QuizSessionInterface    // Menyimpan sesi quiz untuk setiap room pada mode 1 vs 1
+	PrequizSession map[string]PrequizSessionInterface // Menyimpan sesi pre-quiz untuk setiap room pada mode pre-quiz
+
+	// Factory functions for creating sessions
+	QuizSessionFactory    QuizSessionFactory
+	PrequizSessionFactory PrequizSessionFactory
 }
 
 // NewHub membuat instance Hub baru.
@@ -49,19 +77,24 @@ func NewHub(
 	quizService services.QuizServiceInterface,
 	participantService services.ParticipantServiceInterface,
 	prequizService services.PrequizServiceInterface,
+	quizSessionFactory QuizSessionFactory,
+	prequizSessionFactory PrequizSessionFactory,
 ) *Hub {
 	return &Hub{
 		Message:    make(chan Message),
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 		// Kita menggunakan map[*Client]bool sebagai 'set' untuk efisiensi.
-		Rooms:              make(map[string]map[*Client]bool),
-		RoomNumber:         1,
-		QuestionService:    questionService,
-		QuizService:        quizService,
-		ParticipantService: participantService,
-		PreQuizService:     prequizService,
-		QuizSession:        make(map[string]*QuizSession),
+		Rooms:                 make(map[string]map[*Client]bool),
+		RoomNumber:            1,
+		QuestionService:       questionService,
+		QuizService:           quizService,
+		ParticipantService:    participantService,
+		PreQuizService:        prequizService,
+		QuizSession:           make(map[string]QuizSessionInterface),
+		PrequizSession:        make(map[string]PrequizSessionInterface),
+		QuizSessionFactory:    quizSessionFactory,
+		PrequizSessionFactory: prequizSessionFactory,
 	}
 }
 
@@ -105,19 +138,11 @@ func (h *Hub) Run() {
 					continue
 				}
 
-				session := &QuizSession{
-					Hub:                  h,
-					RoomName:             roomName,
-					State:                "waiting",
-					Answers:              make(chan *AnswerEvent, 100), // Buffer untuk jawaban
-					PrequizQuestion:      prequizQuestion,
-					CurrentQuestionIndex: 0,
-				}
-
-				h.QuizSession[roomName] = session
+				session := h.PrequizSessionFactory(h, roomName, client, prequizQuestion)
+				h.PrequizSession[roomName] = session
 				client.Session = session
 
-				go session.RunGameLoop()
+				go session.RunPrequizLoop()
 
 			} else if len(h.Rooms[roomName]) == 2 {
 				getQuestion, err := h.QuestionService.GetRandomQuestion(3)
@@ -172,25 +197,14 @@ func (h *Hub) Run() {
 					continue
 				}
 
-				session := &QuizSession{
-					Hub:           h,
-					RoomName:      roomName,
-					Players:       players,
-					Questions:     *getQuestion,
-					QuizID:        newQuiz.ID,
-					State:         "waiting",
-					Answers:       make(chan *AnswerEvent, 10), // Buffer untuk jawaban
-					PlayerAnswers: make(map[*Client]bool),
-					PlayerScores:  make(map[*Client]int),
-				}
-
+				session := h.QuizSessionFactory(h, roomName, players, *getQuestion, participants, newQuiz.ID)
 				h.QuizSession[roomName] = session
 
 				for _, player := range players {
 					player.Session = session
 				}
 
-				go session.RunGameLoop()
+				go session.RunQuizLoop()
 			}
 
 			h.Mu.Unlock()
@@ -245,8 +259,8 @@ func (h *Hub) Run() {
 					continue
 				}
 
-				if msg.Sender.Session.State == "running" {
-					msg.Sender.Session.Answers <- &AnswerEvent{
+				if msg.Sender.Session.GetState() == "running" {
+					msg.Sender.Session.GetAnswersChannel() <- &AnswerEvent{
 						Player:  msg.Sender,
 						Payload: payload,
 					}

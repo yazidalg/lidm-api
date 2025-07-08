@@ -1,4 +1,4 @@
-package socket
+package common
 
 import (
 	"encoding/json"
@@ -48,6 +48,17 @@ type AnswerPayload struct {
 }
 
 type PrequizCompletedPayload struct {
-	FinalScores map[string]int `json:"final_scores"` // Skor akhir untuk setiap pemain
-	Message     string         `json:"message"`      // Pesan yang ditampilkan saat prequiz selesai
+	FinalScores map[string]uint `json:"final_scores"` // Skor akhir untuk setiap pemain
+	Message     string          `json:"message"`      // Pesan yang ditampilkan saat prequiz selesai
+}
+
+// AnswerEvent adalah event yang dikirim ketika pemain menjawab pertanyaan
+type AnswerEvent struct {
+	Player  *Client
+	Payload AnswerPayload
+}
+
+type AnsweredPreQuizEvent struct {
+	ID        uint `json:"question_id"` // ID pertanyaan yang dijawab
+	IsCorrect bool `json:"is_correct"`  // Apakah jawaban benar
 }

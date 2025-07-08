@@ -1,13 +1,13 @@
-package socket
+package quiz
 
 import (
 	"encoding/json"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"github.com/yazidalg/lidm_backend/internal/app/socket/common"
 )
 
 // Inisialisasi Score untuk setiap pemain
@@ -21,7 +21,7 @@ func (s *QuizSession) InitializeScores() {
 func (s *QuizSession) SendQuestion(question *models.Question) {
 	log.Printf("Room '%s': Mengirim pertanyaan #%d", s.RoomName, s.CurrentQuestionIndex+1)
 	questionPayload, _ := json.Marshal(question)
-	s.Hub.BroadcastToRoom(Message{Action: "question", Payload: questionPayload, Target: s.RoomName})
+	s.Hub.BroadcastToRoom(common.Message{Action: "question", Payload: questionPayload, Target: s.RoomName})
 	s.QuestionStartTime = time.Now()
 }
 
@@ -47,7 +47,7 @@ questionLoop:
 	}
 }
 
-func (s *QuizSession) AnswerProcess(answerEvent *AnswerEvent, currentQuestion *models.Question) {
+func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQuestion *models.Question) {
 	if _, answered := s.PlayerAnswers[answerEvent.Player]; answered {
 		log.Printf("Player '%s' sudah menjawab pertanyaan #%d", answerEvent.Player.Username, s.CurrentQuestionIndex+1)
 		return
@@ -61,9 +61,9 @@ func (s *QuizSession) AnswerProcess(answerEvent *AnswerEvent, currentQuestion *m
 	}
 
 	resultPayload, _ := json.Marshal(map[string]interface{}{"is_correct": isCorrect, "your_score": s.PlayerScores[answerEvent.Player]})
-	s.Hub.BroadcastToRoom(Message{Action: "answer_result", Payload: resultPayload, Target: s.RoomName})
+	s.Hub.BroadcastToRoom(common.Message{Action: "answer_result", Payload: resultPayload, Target: s.RoomName})
 
-	answeredEvent := &AnsweredQuestionEvent{
+	answeredEvent := &common.AnsweredQuestionEvent{
 		QuestionID: currentQuestion.ID,
 		UserID:     answerEvent.Payload.UserID,
 		Score:      s.PlayerScores[answerEvent.Player],
@@ -71,7 +71,7 @@ func (s *QuizSession) AnswerProcess(answerEvent *AnswerEvent, currentQuestion *m
 	}
 
 	answeredEventBytes, _ := json.Marshal(answeredEvent)
-	s.Hub.BroadcastToRoom(Message{Action: "answered_question", Payload: answeredEventBytes, Target: s.RoomName})
+	s.Hub.BroadcastToRoom(common.Message{Action: "answered_question", Payload: answeredEventBytes, Target: s.RoomName})
 }
 
 // concludeQuestion mengirimkan rangkuman akhir dari sebuah pertanyaan.
@@ -80,51 +80,12 @@ func (s *QuizSession) ConcludeQuestion(question *models.Question) {
 		"message":        "Waktu habis atau semua pemain telah menjawab.",
 		"correct_answer": question.CorrectAnswer,
 	})
-	s.Hub.BroadcastToRoom(Message{Action: "question_ended", Payload: payload, Target: s.RoomName})
+	s.Hub.BroadcastToRoom(common.Message{Action: "question_ended", Payload: payload, Target: s.RoomName})
 }
 
 func (s *QuizSession) ConcludeQuiz() {
 	s.State = "finished"
 	log.Printf("Quiz di room '%s' (ID: %d) selesai! Menyimpan hasil...", s.RoomName, s.QuizID)
-
-	if strings.HasPrefix(s.RoomName, "prequiz-") {
-		s.PrequizPlayerQuestion()
-	} else {
-		s.MultiplayerQuestion()
-	}
-
-	s.Hub.RemoveSession(s.RoomName)
-}
-
-func (s *QuizSession) PrequizPlayerQuestion() {
-
-	log.Printf("Prequiz di room '%s': Memulai sesi prequiz", s.RoomName)
-	finalScores := make(map[string]int)
-
-	var finalScore int
-
-	for player, score := range s.PlayerScores {
-		finalScores[player.Username] = score
-		finalScore += score
-	}
-
-	completedPayload := PrequizCompletedPayload{
-		FinalScores: finalScores,
-		Message:     "Prequiz Selesai!",
-	}
-
-	completedPayloadBytes, _ := json.Marshal(completedPayload)
-	quizFinishMessage := Message{
-		Action:  "prequiz_completed",
-		Payload: completedPayloadBytes,
-		Target:  s.RoomName,
-	}
-
-	s.Hub.BroadcastToRoom(quizFinishMessage)
-
-}
-
-func (s *QuizSession) MultiplayerQuestion() {
 
 	finalScores := make(map[string]int)
 	winnerUsername := "Seri"
@@ -183,13 +144,14 @@ func (s *QuizSession) MultiplayerQuestion() {
 	}
 
 	// Kirim pesan ke client
-	completedPayload := QuizCompletedPayload{
+	completedPayload := common.QuizCompletedPayload{
 		FinalScores: finalScores,
 		Winner:      winnerUsername,
 		Message:     "Permainan Selesai!",
 	}
 	completedPayloadBytes, _ := json.Marshal(completedPayload)
 
-	quizFinishMessage := Message{Action: "quiz_completed", Payload: completedPayloadBytes, Target: s.RoomName}
+	quizFinishMessage := common.Message{Action: "quiz_completed", Payload: completedPayloadBytes, Target: s.RoomName}
 	s.Hub.BroadcastToRoom(quizFinishMessage)
+	s.Hub.RemoveSession(s.RoomName)
 }

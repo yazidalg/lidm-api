@@ -2,9 +2,12 @@ package helpers
 
 import (
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
+	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
-	"github.com/yazidalg/lidm_backend/internal/app/socket"
+	"github.com/yazidalg/lidm_backend/internal/app/socket/common"
+	"github.com/yazidalg/lidm_backend/internal/app/socket/prequiz"
+	"github.com/yazidalg/lidm_backend/internal/app/socket/quiz"
 	"gorm.io/gorm"
 )
 
@@ -64,7 +67,16 @@ func NewBuildSocket(
 	participantService services.ParticipantServiceInterface,
 	prequizService services.PrequizServiceInterface,
 ) *handlers.SocketHandler {
-	hub := socket.NewHub(questionService, quizService, participantService, prequizService)
+	// Factory functions
+	quizSessionFactory := func(hub *common.Hub, roomName string, players []*common.Client, questions []models.Question, participants []*models.Participant, quizID uint) common.QuizSessionInterface {
+		return quiz.NewQuizSession(hub, roomName, players, questions, participants, quizID)
+	}
+
+	prequizSessionFactory := func(hub *common.Hub, roomName string, player *common.Client, questions []models.Prequiz) common.PrequizSessionInterface {
+		return prequiz.NewPrequizSession(hub, roomName, player, questions)
+	}
+
+	hub := common.NewHub(questionService, quizService, participantService, prequizService, quizSessionFactory, prequizSessionFactory)
 	go hub.Run() // Jalankan Hub sebagai goroutine
 
 	// Daftarkan handler WebSocket
