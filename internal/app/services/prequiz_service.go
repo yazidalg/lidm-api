@@ -35,7 +35,6 @@ func (s *prequizService) CreatePrequiz(prequiz request.PrequizRequest) (*models.
 
 	prequizModel := models.Prequiz{
 		LessonID:      prequiz.LessonID,
-		UserID:        prequiz.UserID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,
@@ -57,7 +56,6 @@ func (s *prequizService) UpdatePrequiz(id uint, prequiz request.PrequizRequest) 
 
 	prequizModel := models.Prequiz{
 		LessonID:      prequiz.LessonID,
-		UserID:        prequiz.UserID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,

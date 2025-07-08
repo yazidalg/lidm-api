@@ -38,7 +38,7 @@ func (r *prequizRepository) CreatePrequiz(prequiz *models.Prequiz) (*models.Preq
 func (r *prequizRepository) GetPrequizByID(id uint) (*models.Prequiz, error) {
 	var prequiz models.Prequiz
 
-	err := r.db.Preload("User").Preload("Lesson").First(&prequiz, id).Error
+	err := r.db.Preload("Lesson").First(&prequiz, id).Error
 	if err != nil {
 		return nil, err // Other error
 	}
@@ -49,7 +49,7 @@ func (r *prequizRepository) GetPrequizByID(id uint) (*models.Prequiz, error) {
 func (r *prequizRepository) GetAllPrequizzes() ([]models.Prequiz, error) {
 	var prequizzes []models.Prequiz
 
-	err := r.db.Preload("User").Preload("Lesson").Find(&prequizzes).Error
+	err := r.db.Preload("Lesson").Find(&prequizzes).Error
 	if err != nil {
 		return nil, err // Other error
 	}

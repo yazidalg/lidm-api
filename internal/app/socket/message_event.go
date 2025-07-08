@@ -46,3 +46,8 @@ type AnswerPayload struct {
 	UserID         uint   `json:"user_id"`
 	OptionSelected string `json:"option_selected"`
 }
+
+type PrequizCompletedPayload struct {
+	FinalScores map[string]int `json:"final_scores"` // Skor akhir untuk setiap pemain
+	Message     string         `json:"message"`      // Pesan yang ditampilkan saat prequiz selesai
+}

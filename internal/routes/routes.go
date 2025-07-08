@@ -18,6 +18,7 @@ func NewRoute(
 	moduleHandler *handlers.ModuleHandler,
 	lessonHandler *handlers.LessonHandler,
 	progressHandler *handlers.ProgressHandler,
+	prequizHandler *handlers.PrequizHandler,
 ) {
 	router := gin.Default()
 
@@ -79,6 +80,7 @@ func NewRoute(
 	socketGroupHandler.Use(middleware.AuthRequire)
 	socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
 	socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
+	socketGroupHandler.GET("/prequiz", socketHandler.PreQuiz)
 
 	moduleGroupHandler := router.Group("module")
 	moduleGroupHandler.Use(middleware.AuthRequire)
@@ -101,6 +103,13 @@ func NewRoute(
 	progressGroupHandler.POST("/create", progressHandler.CreateProgress)
 	progressGroupHandler.PUT("/:id", progressHandler.UpdateProgress)
 	progressGroupHandler.GET("/all", progressHandler.GetAllProgress)
+
+	prequizGroupHandler := router.Group("prequiz")
+	prequizGroupHandler.Use(middleware.AuthRequire)
+	prequizGroupHandler.POST("/create", prequizHandler.CreatePrequiz)
+	prequizGroupHandler.GET("/:id", prequizHandler.GetPrequizByID)
+	prequizGroupHandler.GET("/all", prequizHandler.GetAllPrequizzes)
+	prequizGroupHandler.PUT("/:id", prequizHandler.UpdatePrequiz)
 
 	router.Run(":3000") // Use PORT from environment variable, default to 8080 if not set
 }

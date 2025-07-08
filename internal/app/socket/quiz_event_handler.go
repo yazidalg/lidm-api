@@ -3,6 +3,7 @@ package socket
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -86,6 +87,45 @@ func (s *QuizSession) ConcludeQuiz() {
 	s.State = "finished"
 	log.Printf("Quiz di room '%s' (ID: %d) selesai! Menyimpan hasil...", s.RoomName, s.QuizID)
 
+	if strings.HasPrefix(s.RoomName, "prequiz-") {
+		s.PrequizPlayerQuestion()
+	} else {
+		s.MultiplayerQuestion()
+	}
+
+	s.Hub.RemoveSession(s.RoomName)
+}
+
+func (s *QuizSession) PrequizPlayerQuestion() {
+
+	log.Printf("Prequiz di room '%s': Memulai sesi prequiz", s.RoomName)
+	finalScores := make(map[string]int)
+
+	var finalScore int
+
+	for player, score := range s.PlayerScores {
+		finalScores[player.Username] = score
+		finalScore += score
+	}
+
+	completedPayload := PrequizCompletedPayload{
+		FinalScores: finalScores,
+		Message:     "Prequiz Selesai!",
+	}
+
+	completedPayloadBytes, _ := json.Marshal(completedPayload)
+	quizFinishMessage := Message{
+		Action:  "prequiz_completed",
+		Payload: completedPayloadBytes,
+		Target:  s.RoomName,
+	}
+
+	s.Hub.BroadcastToRoom(quizFinishMessage)
+
+}
+
+func (s *QuizSession) MultiplayerQuestion() {
+
 	finalScores := make(map[string]int)
 	winnerUsername := "Seri"
 	var winnerID *uint
@@ -152,6 +192,4 @@ func (s *QuizSession) ConcludeQuiz() {
 
 	quizFinishMessage := Message{Action: "quiz_completed", Payload: completedPayloadBytes, Target: s.RoomName}
 	s.Hub.BroadcastToRoom(quizFinishMessage)
-
-	s.Hub.RemoveSession(s.RoomName)
 }

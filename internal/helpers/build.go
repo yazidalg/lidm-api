@@ -62,8 +62,9 @@ func NewBuildSocket(
 	questionService services.QuestionServiceInterface,
 	quizService services.QuizServiceInterface,
 	participantService services.ParticipantServiceInterface,
+	prequizService services.PrequizServiceInterface,
 ) *handlers.SocketHandler {
-	hub := socket.NewHub(questionService, quizService, participantService)
+	hub := socket.NewHub(questionService, quizService, participantService, prequizService)
 	go hub.Run() // Jalankan Hub sebagai goroutine
 
 	// Daftarkan handler WebSocket
@@ -102,4 +103,20 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	progressHandler := handlers.NewProgressHandler(progressService, userService, lessonService)
 
 	return progressHandler
+}
+
+func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizServiceInterface) {
+	moduleRepository := repositories.NewModuleRepository(db)
+
+	prequizRepository := repositories.NewPrequizRepository(db)
+
+	lessonRepository := repositories.NewLessonRepository(db)
+	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
+
+	userRepository := repositories.NewUserRepository(db)
+
+	prequizService := services.NewPrequizService(prequizRepository, lessonRepository, userRepository)
+	prequizHandler := handlers.NewPrequizHandler(prequizService, lessonService, userRepository)
+
+	return prequizHandler, prequizService
 }

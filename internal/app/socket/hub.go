@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -37,6 +38,7 @@ type Hub struct {
 
 	QuestionService    services.QuestionServiceInterface
 	QuizService        services.QuizServiceInterface
+	PreQuizService     services.PrequizServiceInterface
 	ParticipantService services.ParticipantServiceInterface
 	QuizSession        map[string]*QuizSession // Menyimpan sesi quiz untuk setiap room
 }
@@ -46,6 +48,7 @@ func NewHub(
 	questionService services.QuestionServiceInterface,
 	quizService services.QuizServiceInterface,
 	participantService services.ParticipantServiceInterface,
+	prequizService services.PrequizServiceInterface,
 ) *Hub {
 	return &Hub{
 		Message:    make(chan Message),
@@ -57,6 +60,7 @@ func NewHub(
 		QuestionService:    questionService,
 		QuizService:        quizService,
 		ParticipantService: participantService,
+		PreQuizService:     prequizService,
 		QuizSession:        make(map[string]*QuizSession),
 	}
 }
@@ -93,7 +97,29 @@ func (h *Hub) Run() {
 
 			h.BroadcastToRoom(joinMessage)
 
-			if len(h.Rooms[roomName]) == 2 {
+			if strings.HasPrefix(roomName, "prequiz-") {
+				prequizQuestion, err := h.PreQuizService.GetAllPrequizzes()
+				if err != nil || len(prequizQuestion) == 0 {
+					log.Printf("Gagal mendapatkan pertanyaan pre-quiz: %v", err)
+					h.Mu.Unlock()
+					continue
+				}
+
+				session := &QuizSession{
+					Hub:                  h,
+					RoomName:             roomName,
+					State:                "waiting",
+					Answers:              make(chan *AnswerEvent, 100), // Buffer untuk jawaban
+					PrequizQuestion:      prequizQuestion,
+					CurrentQuestionIndex: 0,
+				}
+
+				h.QuizSession[roomName] = session
+				client.Session = session
+
+				go session.RunGameLoop()
+
+			} else if len(h.Rooms[roomName]) == 2 {
 				getQuestion, err := h.QuestionService.GetRandomQuestion(3)
 				if err != nil || len(*getQuestion) < 3 {
 					log.Printf("Gagal mendapatkan pertanyaan untuk room '%s': %v", roomName, err)

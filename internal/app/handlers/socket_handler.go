@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -97,6 +98,45 @@ func (h *SocketHandler) MatchMaking(c *gin.Context) {
 		log.Printf("Failed to upgrade connection for matchmaking: %v", err)
 		return
 	}
+
+	client := &socket.Client{
+		Hub:      h.hub,
+		Conn:     conn,
+		Send:     make(chan *socket.Message, 256), // Buffered channel
+		Room:     roomName,
+		UserID:   user.ID,
+		Username: user.Name,
+	}
+
+	client.Hub.Register <- client
+
+	go client.WritePump()
+	go client.ReadPump()
+}
+
+func (h *SocketHandler) PreQuiz(c *gin.Context) {
+	userVal, exists := c.Get("user")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
+		return
+	}
+
+	user, ok := userVal.(models.User)
+
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user data"})
+		return
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+
+	if err != nil {
+		log.Printf("Failed to upgrade connection for prequiz: %v", err)
+		return
+	}
+
+	roomName := fmt.Sprintf("prequiz-%d", user.ID)
 
 	client := &socket.Client{
 		Hub:      h.hub,

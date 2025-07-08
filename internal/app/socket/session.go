@@ -14,6 +14,7 @@ type QuizSession struct {
 	Players              []*Client
 	Questions            []models.Question
 	Participants         []*models.Participant
+	PrequizQuestion      []models.Prequiz
 	QuizID               uint
 	CurrentQuestionIndex int
 	State                string

@@ -39,8 +39,7 @@ func (h *PrequizHandler) CreatePrequiz(c *gin.Context) {
 	}
 
 	lesson, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
-	user, userErr := h.userService.GetUserById(int(request.UserID))
-	if lessonErr != nil || userErr != nil || lesson == nil || user.ID == 0 || lesson.ID == 0 {
+	if lessonErr != nil || lesson == nil || lesson.ID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Lesson or user not found",
 			"error":   "Failed to create prequiz",
@@ -114,8 +113,7 @@ func (h *PrequizHandler) UpdatePrequiz(c *gin.Context) {
 	}
 
 	lesson, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
-	user, userErr := h.userService.GetUserById(int(request.UserID))
-	if lessonErr != nil || userErr != nil || lesson == nil || user.ID == 0 {
+	if lessonErr != nil || lesson == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Lesson or user not found",
 			"error":   "Failed to update prequiz",
