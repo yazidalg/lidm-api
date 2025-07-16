@@ -36,6 +36,22 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	// Validasi role
+	if body.Role != "" && body.Role != "user" && body.Role != "admin" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid role. Must be 'user' or 'admin'",
+		})
+		return
+	}
+
+	// Validasi class - hanya wajib untuk user biasa, admin boleh kosong
+	if body.Role != "admin" && body.Class == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Class is required for user role",
+		})
+		return
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
 	if err != nil {
@@ -50,7 +66,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		Email:    body.Email,
 		Password: string(hash),
 		Class:    body.Class,
-		Role:     body.Role,
+		RoleName: body.Role, // Pass role ke request
 	}
 
 	result, err := h.authService.RegisterUser(user)

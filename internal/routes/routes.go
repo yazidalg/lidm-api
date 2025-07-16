@@ -20,6 +20,7 @@ func NewRoute(
 	progressHandler *handlers.ProgressHandler,
 	prequizHandler *handlers.PrequizHandler,
 	authMiddleware *middleware.AuthMiddleware,
+	roleHandler *handlers.RoleHandler,
 ) {
 	router := gin.Default()
 
@@ -209,8 +210,16 @@ func NewRoute(
 	adminGroup.Use(authMiddleware.RequireAdmin)
 	{
 		// User management untuk admin
-		adminGroup.GET("/users", userHandler.GetAllUsers)             // Perlu dibuat handler ini
-		adminGroup.PUT("/users/:id/role", userHandler.UpdateUserRole) // Perlu dibuat handler ini
+		adminGroup.GET("/users", userHandler.GetAllUsers)
+		adminGroup.PUT("/users/:id/role", userHandler.UpdateUserRole)
+		adminGroup.DELETE("/users/:id", userHandler.DeleteUser)
+
+		// Role management untuk admin
+		adminGroup.GET("/roles", roleHandler.GetAllRoles)
+		adminGroup.POST("/roles", roleHandler.CreateRole)
+		adminGroup.GET("/roles/:id", roleHandler.GetRoleById)
+		adminGroup.PUT("/roles/:id", roleHandler.UpdateRole)
+		adminGroup.DELETE("/roles/:id", roleHandler.DeleteRole)
 	}
 
 	router.Run(":3000")

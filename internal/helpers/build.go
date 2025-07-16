@@ -14,14 +14,18 @@ import (
 
 func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 	userRepository := repositories.NewUserRepository(db)
-	userService := services.NewUserService(userRepository)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	userService := services.NewUserService(userRepository, roleService)
 	userHandler := handlers.NewUserHandler(userService)
 	return userHandler
 }
 
 func NewBuildAuth(db *gorm.DB) *handlers.AuthHandler {
 	authRepository := repositories.NewAuthRepository(db)
-	authService := services.NewAuthService(authRepository)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	authService := services.NewAuthService(authRepository, roleService)
 	authHandler := handlers.NewAuthHandler(authService)
 	return authHandler
 }
@@ -106,7 +110,9 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	moduleRepository := repositories.NewModuleRepository(db)
 
 	userRepository := repositories.NewUserRepository(db)
-	userService := services.NewUserService(userRepository)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	lessonRepository := repositories.NewLessonRepository(db)
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
@@ -127,16 +133,28 @@ func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizSer
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 
 	userRepository := repositories.NewUserRepository(db)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	prequizService := services.NewPrequizService(prequizRepository, lessonRepository, userRepository)
-	prequizHandler := handlers.NewPrequizHandler(prequizService, lessonService, userRepository)
+	prequizHandler := handlers.NewPrequizHandler(prequizService, lessonService, userService)
 
 	return prequizHandler, prequizService
 }
 
 func NewBuildAuthMiddleware(db *gorm.DB) *middleware.AuthMiddleware {
 	authRepository := repositories.NewAuthRepository(db)
-	authService := services.NewAuthService(authRepository)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	authService := services.NewAuthService(authRepository, roleService)
 	authMiddleware := middleware.NewAuthMiddleware(authService)
 	return authMiddleware
+}
+
+func NewBuildRole(db *gorm.DB) *handlers.RoleHandler {
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	roleHandler := handlers.NewRoleHandler(roleService)
+	return roleHandler
 }

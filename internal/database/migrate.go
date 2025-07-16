@@ -8,6 +8,7 @@ import (
 func Migrate(db *gorm.DB) error {
 	// Migrate the database schema
 	if err := db.AutoMigrate(
+		&models.Role{}, // Add Role first since User depends on it
 		&models.User{},
 		&models.Module{},
 		&models.Quiz{},
@@ -20,6 +21,11 @@ func Migrate(db *gorm.DB) error {
 		&models.Progress{},
 		&models.Prequiz{},
 	); err != nil {
+		return err
+	}
+
+	// Seed default roles
+	if err := models.SeedRoles(db); err != nil {
 		return err
 	}
 

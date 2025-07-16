@@ -33,7 +33,13 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		tokenString = authHeader[7:] // Remove "Bearer " prefix
+
+		// Remove "Bearer " prefix
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			tokenString = authHeader[7:]
+		} else {
+			tokenString = authHeader
+		}
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

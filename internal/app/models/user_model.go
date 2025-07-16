@@ -16,11 +16,12 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	TotalXP           int32
-	Role              string    `gorm:"default:'user'"` // Default role is 'user', can be 'admin' or 'superadmin'
+	RoleID            uint      `gorm:"not null;default:1"` // Foreign key to Role
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
 
 	// Relationships
+	Role         Role          `gorm:"foreignKey:RoleID" json:"role"`
 	Leaderboard  Leaderboard   `gorm:"foreignKey:UserID"`
 	Participants []Participant `gorm:"foreignKey:UserID"`
 	Progress     Progress      `gorm:"foreignKey:UserID"`
@@ -32,9 +33,9 @@ const (
 )
 
 func (u *User) IsAdmin() bool {
-	return u.Role == RoleAdmin
+	return u.Role.Name == RoleAdmin
 }
 
 func (u *User) IsUser() bool {
-	return u.Role == RoleUser
+	return u.Role.Name == RoleUser
 }

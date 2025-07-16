@@ -20,21 +20,37 @@ type AuthServiceInterface interface {
 
 type authService struct {
 	authRepository repositories.AuthRepositoryInterface
+	roleService    RoleServiceInterface
 }
 
-func NewAuthService(authRepository repositories.AuthRepositoryInterface) *authService {
-	return &authService{authRepository}
+func NewAuthService(authRepository repositories.AuthRepositoryInterface, roleService RoleServiceInterface) *authService {
+	return &authService{authRepository, roleService}
 }
 
 func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.User, error) {
 	token := utils.GenerateToken()
+
+	// Get role by name, default to 'user' if not provided
+	roleName := user.RoleName
+	if roleName == "" {
+		roleName = models.RoleUserName
+	}
+
+	role, err := s.roleService.GetRoleByName(roleName)
+	if err != nil {
+		// If role not found, use default user role
+		role, err = s.roleService.GetRoleByName(models.RoleUserName)
+		if err != nil {
+			return models.User{}, err
+		}
+	}
 
 	userData := models.User{
 		Name:              user.Name,
 		Email:             user.Email,
 		Class:             user.Class,
 		Password:          user.Password,
-		Role:              user.Role,
+		RoleID:            role.ID, // Use role ID instead of role string
 		IsVerified:        false,
 		VerificationToken: token,
 		Point:             0,

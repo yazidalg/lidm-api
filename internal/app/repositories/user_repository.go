@@ -8,7 +8,8 @@ import (
 type UserRepositoryInterface interface {
 	GetUserById(id int) (models.User, error)
 	GetAllUsers() ([]models.User, error)
-	UpdateUserRole(userID uint, role string) (models.User, error)
+	UpdateUserRole(userID uint, roleID uint) (models.User, error)
+	DeleteUser(userID uint) error
 }
 
 type userRepository struct {
@@ -18,15 +19,24 @@ type userRepository struct {
 // GetAllUsers implements UserRepositoryInterface.
 func (r *userRepository) GetAllUsers() ([]models.User, error) {
 	var users []models.User
-	err := r.db.Find(&users).Error
+	err := r.db.Preload("Role").Find(&users).Error
 	return users, err
 }
 
 // UpdateUserRole implements UserRepositoryInterface.
-func (r *userRepository) UpdateUserRole(userID uint, role string) (models.User, error) {
+func (r *userRepository) UpdateUserRole(userID uint, roleID uint) (models.User, error) {
 	var user models.User
-	err := r.db.Model(&user).Where("id = ?", userID).Update("role", role).Error
+	err := r.db.Model(&user).Where("id = ?", userID).Update("role_id", roleID).Error
+	if err != nil {
+		return user, err
+	}
+	// Fetch updated user with role
+	err = r.db.Preload("Role").First(&user, userID).Error
 	return user, err
+}
+
+func (r *userRepository) DeleteUser(userID uint) error {
+	return r.db.Delete(&models.User{}, userID).Error
 }
 
 func NewUserRepository(db *gorm.DB) *userRepository {
@@ -35,6 +45,6 @@ func NewUserRepository(db *gorm.DB) *userRepository {
 
 func (r *userRepository) GetUserById(id int) (models.User, error) {
 	var user models.User
-	err := r.db.Find(&user, id).Error
+	err := r.db.Preload("Role").Find(&user, id).Error
 	return user, err
 }

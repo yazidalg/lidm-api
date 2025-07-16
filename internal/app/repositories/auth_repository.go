@@ -32,7 +32,7 @@ func (r *authRepository) RegisterUser(user models.User) (models.User, error) {
 func (r *authRepository) LoginUser(id int) (models.User, error) {
 	var user models.User
 
-	err := r.db.Find(&user, id).Error
+	err := r.db.Preload("Role").Find(&user, id).Error
 
 	return user, err
 }
@@ -40,7 +40,7 @@ func (r *authRepository) LoginUser(id int) (models.User, error) {
 func (r *authRepository) GetByEmail(email string) (models.User, error) {
 	var user models.User
 
-	err := r.db.First(&user, "email = ?", email).Error
+	err := r.db.Preload("Role").First(&user, "email = ?", email).Error
 
 	return user, err
 }

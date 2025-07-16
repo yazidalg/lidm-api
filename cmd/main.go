@@ -18,6 +18,7 @@ func main() {
 	// Build handlers
 	userHandler := helpers.NewBuildUser(db)
 	authHandler := helpers.NewBuildAuth(db)
+	roleHandler := helpers.NewBuildRole(db)
 	forgotPasswordHandler := helpers.NewBuildForgotPassword(db)
 	questionHandler, questionService := helpers.NewBuildQuestion(db)
 	answerHandler := helpers.NewBuildAnswer(db)
@@ -42,6 +43,7 @@ func main() {
 		lessonHandler,
 		progressHandler,
 		prequizHandler,
-		authMiddleware, // Add authMiddleware parameter
+		authMiddleware,
+		roleHandler, // Add roleHandler parameter
 	)
 }

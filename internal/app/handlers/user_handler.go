@@ -61,16 +61,32 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 		return
 	}
 
-	userVal, exist := c.Get("user")
-	if !exist {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
+	// Validate role
+	if body.Role != "user" && body.Role != "admin" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid role. Must be 'user' or 'admin'",
+		})
 		return
 	}
 
-	user := userVal.(models.User)
-	fmt.Println("Updating role for user:", user.ID, "to role:", body.Role)
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User ID is required",
+		})
+		return
+	}
 
-	updatedUser, err := h.userService.UpdateUserRole(user.ID, body.Role)
+	// Convert string to uint
+	var id uint
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID",
+		})
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateUserRole(id, body.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to update user role",
@@ -82,5 +98,37 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User role updated successfully",
 		"data":    updatedUser,
+	})
+}
+
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User ID is required",
+		})
+		return
+	}
+
+	// Convert string to uint
+	var id uint
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID",
+		})
+		return
+	}
+
+	err := h.userService.DeleteUser(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to delete user",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User deleted successfully",
 	})
 }
