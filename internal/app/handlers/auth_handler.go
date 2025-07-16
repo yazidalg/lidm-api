@@ -26,6 +26,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		Email    string
 		Password string
 		Class    string
+		Role     string `json:"role,omitempty"`
 	}
 
 	if c.Bind(&body) != nil {
@@ -49,6 +50,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		Email:    body.Email,
 		Password: string(hash),
 		Class:    body.Class,
+		Role:     body.Role,
 	}
 
 	result, err := h.authService.RegisterUser(user)

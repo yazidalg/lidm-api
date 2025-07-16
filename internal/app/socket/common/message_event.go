@@ -48,7 +48,7 @@ type AnswerPayload struct {
 }
 
 type PrequizCompletedPayload struct {
-	FinalScores map[string]uint `json:"final_scores"` // Skor akhir untuk setiap pemain
+	FinalScores map[string]uint `json:"final_result"` // Skor akhir untuk setiap pemain
 	Message     string          `json:"message"`      // Pesan yang ditampilkan saat prequiz selesai
 }
 

@@ -7,6 +7,8 @@ import (
 
 type UserServiceInterface interface {
 	GetUserById(id int) (models.User, error)
+	GetAllUsers() ([]models.User, error)
+	UpdateUserRole(userID uint, role string) (models.User, error)
 }
 
 type userService struct {
@@ -19,4 +21,12 @@ func NewUserService(userRepository repositories.UserRepositoryInterface) *userSe
 
 func (s *userService) GetUserById(id int) (models.User, error) {
 	return s.userRepository.GetUserById(id)
+}
+
+func (s *userService) GetAllUsers() ([]models.User, error) {
+	return s.userRepository.GetAllUsers()
+}
+
+func (s *userService) UpdateUserRole(userID uint, role string) (models.User, error) {
+	return s.userRepository.UpdateUserRole(userID, role)
 }

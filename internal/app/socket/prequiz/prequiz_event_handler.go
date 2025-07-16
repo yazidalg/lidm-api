@@ -2,7 +2,6 @@ package prequiz
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -20,7 +19,6 @@ func (s *PrequizSession) GetCurrentQuestion(prequiz *models.Prequiz) {
 
 func (s *PrequizSession) HandleAnswer(prequiz *models.Prequiz) {
 	answerEvent := <-s.Answers
-	fmt.Printf("hahahahahaha %v\n", answerEvent.Payload.OptionSelected)
 	s.AnswerProcess(answerEvent, prequiz)
 }
 

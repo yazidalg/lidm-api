@@ -12,6 +12,10 @@ func main() {
 	db := config.ConnectDB()
 	database.Migrate(db)
 
+	// Build middleware
+	authMiddleware := helpers.NewBuildAuthMiddleware(db)
+
+	// Build handlers
 	userHandler := helpers.NewBuildUser(db)
 	authHandler := helpers.NewBuildAuth(db)
 	forgotPasswordHandler := helpers.NewBuildForgotPassword(db)
@@ -38,5 +42,6 @@ func main() {
 		lessonHandler,
 		progressHandler,
 		prequizHandler,
+		authMiddleware, // Add authMiddleware parameter
 	)
 }

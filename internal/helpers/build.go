@@ -8,6 +8,7 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/socket/common"
 	"github.com/yazidalg/lidm_backend/internal/app/socket/prequiz"
 	"github.com/yazidalg/lidm_backend/internal/app/socket/quiz"
+	"github.com/yazidalg/lidm_backend/internal/middleware"
 	"gorm.io/gorm"
 )
 
@@ -131,4 +132,11 @@ func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizSer
 	prequizHandler := handlers.NewPrequizHandler(prequizService, lessonService, userRepository)
 
 	return prequizHandler, prequizService
+}
+
+func NewBuildAuthMiddleware(db *gorm.DB) *middleware.AuthMiddleware {
+	authRepository := repositories.NewAuthRepository(db)
+	authService := services.NewAuthService(authRepository)
+	authMiddleware := middleware.NewAuthMiddleware(authService)
+	return authMiddleware
 }

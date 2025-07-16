@@ -34,6 +34,7 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		Email:             user.Email,
 		Class:             user.Class,
 		Password:          user.Password,
+		Role:              user.Role,
 		IsVerified:        false,
 		VerificationToken: token,
 		Point:             0,

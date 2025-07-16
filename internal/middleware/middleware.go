@@ -4,75 +4,152 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
-	"github.com/yazidalg/lidm_backend/internal/config"
+	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
-func AuthRequire(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "Authorization header missing or invalid",
-		})
-		return
+type AuthMiddleware struct {
+	authService services.AuthServiceInterface
+}
+
+func NewAuthMiddleware(authService services.AuthServiceInterface) *AuthMiddleware {
+	return &AuthMiddleware{authService}
+}
+
+// RequireAuth - middleware untuk memastikan user sudah login
+func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
+	tokenString, err := c.Cookie("authorization")
+	if err != nil {
+		// Try to get token from Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Authorization token required",
+			})
+			c.Abort()
+			return
+		}
+		tokenString = authHeader[7:] // Remove "Bearer " prefix
 	}
 
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	secret := os.Getenv("SECRET")
-
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(secret), nil
+		return []byte(os.Getenv("SECRET")), nil
 	})
 
-	if err != nil || !token.Valid {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "Failed to parse token",
-			"error":   err.Error(),
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid token",
 		})
+		c.Abort()
 		return
 	}
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if float64(time.Now().Unix()) > claims["exp"].(float64) {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Token expired",
+			})
+			c.Abort()
+			return
+		}
+
+		user, err := m.authService.LoginUser(int(claims["sub"].(float64)))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "User not found",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("user", user)
+		c.Next()
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid token",
+		})
+		c.Abort()
+		return
+	}
+}
+
+// RequireAdmin - middleware untuk memastikan user adalah admin
+func (m *AuthMiddleware) RequireAdmin(c *gin.Context) {
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "User not found in context",
+		})
+		c.Abort()
+		return
+	}
+
+	userModel, ok := user.(models.User)
 	if !ok {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "Invalid token claims",
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Invalid user data",
 		})
+		c.Abort()
 		return
 	}
 
-	exp := int64(claims["exp"].(float64))
-	if time.Now().Unix() > exp {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "Token expired",
+	if !userModel.IsAdmin() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Admin access required",
 		})
+		c.Abort()
 		return
 	}
 
-	userIDFloat := claims["sub"].(float64)
-	userID := uint(userIDFloat)
+	c.Next()
+}
 
-	db := config.ConnectDB()
-	var user models.User
-	if err := db.First(&user, userID).Error; err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"message": "User not found",
+// RequireUserOrAdmin - middleware untuk memastikan user adalah owner resource atau admin
+func (m *AuthMiddleware) RequireUserOrAdmin(c *gin.Context) {
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "User not found in context",
 		})
+		c.Abort()
 		return
 	}
 
-	c.Set("user", user)
+	userModel, ok := user.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Invalid user data",
+		})
+		c.Abort()
+		return
+	}
+
+	// Jika admin, langsung izinkan
+	if userModel.IsAdmin() {
+		c.Next()
+		return
+	}
+
+	// Jika bukan admin, cek apakah user adalah pemilik resource
+	requestedUserID := c.Param("user_id")
+	if requestedUserID == "" {
+		requestedUserID = c.Param("id")
+	}
+
+	if requestedUserID != "" && requestedUserID != fmt.Sprint(userModel.ID) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Access denied. You can only access your own data",
+		})
+		c.Abort()
+		return
+	}
+
 	c.Next()
 }
