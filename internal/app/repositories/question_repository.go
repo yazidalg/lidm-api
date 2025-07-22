@@ -12,6 +12,7 @@ type QuestionRepositoryInterface interface {
 	UpdateQuestion(id int32, question *models.Question) (*models.Question, error)
 	DeleteQuestion(id int32) error
 	GetRandomQuestion(count int) (*[]models.Question, error)
+	GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error)
 }
 
 type questionRepository struct {
@@ -55,4 +56,16 @@ func (r *questionRepository) GetRandomQuestion(count int) (*[]models.Question, e
 		return nil, err
 	}
 	return &question, nil
+}
+
+func (r *questionRepository) GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error) {
+	var questions []models.Question
+	err := r.db.Where("module_id = ?", moduleID).
+		Order("RAND()").
+		Limit(count).
+		Find(&questions).Error
+	if err != nil {
+		return nil, err
+	}
+	return &questions, nil
 }

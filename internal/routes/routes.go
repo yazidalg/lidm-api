@@ -14,6 +14,7 @@ func NewRoute(
 	answerHandler *handlers.AnswerHandler,
 	participantHandler *handlers.ParticipantHandler,
 	quizHandler *handlers.QuizHandler,
+	quizSessionHandler *handlers.QuizSessionHandler,
 	socketHandler *handlers.SocketHandler,
 	moduleHandler *handlers.ModuleHandler,
 	lessonHandler *handlers.LessonHandler,
@@ -126,6 +127,19 @@ func NewRoute(
 		quizGroupHandler.GET("/all", quizHandler.GetAllQuizzes)
 	}
 
+	// Quiz Session routes - User bisa create dan join quiz session
+	quizSessionGroupHandler := router.Group("quiz-sessions")
+	quizSessionGroupHandler.Use(authMiddleware.RequireAuth)
+	{
+		// User accessible routes untuk quiz session
+		quizSessionGroupHandler.POST("/", quizSessionHandler.CreateQuizSession)
+		quizSessionGroupHandler.POST("/join", quizSessionHandler.JoinQuiz)
+		quizSessionGroupHandler.POST("/answer", quizSessionHandler.AnswerQuestion)
+		quizSessionGroupHandler.GET("/:quiz_id", quizSessionHandler.GetQuizSession)
+		quizSessionGroupHandler.GET("/:quiz_id/results", quizSessionHandler.GetQuizResult)
+		quizSessionGroupHandler.POST("/:quiz_id/finish", quizSessionHandler.FinishQuiz)
+	}
+
 	// Socket routes - Semua authenticated user bisa akses
 	socketGroupHandler := router.Group("ws")
 	socketGroupHandler.Use(authMiddleware.RequireAuth)
@@ -133,6 +147,7 @@ func NewRoute(
 		socketGroupHandler.GET("/:roomName", socketHandler.ServeWs)
 		socketGroupHandler.GET("/matchmaking", socketHandler.MatchMaking)
 		socketGroupHandler.GET("/prequiz", socketHandler.PreQuiz)
+		socketGroupHandler.GET("/quiz-session/:quiz_id", socketHandler.QuizSession)
 	}
 
 	// Module routes - Admin only untuk CUD, User bisa Read

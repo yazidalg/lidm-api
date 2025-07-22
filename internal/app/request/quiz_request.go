@@ -1,13 +1,15 @@
 package request
 
 type CreateQuizRequest struct {
-	QuestionsIDs    []uint `json:"questions_ids" binding:"required"`
-	ParticipantsIDs []uint `json:"participants_ids"`
-	Status          string `json:"status"`
+	Status        string `json:"status,omitempty"`
+	Mode          string `json:"mode" binding:"required,oneof=single_player multiplayer"`
+	ModuleID      uint   `json:"module_id" binding:"required"`
+	QuestionCount int    `json:"question_count,omitempty"` // Default 5 jika tidak diisi
+	QuestionsIDs  []uint `json:"questions_ids,omitempty"`
 }
 
 type UpdateQuizRequest struct {
-	QuestionsIDs []uint `json:"questions_ids"`
-	Status       string `json:"status"`
-	WinnerID     *uint  `json:"winner_id"`
+	Status       string `json:"status,omitempty"`
+	WinnerID     *uint  `json:"winner_id,omitempty"`
+	QuestionsIDs []uint `json:"questions_ids,omitempty"`
 }

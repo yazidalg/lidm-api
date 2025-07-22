@@ -152,3 +152,50 @@ func (h *SocketHandler) PreQuiz(c *gin.Context) {
 	go client.WritePump()
 	go client.ReadPump()
 }
+
+// QuizSession handles WebSocket connections for real-time quiz sessions
+func (h *SocketHandler) QuizSession(c *gin.Context) {
+	userVal, exists := c.Get("user")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authorized"})
+		return
+	}
+
+	user, ok := userVal.(models.User)
+
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve user data"})
+		return
+	}
+
+	// Get quiz ID from URL parameter
+	quizID := c.Param("quiz_id")
+	if quizID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Quiz ID is required"})
+		return
+	}
+
+	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+
+	if err != nil {
+		log.Printf("Failed to upgrade connection for quiz session: %v", err)
+		return
+	}
+
+	roomName := fmt.Sprintf("quiz-%s", quizID)
+
+	client := &common.Client{
+		Hub:      h.hub,
+		Conn:     conn,
+		Send:     make(chan *common.Message, 256), // Buffered channel
+		Room:     roomName,
+		UserID:   user.ID,
+		Username: user.Name,
+	}
+
+	client.Hub.Register <- client
+
+	go client.WritePump()
+	go client.ReadPump()
+}

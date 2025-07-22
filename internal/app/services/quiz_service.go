@@ -26,11 +26,23 @@ func NewQuizService(quizRepository repositories.QuizRepositoryInterface) *quizSe
 func (s *quizService) CreateQuiz(request request.CreateQuizRequest) (*models.Quiz, error) {
 	// Convert request to model
 	quizData := models.Quiz{
-		Status: request.Status,
+		Status:        request.Status,
+		Mode:          request.Mode,
+		ModuleID:      &request.ModuleID,
+		QuestionCount: request.QuestionCount,
 	}
 
-	// Convert question IDs to Question pointers
-	if len(request.QuestionsIDs) > 0 {
+	// Set default question count if not provided
+	if quizData.QuestionCount == 0 {
+		quizData.QuestionCount = 5
+	}
+
+	// Get random questions from the module if not provided
+	if len(request.QuestionsIDs) == 0 {
+		// Let the repository handle getting random questions
+		quizData.Questions = []models.Question{} // Will be populated by repository
+	} else {
+		// Convert question IDs to Question pointers
 		questions := make([]models.Question, len(request.QuestionsIDs))
 		for i, id := range request.QuestionsIDs {
 			questions[i] = models.Question{

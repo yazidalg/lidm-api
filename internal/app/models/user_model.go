@@ -16,7 +16,7 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	TotalXP           int32
-	RoleID            uint      `gorm:"not null;default:1"` // Foreign key to Role
+	RoleID            uint      `gorm:"not null"` // Remove default value
 	CreatedAt         time.Time `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
 

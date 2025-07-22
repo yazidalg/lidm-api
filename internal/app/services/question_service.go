@@ -13,6 +13,7 @@ type QuestionServiceInterface interface {
 	UpdateQuestion(id int32, request request.UpdateQuestionRequest) (*models.Question, error)
 	DeleteQuestion(id int32) error
 	GetRandomQuestion(count int) (*[]models.Question, error)
+	GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error)
 }
 
 type questionService struct {
@@ -26,12 +27,18 @@ func NewQuestionService(questionRepository repositories.QuestionRepositoryInterf
 func (s *questionService) CreateQuestion(request request.CreateQuestionRequest) (*models.Question, error) {
 
 	questionData := models.Question{
+		ModuleID:      request.ModuleID,
 		Question:      request.Question,
 		AnswerTime:    request.AnswerTime,
 		ReadTime:      request.ReadTime,
 		CorrectAnswer: request.CorrectAnswer,
 		Explanation:   request.Explanation,
-		Options:       models.Options(request.Options),
+		Options: models.Options{
+			OptionA: request.Options.OptionA,
+			OptionB: request.Options.OptionB,
+			OptionC: request.Options.OptionC,
+			OptionD: request.Options.OptionD,
+		},
 	}
 
 	return s.questionRepository.CreateQuestion(&questionData)
@@ -47,12 +54,18 @@ func (s *questionService) GetAllQuestions() ([]models.Question, error) {
 
 func (s *questionService) UpdateQuestion(id int32, request request.UpdateQuestionRequest) (*models.Question, error) {
 	questionData := models.Question{
+		ModuleID:      request.ModuleID,
 		Question:      request.Question,
 		AnswerTime:    request.AnswerTime,
 		ReadTime:      request.ReadTime,
 		CorrectAnswer: request.CorrectAnswer,
 		Explanation:   request.Explanation,
-		Options:       models.Options(request.Options),
+		Options: models.Options{
+			OptionA: request.Options.OptionA,
+			OptionB: request.Options.OptionB,
+			OptionC: request.Options.OptionC,
+			OptionD: request.Options.OptionD,
+		},
 	}
 
 	return s.questionRepository.UpdateQuestion(id, &questionData)
@@ -64,4 +77,8 @@ func (s *questionService) DeleteQuestion(id int32) error {
 
 func (s *questionService) GetRandomQuestion(count int) (*[]models.Question, error) {
 	return s.questionRepository.GetRandomQuestion(count)
+}
+
+func (s *questionService) GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error) {
+	return s.questionRepository.GetRandomQuestionsByModule(moduleID, count)
 }

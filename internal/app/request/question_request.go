@@ -1,6 +1,7 @@
 package request
 
 type CreateQuestionRequest struct {
+	ModuleID      *uint           `json:"module_id,omitempty"`
 	Question      string          `json:"question" binding:"required"`
 	AnswerTime    int32           `json:"answer_time" binding:"required"`
 	ReadTime      int32           `json:"read_time" binding:"required"`
@@ -17,6 +18,7 @@ type QuestionOptions struct {
 }
 
 type UpdateQuestionRequest struct {
+	ModuleID      *uint           `json:"module_id,omitempty"`
 	Question      string          `json:"question"`
 	AnswerTime    int32           `json:"answer_time"`
 	ReadTime      int32           `json:"read_time"`

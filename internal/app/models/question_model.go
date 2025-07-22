@@ -8,6 +8,7 @@ import (
 
 type Question struct {
 	gorm.Model
+	ModuleID      *uint `gorm:"index"` // Materi/topik pertanyaan
 	Question      string
 	AnswerTime    int32
 	ReadTime      int32
@@ -17,6 +18,9 @@ type Question struct {
 	Quiz          []Quiz    `gorm:"many2many:quiz_questions;"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
+
+	// Relationships
+	Module *Module `gorm:"foreignKey:ModuleID"`
 }
 
 type Options struct {

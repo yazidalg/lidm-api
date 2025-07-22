@@ -24,11 +24,12 @@ func main() {
 	answerHandler := helpers.NewBuildAnswer(db)
 	participantHandler, participantService := helpers.NewBuildParticipant(db)
 	quizHandler, quizService := helpers.NewBuildQuiz(db)
+	quizSessionHandler, quizSessionService := helpers.NewBuildQuizSession(db)
 	moduleHandler := helpers.NewBuildModule(db)
 	lessonHandler := helpers.NewBuildLesson(db)
 	progressHandler := helpers.NewBuildProgress(db)
 	prequizHandler, prequizService := helpers.NewBuildPrequiz(db)
-	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService)
+	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService)
 
 	routes.NewRoute(
 		authHandler,
@@ -38,6 +39,7 @@ func main() {
 		answerHandler,
 		participantHandler,
 		quizHandler,
+		quizSessionHandler,
 		socketHandler,
 		moduleHandler,
 		lessonHandler,

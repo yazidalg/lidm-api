@@ -66,11 +66,30 @@ func NewBuildQuiz(db *gorm.DB) (*handlers.QuizHandler, services.QuizServiceInter
 	return quizHandler, quizService
 }
 
+func NewBuildQuizSession(db *gorm.DB) (*handlers.QuizSessionHandler, services.QuizSessionServiceInterface) {
+	quizSessionRepository := repositories.NewQuizSessionRepository(db)
+	quizRepository := repositories.NewQuizRepository(db)
+	questionRepository := repositories.NewQuestionRepository(db)
+	participantRepository := repositories.NewParticipantRepository(db)
+	moduleRepository := repositories.NewModuleRepository(db)
+
+	quizSessionService := services.NewQuizSessionService(
+		quizSessionRepository,
+		quizRepository,
+		questionRepository,
+		participantRepository,
+		moduleRepository,
+	)
+	quizSessionHandler := handlers.NewQuizSessionHandler(quizSessionService)
+	return quizSessionHandler, quizSessionService
+}
+
 func NewBuildSocket(
 	questionService services.QuestionServiceInterface,
 	quizService services.QuizServiceInterface,
 	participantService services.ParticipantServiceInterface,
 	prequizService services.PrequizServiceInterface,
+	quizSessionService services.QuizSessionServiceInterface,
 ) *handlers.SocketHandler {
 	// Factory functions
 	quizSessionFactory := func(hub *common.Hub, roomName string, players []*common.Client, questions []models.Question, participants []*models.Participant, quizID uint) common.QuizSessionInterface {
