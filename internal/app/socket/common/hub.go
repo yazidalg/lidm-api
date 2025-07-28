@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
-	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
@@ -144,61 +143,43 @@ func (h *Hub) Run() {
 
 				go session.RunPrequizLoop()
 
-			} else if len(h.Rooms[roomName]) == 2 {
-				getQuestion, err := h.QuestionService.GetRandomQuestion(3)
-				if err != nil || len(*getQuestion) < 3 {
-					log.Printf("Gagal mendapatkan pertanyaan untuk room '%s': %v", roomName, err)
+			}
+
+			if strings.HasPrefix(roomName, "quiz-") && len(h.Rooms[roomName]) == 2 {
+				log.Printf("Room kuis '%s' telah penuh. Memulai sesi kuis...", roomName)
+
+				var quizId uint
+				fmt.Sscanf(roomName, "quiz-%d", &quizId)
+
+				quiz, err := h.QuizService.GetQuizByID(quizId)
+
+				if err != nil || quiz.Status != "in_progress" {
+					log.Printf("Gagal memulai kuis untuk room '%s': Kuis tidak ditemukan atau belum siap. Error: %v", roomName, err)
 					h.Mu.Unlock()
 					continue
 				}
 
-				questionIDs := make([]uint, len(*getQuestion))
-				for i, q := range *getQuestion {
-					questionIDs[i] = q.ID
-				}
-
-				createQuizReq := request.CreateQuizRequest{
-					Status:       "in_progress", // Langsung set in_progress
-					QuestionsIDs: questionIDs,
-				}
-
-				newQuiz, err := h.QuizService.CreateQuiz(createQuizReq)
-
-				if err != nil {
-					log.Printf("Gagal membuat quiz di database: %v", err)
+				// Asumsi QuestionService punya fungsi ini
+				questionCount := 5 // atau ambil dari quiz.QuestionCount
+				questions, err := h.QuestionService.GetRandomQuestionsByModule(*quiz.ModuleID, questionCount)
+				if err != nil || len(*questions) == 0 {
+					log.Printf("Gagal mendapatkan pertanyaan untuk modul %d: %v", *quiz.ModuleID, err)
 					h.Mu.Unlock()
 					continue
 				}
-				log.Printf("Quiz dengan ID %d berhasil dibuat di database.", newQuiz.ID)
 
 				players := make([]*Client, 0, 2)
 				for p := range h.Rooms[roomName] {
 					players = append(players, p)
 				}
 
-				participants := make([]*models.Participant, 0, len(players))
-				for _, player := range players {
-					createParticipantReq := request.CreateParticipantRequest{
-						UserID: player.UserID,
-						QuizID: newQuiz.ID,
-					}
-					newParticipant, err := h.ParticipantService.CreateParticipant(createParticipantReq)
-					if err != nil {
-						log.Printf("Gagal membuat participant di database untuk user %d: %v", player.UserID, err)
-						continue // Lanjutkan ke pemain berikutnya
-					}
-					participants = append(participants, newParticipant)
+				participants := make([]*models.Participant, len(quiz.Participants))
+				for i, p := range quiz.Participants {
+					tempP := p
+					participants[i] = &tempP
 				}
 
-				if len(participants) != 2 {
-					log.Printf("Gagal membuat semua participant, membatalkan quiz.")
-					// TODO: Hapus quiz yang sudah terlanjur dibuat
-					h.Mu.Unlock()
-					continue
-				}
-
-				session := h.QuizSessionFactory(h, roomName, players, *getQuestion, participants, newQuiz.ID)
-				h.QuizSession[roomName] = session
+				session := h.QuizSessionFactory(h, roomName, players, *questions, participants, quiz.ID)
 
 				for _, player := range players {
 					player.Session = session

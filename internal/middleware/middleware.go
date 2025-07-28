@@ -66,7 +66,16 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 			return
 		}
 
-		user, err := m.authService.LoginUser(int(claims["sub"].(float64)))
+		userIdFloat, ok := claims["sub"].(float64)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Invalid token claims",
+			})
+			c.Abort()
+			return
+		}
+
+		user, err := m.authService.LoginUser(int(userIdFloat))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"message": "User not found",

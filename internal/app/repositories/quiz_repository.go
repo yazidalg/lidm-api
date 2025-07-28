@@ -86,12 +86,7 @@ func (r *quizRepository) GetQuizByID(id uint) (*models.Quiz, error) {
 	var quiz models.Quiz
 
 	// Preload related entities
-	err := r.db.Preload("Participants.User").
-		Preload("Questions").
-		Preload("Winner").
-		Preload("Host").
-		Preload("Module").
-		First(&quiz, id).Error
+	err := r.db.Preload("Participants").Preload("Module").First(&quiz, id).Error
 
 	if err != nil {
 		return nil, err
@@ -104,12 +99,8 @@ func (r *quizRepository) GetQuizByInviteCode(inviteCode string) (*models.Quiz, e
 	var quiz models.Quiz
 
 	// Preload related entities
-	err := r.db.Preload("Participants.User").
-		Preload("Questions").
-		Preload("Winner").
-		Preload("Host").
-		Preload("Module").
-		Where("invite_code = ?", inviteCode).
+	err := r.db.Preload("Participants").
+		Where("invite_code = ? AND status = ?", inviteCode, "pending").
 		First(&quiz).Error
 
 	if err != nil {

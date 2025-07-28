@@ -12,6 +12,7 @@ type QuizServiceInterface interface {
 	GetQuizByID(id uint) (*models.Quiz, error)
 	GetAllQuizzes() ([]models.Quiz, error)
 	UpdateQuiz(id uint, request request.UpdateQuizRequest) (*models.Quiz, error)
+	GetQuizByInviteCode(inviteCode string) (*models.Quiz, error)
 	DeleteQuiz(id uint) error
 }
 
@@ -23,12 +24,19 @@ func NewQuizService(quizRepository repositories.QuizRepositoryInterface) *quizSe
 	return &quizService{quizRepository}
 }
 
+// GetQuizByInviteCode implements QuizServiceInterface.
+func (s *quizService) GetQuizByInviteCode(code string) (*models.Quiz, error) {
+	return s.quizRepository.GetQuizByInviteCode(code)
+}
+
 func (s *quizService) CreateQuiz(request request.CreateQuizRequest) (*models.Quiz, error) {
 	// Convert request to model
 	quizData := models.Quiz{
 		Status:        request.Status,
 		Mode:          request.Mode,
 		ModuleID:      &request.ModuleID,
+		HostUserID:    request.HostUserID,
+		InviteCode:    request.InviteCode,
 		QuestionCount: request.QuestionCount,
 	}
 

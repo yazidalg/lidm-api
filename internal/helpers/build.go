@@ -62,7 +62,9 @@ func NewBuildParticipant(db *gorm.DB) (*handlers.ParticipantHandler, services.Pa
 func NewBuildQuiz(db *gorm.DB) (*handlers.QuizHandler, services.QuizServiceInterface) {
 	quizRepository := repositories.NewQuizRepository(db)
 	quizService := services.NewQuizService(quizRepository)
-	quizHandler := handlers.NewQuizHandler(quizService)
+	participantRepository := repositories.NewParticipantRepository(db)
+	participantService := services.NewParticipantService(participantRepository)
+	quizHandler := handlers.NewQuizHandler(participantService, quizService)
 	return quizHandler, quizService
 }
 
@@ -72,6 +74,7 @@ func NewBuildQuizSession(db *gorm.DB) (*handlers.QuizSessionHandler, services.Qu
 	questionRepository := repositories.NewQuestionRepository(db)
 	participantRepository := repositories.NewParticipantRepository(db)
 	moduleRepository := repositories.NewModuleRepository(db)
+	userRepository := repositories.NewUserRepository(db)
 
 	quizSessionService := services.NewQuizSessionService(
 		quizSessionRepository,
@@ -79,6 +82,7 @@ func NewBuildQuizSession(db *gorm.DB) (*handlers.QuizSessionHandler, services.Qu
 		questionRepository,
 		participantRepository,
 		moduleRepository,
+		userRepository,
 	)
 	quizSessionHandler := handlers.NewQuizSessionHandler(quizSessionService)
 	return quizSessionHandler, quizSessionService

@@ -27,6 +27,7 @@ type quizSessionService struct {
 	questionRepo    repositories.QuestionRepositoryInterface
 	participantRepo repositories.ParticipantRepositoryInterface
 	moduleRepo      repositories.ModuleRepositoryInterface
+	userRepo        repositories.UserRepositoryInterface
 }
 
 func NewQuizSessionService(
@@ -35,6 +36,7 @@ func NewQuizSessionService(
 	questionRepo repositories.QuestionRepositoryInterface,
 	participantRepo repositories.ParticipantRepositoryInterface,
 	moduleRepo repositories.ModuleRepositoryInterface,
+	userRepo repositories.UserRepositoryInterface,
 ) *quizSessionService {
 	return &quizSessionService{
 		quizSessionRepo: quizSessionRepo,
@@ -42,12 +44,19 @@ func NewQuizSessionService(
 		questionRepo:    questionRepo,
 		participantRepo: participantRepo,
 		moduleRepo:      moduleRepo,
+		userRepo:        userRepo,
 	}
 }
 
 func (s *quizSessionService) CreateQuizSession(userID uint, req request.CreateQuizSessionRequest) (*response.QuizSessionResponse, error) {
 	// Validate module exists
-	_, err := s.moduleRepo.GetModuleByID(uint32(req.ModuleID))
+
+	_, err := s.userRepo.GetUserById(int(userID))
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %v", err)
+	}
+
+	_, err = s.moduleRepo.GetModuleByID(uint32(req.ModuleID))
 	if err != nil {
 		return nil, fmt.Errorf("module not found: %v", err)
 	}

@@ -117,7 +117,6 @@ func NewRoute(
 		quizAdminGroup := quizGroupHandler.Group("")
 		quizAdminGroup.Use(authMiddleware.RequireAdmin)
 		{
-			quizAdminGroup.POST("/create", quizHandler.CreateQuiz)
 			quizAdminGroup.PUT("/:id", quizHandler.UpdateQuiz)
 			quizAdminGroup.DELETE("/:id", quizHandler.DeleteQuiz)
 		}
@@ -125,6 +124,8 @@ func NewRoute(
 		// User accessible routes
 		quizGroupHandler.GET("/:id", quizHandler.GetQuizByID)
 		quizGroupHandler.GET("/all", quizHandler.GetAllQuizzes)
+		quizGroupHandler.POST("/create", quizHandler.CreateQuizLobby)
+		quizGroupHandler.POST("/join", quizHandler.JoinQuizLobby)
 	}
 
 	// Quiz Session routes - User bisa create dan join quiz session
