@@ -13,6 +13,8 @@ type Module struct {
 	Thumbnail   string
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+	OffsetX     uint16    `gorm:"default:0"` // Offset for the lesson in the module
+	OffsetY     uint16    `gorm:"default:0"` // Offset for the lesson in the module
 
 	// Relationships
 	Lessons []Lesson `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE"` // Relationship to Lesson
