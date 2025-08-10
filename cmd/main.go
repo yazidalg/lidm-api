@@ -1,9 +1,13 @@
 package main
 
 import (
+	"os"
+	"strings"
+
 	"github.com/yazidalg/lidm_backend/internal/config"
 	"github.com/yazidalg/lidm_backend/internal/database"
 	"github.com/yazidalg/lidm_backend/internal/helpers"
+	"github.com/yazidalg/lidm_backend/internal/realtime/socketio"
 	"github.com/yazidalg/lidm_backend/internal/routes"
 )
 
@@ -11,6 +15,13 @@ func main() {
 	config.LoadEnv()
 	db := config.ConnectDB()
 	database.Migrate(db)
+
+	// Optional quiz seeding via env: SEED_QUIZ_MODULES="Module Title 1,Module Title 2"
+	if modsEnv := os.Getenv("SEED_QUIZ_MODULES"); modsEnv != "" {
+		modules := strings.Split(modsEnv, ",")
+		for i := range modules { modules[i] = strings.TrimSpace(modules[i]) }
+		database.SeedQuizData(db, modules)
+	}
 
 	// Build middleware
 	authMiddleware := helpers.NewBuildAuthMiddleware(db)
@@ -32,12 +43,14 @@ func main() {
 	videoQuizHandler, videoQuizService := helpers.NewBuildVideoQuiz(db)
 	activityHandler, activityService := helpers.NewBuildUserActivity(db)
 	dashboardHandler := helpers.NewBuildDashboard(db)
-	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService)
+	// User service khusus untuk socket (lives & xp)
+	userServiceForSocket := helpers.NewUserServiceOnly(db)
+	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService, userServiceForSocket)
 
 	// Suppress unused variable warning for videoQuizService if needed
 	_ = videoQuizService
 
-	routes.NewRoute(
+	router := routes.NewRoute(
 		authHandler,
 		userHandler,
 		forgotPasswordHandler,
@@ -58,4 +71,9 @@ func main() {
 		activityService,
 		dashboardHandler,
 	)
+
+	// Start Socket.IO server (mounts /socket.io endpoints)
+	socketio.StartSocketIOServer(router, questionService, quizService, userServiceForSocket, participantService)
+
+	router.Run(":3000")
 }

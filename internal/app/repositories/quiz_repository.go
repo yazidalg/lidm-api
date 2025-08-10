@@ -14,6 +14,7 @@ type QuizRepositoryInterface interface {
 	GetQuizByID(id uint) (*models.Quiz, error)
 	GetQuizByInviteCode(inviteCode string) (*models.Quiz, error)
 	GetAllQuizzes() ([]models.Quiz, error)
+	GetQuizzesByModule(moduleID uint) ([]models.Quiz, error)
 	UpdateQuiz(id uint, quiz *models.Quiz) (*models.Quiz, error)
 	DeleteQuiz(id uint) error
 	GetRandomQuestionsByModule(moduleID uint, count int) ([]models.Question, error)
@@ -47,8 +48,8 @@ func NewQuizRepository(db *gorm.DB) *quizRepository {
 }
 
 func (r *quizRepository) CreateQuiz(quiz *models.Quiz) (*models.Quiz, error) {
-	// Generate invite code for multiplayer mode
-	if quiz.Mode == "multiplayer" {
+	// Generate invite code for multiplayer mode ONLY if not already provided
+	if quiz.Mode == "multiplayer" && quiz.InviteCode == "" {
 		inviteCode, err := r.generateInviteCode()
 		if err != nil {
 			return nil, err
@@ -98,15 +99,12 @@ func (r *quizRepository) GetQuizByID(id uint) (*models.Quiz, error) {
 func (r *quizRepository) GetQuizByInviteCode(inviteCode string) (*models.Quiz, error) {
 	var quiz models.Quiz
 
-	// Preload related entities
-	err := r.db.Preload("Participants").
-		Where("invite_code = ? AND status = ?", inviteCode, "pending").
-		First(&quiz).Error
-
+	// Do NOT restrict by status here; caller logic decides what statuses are acceptable.
+	// This avoids false "record not found" when status already progressed (e.g., in_progress) but we still need quiz context.
+	err := r.db.Preload("Participants").Where("invite_code = ?", inviteCode).First(&quiz).Error
 	if err != nil {
 		return nil, err
 	}
-
 	return &quiz, nil
 }
 
@@ -121,6 +119,18 @@ func (r *quizRepository) GetAllQuizzes() ([]models.Quiz, error) {
 		Preload("Module").
 		Find(&quizzes).Error
 
+	return quizzes, err
+}
+
+func (r *quizRepository) GetQuizzesByModule(moduleID uint) ([]models.Quiz, error) {
+	var quizzes []models.Quiz
+	err := r.db.Preload("Participants.User").
+		Preload("Questions").
+		Preload("Winner").
+		Preload("Host").
+		Preload("Module").
+		Where("module_id = ?", moduleID).
+		Find(&quizzes).Error
 	return quizzes, err
 }
 

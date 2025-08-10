@@ -3,6 +3,7 @@ package utils
 import (
 	"math/rand"
 	"time"
+	"strconv"
 )
 
 func GenerateInviteCode(length int) string {
@@ -14,3 +15,6 @@ func GenerateInviteCode(length int) string {
 	}
 	return string(b)
 }
+
+// UintToString converts uint to string (small helper for socket room naming / logs)
+func UintToString(v uint) string { return strconv.FormatUint(uint64(v), 10) }

@@ -20,4 +20,5 @@ type Module struct {
 	// Relationships
 	Lessons      []Lesson      `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"lessons,omitempty"` // Legacy relationship
 	SubMaterials []SubMaterial `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"sub_materials,omitempty"`
+	Quizzes      []Quiz        `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"quizzes,omitempty"` // Quiz yang terkait dengan module ini
 }

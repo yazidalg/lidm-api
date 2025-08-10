@@ -11,6 +11,7 @@ type QuizServiceInterface interface {
 	CreateQuiz(request request.CreateQuizRequest) (*models.Quiz, error)
 	GetQuizByID(id uint) (*models.Quiz, error)
 	GetAllQuizzes() ([]models.Quiz, error)
+	GetQuizzesByModule(moduleID uint) ([]models.Quiz, error)
 	UpdateQuiz(id uint, request request.UpdateQuizRequest) (*models.Quiz, error)
 	GetQuizByInviteCode(inviteCode string) (*models.Quiz, error)
 	DeleteQuiz(id uint) error
@@ -42,7 +43,7 @@ func (s *quizService) CreateQuiz(request request.CreateQuizRequest) (*models.Qui
 
 	// Set default question count if not provided
 	if quizData.QuestionCount == 0 {
-		quizData.QuestionCount = 5
+		quizData.QuestionCount = 10
 	}
 
 	// Get random questions from the module if not provided
@@ -77,6 +78,10 @@ func (s *quizService) GetQuizByID(id uint) (*models.Quiz, error) {
 
 func (s *quizService) GetAllQuizzes() ([]models.Quiz, error) {
 	return s.quizRepository.GetAllQuizzes()
+}
+
+func (s *quizService) GetQuizzesByModule(moduleID uint) ([]models.Quiz, error) {
+	return s.quizRepository.GetQuizzesByModule(moduleID)
 }
 
 func (s *quizService) UpdateQuiz(id uint, request request.UpdateQuizRequest) (*models.Quiz, error) {

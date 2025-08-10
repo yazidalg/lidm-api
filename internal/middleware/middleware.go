@@ -14,10 +14,11 @@ import (
 
 type AuthMiddleware struct {
 	authService services.AuthServiceInterface
+	userService services.UserServiceInterface
 }
 
-func NewAuthMiddleware(authService services.AuthServiceInterface) *AuthMiddleware {
-	return &AuthMiddleware{authService}
+func NewAuthMiddleware(authService services.AuthServiceInterface, userService services.UserServiceInterface) *AuthMiddleware {
+	return &AuthMiddleware{authService: authService, userService: userService}
 }
 
 // RequireAuth - middleware untuk memastikan user sudah login
@@ -117,6 +118,13 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 			})
 			c.Abort()
 			return
+		}
+
+		// Reset lives harian jika perlu (max 5) dengan persistence
+		_ = m.userService.ResetLivesIfNeeded(user.ID, 5)
+		// Refresh user setelah kemungkinan reset
+		if refreshed, err := m.userService.GetUserByIDUint(user.ID); err == nil && refreshed != nil {
+			user = *refreshed
 		}
 
 		// Set user data in context

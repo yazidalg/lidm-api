@@ -3,6 +3,7 @@ package quiz
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -56,11 +57,51 @@ func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQues
 	s.PlayerAnswers[answerEvent.Player] = true
 
 	isCorrect := answerEvent.Payload.OptionSelected == currentQuestion.CorrectAnswer
-	if isCorrect {
-		s.PlayerScores[answerEvent.Player] += 10
+
+	// Ambil detail quiz untuk cek mode & apply rules
+	quiz, err := s.Hub.QuizService.GetQuizByID(s.QuizID)
+	if err != nil {
+		log.Printf("Gagal ambil quiz %d: %v", s.QuizID, err)
 	}
 
-	resultPayload, _ := json.Marshal(map[string]interface{}{"is_correct": isCorrect, "your_score": s.PlayerScores[answerEvent.Player]})
+	baseScore := 10
+	gainedXP := int32(0)
+	if isCorrect {
+		// Tambah base score
+		s.PlayerScores[answerEvent.Player] += baseScore
+		gainedXP += int32(baseScore)
+
+		// Random EXP boost (misal 30% chance) antara 5-20 XP
+		rand.Seed(time.Now().UnixNano())
+		if rand.Float32() < 0.30 { // 30% chance
+			boost := int32(5 + rand.Intn(16)) // 5..20
+			gainedXP += boost
+		}
+
+		// Simpan XP ke user
+		if gainedXP > 0 {
+			if err := s.Hub.UserService.AddXP(answerEvent.Player.UserID, gainedXP); err != nil {
+				log.Printf("Gagal menambah XP user %d: %v", answerEvent.Player.UserID, err)
+			}
+		}
+	} else {
+		// Wrong answer: jika mode single_player kurangi nyawa
+		if quiz != nil && quiz.Mode == "single_player" {
+			if err := s.Hub.UserService.DecrementLife(answerEvent.Player.UserID); err != nil {
+				log.Printf("Gagal decrement life user %d: %v", answerEvent.Player.UserID, err)
+			} else {
+				// Ambil user ter-update
+				if u, err2 := s.Hub.UserService.GetUserByIDUint(answerEvent.Player.UserID); err2 == nil && u != nil {
+					if u.Lives <= 0 {
+						payload, _ := json.Marshal(map[string]interface{}{"message": "Lives exhausted", "lives": u.Lives})
+						s.Hub.SendMessage(answerEvent.Player, common.Message{Action: "lives_exhausted", Payload: payload, Target: s.RoomName})
+					}
+				}
+			}
+		}
+	}
+
+	resultPayload, _ := json.Marshal(map[string]interface{}{"is_correct": isCorrect, "your_score": s.PlayerScores[answerEvent.Player], "gained_xp": gainedXP})
 	s.Hub.BroadcastToRoom(common.Message{Action: "answer_result", Payload: resultPayload, Target: s.RoomName})
 
 	answeredEvent := &common.AnsweredQuestionEvent{

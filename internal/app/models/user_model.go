@@ -16,6 +16,8 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	TotalXP           int32
+	Lives             int        `gorm:"default:5" json:"lives"`                 // Nyawa (hanya berkurang di mode single player)
+	LifeResetAt       *time.Time `json:"life_reset_at"`                           // Waktu terakhir reset nyawa harian
 	ProfilePicture    string     `gorm:"type:text" json:"profile_picture"`
 	RoleID            uint       `gorm:"not null"` // Remove default value
 	CurrentStreak     int        `gorm:"default:0" json:"current_streak"`     // Streak hari berturut-turut

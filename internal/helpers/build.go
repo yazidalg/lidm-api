@@ -21,6 +21,14 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 	return userHandler
 }
 
+// NewUserServiceOnly - untuk kebutuhan internal (misal socket) tanpa handler
+func NewUserServiceOnly(db *gorm.DB) services.UserServiceInterface {
+	userRepository := repositories.NewUserRepository(db)
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	return services.NewUserService(userRepository, roleService)
+}
+
 func NewBuildAuth(db *gorm.DB) *handlers.AuthHandler {
 	authRepository := repositories.NewAuthRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
@@ -94,6 +102,8 @@ func NewBuildSocket(
 	participantService services.ParticipantServiceInterface,
 	prequizService services.PrequizServiceInterface,
 	quizSessionService services.QuizSessionServiceInterface,
+	// Tambahan: user service untuk lives & xp
+	userService services.UserServiceInterface,
 ) *handlers.SocketHandler {
 	// Factory functions
 	quizSessionFactory := func(hub *common.Hub, roomName string, players []*common.Client, questions []models.Question, participants []*models.Participant, quizID uint) common.QuizSessionInterface {
@@ -104,7 +114,7 @@ func NewBuildSocket(
 		return prequiz.NewPrequizSession(hub, roomName, player, questions)
 	}
 
-	hub := common.NewHub(questionService, quizService, participantService, prequizService, quizSessionFactory, prequizSessionFactory)
+	hub := common.NewHub(questionService, quizService, participantService, prequizService, quizSessionFactory, prequizSessionFactory, userService)
 	go hub.Run() // Jalankan Hub sebagai goroutine
 
 	// Daftarkan handler WebSocket
@@ -171,7 +181,10 @@ func NewBuildAuthMiddleware(db *gorm.DB) *middleware.AuthMiddleware {
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
 	authService := services.NewAuthService(authRepository, roleService)
-	authMiddleware := middleware.NewAuthMiddleware(authService)
+	// user service for life reset
+	userRepository := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepository, roleService)
+	authMiddleware := middleware.NewAuthMiddleware(authService, userService)
 	return authMiddleware
 }
 

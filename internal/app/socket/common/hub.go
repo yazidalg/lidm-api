@@ -61,6 +61,7 @@ type Hub struct {
 	QuizService        services.QuizServiceInterface
 	PreQuizService     services.PrequizServiceInterface
 	ParticipantService services.ParticipantServiceInterface
+	UserService        services.UserServiceInterface // Baru: untuk update lives & xp
 
 	QuizSession    map[string]QuizSessionInterface    // Menyimpan sesi quiz untuk setiap room pada mode 1 vs 1
 	PrequizSession map[string]PrequizSessionInterface // Menyimpan sesi pre-quiz untuk setiap room pada mode pre-quiz
@@ -78,6 +79,7 @@ func NewHub(
 	prequizService services.PrequizServiceInterface,
 	quizSessionFactory QuizSessionFactory,
 	prequizSessionFactory PrequizSessionFactory,
+	userService services.UserServiceInterface,
 ) *Hub {
 	return &Hub{
 		Message:    make(chan Message),
@@ -90,6 +92,7 @@ func NewHub(
 		QuizService:           quizService,
 		ParticipantService:    participantService,
 		PreQuizService:        prequizService,
+		UserService:           userService,
 		QuizSession:           make(map[string]QuizSessionInterface),
 		PrequizSession:        make(map[string]PrequizSessionInterface),
 		QuizSessionFactory:    quizSessionFactory,

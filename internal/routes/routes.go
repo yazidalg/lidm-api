@@ -27,7 +27,7 @@ func NewRoute(
 	activityHandler *handlers.UserActivityHandler,
 	activityService services.UserActivityServiceInterface,
 	dashboardHandler *handlers.DashboardHandler,
-) {
+) *gin.Engine {
 	router := gin.Default()
 
 	// Initialize activity tracking middleware
@@ -141,6 +141,7 @@ func NewRoute(
 		// User accessible routes
 		quizGroupHandler.GET("/:id", quizHandler.GetQuizByID)
 		quizGroupHandler.GET("/all", quizHandler.GetAllQuizzes)
+		quizGroupHandler.GET("/module/:module_id", quizHandler.GetQuizzesByModule)
 		quizGroupHandler.POST("/create", quizHandler.CreateQuizLobby)
 		quizGroupHandler.POST("/join", quizHandler.JoinQuizLobby)
 	}
@@ -313,5 +314,5 @@ func NewRoute(
 		dashboardGroup.GET("/", dashboardHandler.GetDashboard)
 	}
 
-	router.Run(":3000")
+	return router
 }

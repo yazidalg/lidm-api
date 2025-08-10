@@ -14,7 +14,7 @@ type Quiz struct {
 	InviteCode    string `gorm:"unique;size:8"`                                                  // Kode unik untuk mengundang teman
 	WinnerID      *uint  `gorm:"index"`
 	HostUserID    uint   `gorm:"index"`     // User yang membuat quiz (untuk mode multiplayer)
-	QuestionCount int    `gorm:"default:5"` // Jumlah pertanyaan (default 5)
+	QuestionCount int    `gorm:"default:10"` // Jumlah pertanyaan (default 10)
 	CreatedAt     *time.Time
 	UpdatedAt     *time.Time
 
