@@ -16,13 +16,13 @@ type User struct {
 	VerificationToken string
 	Point             int32
 	TotalXP           int32
-	ProfilePicture    string    `gorm:"type:text" json:"profile_picture,omitempty"`
-	RoleID            uint      `gorm:"not null"` // Remove default value
-	CurrentStreak     int       `gorm:"default:0" json:"current_streak"`     // Streak hari berturut-turut
-	MaxStreak         int       `gorm:"default:0" json:"max_streak"`         // Streak terpanjang
-	LastActiveDate    *time.Time `json:"last_active_date"`                   // Tanggal terakhir aktif
-	CreatedAt         time.Time `gorm:"autoCreateTime"`
-	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
+	ProfilePicture    string     `gorm:"type:text" json:"profile_picture"`
+	RoleID            uint       `gorm:"not null"` // Remove default value
+	CurrentStreak     int        `gorm:"default:0" json:"current_streak"`     // Streak hari berturut-turut
+	MaxStreak         int        `gorm:"default:0" json:"max_streak"`         // Streak terpanjang
+	LastActiveDate    *time.Time `json:"last_active_date"`                    // Tanggal terakhir aktif
+	CreatedAt         time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt         time.Time  `gorm:"autoUpdateTime"`
 
 	// Relationships
 	Role         Role          `gorm:"foreignKey:RoleID" json:"role"`

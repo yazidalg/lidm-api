@@ -113,11 +113,13 @@ func (h *ModuleHandler) createModuleWithIcon(c *gin.Context) {
 		}
 
 		// Update module with icon path
+		offsetXFloat := float64(result.OffsetX)
+		offsetYFloat := float64(result.OffsetY)
 		updateRequest := request.ModuleRequest{
 			Title:       result.Title,
 			Description: result.Description,
-			OffsetX:     &result.OffsetX,
-			OffsetY:     &result.OffsetY,
+			OffsetX:     &offsetXFloat,
+			OffsetY:     &offsetYFloat,
 			Icon:        &filePath,
 		}
 
@@ -302,11 +304,13 @@ func (h *ModuleHandler) UploadModuleIcon(c *gin.Context) {
 	}
 
 	// Update module with new icon path
+	offsetXFloat := float64(module.OffsetX)
+	offsetYFloat := float64(module.OffsetY)
 	updateRequest := request.ModuleRequest{
 		Title:       module.Title,
 		Description: module.Description,
-		OffsetX:     &module.OffsetX,
-		OffsetY:     &module.OffsetY,
+		OffsetX:     &offsetXFloat,
+		OffsetY:     &offsetYFloat,
 		Icon:        &filePath,
 	}
 
@@ -364,11 +368,13 @@ func (h *ModuleHandler) DeleteModuleIcon(c *gin.Context) {
 	utils.DeleteFile(module.Icon)
 
 	// Update module to remove icon reference
+	offsetXFloat := float64(module.OffsetX)
+	offsetYFloat := float64(module.OffsetY)
 	updateRequest := request.ModuleRequest{
 		Title:       module.Title,
 		Description: module.Description,
-		OffsetX:     &module.OffsetX,
-		OffsetY:     &module.OffsetY,
+		OffsetX:     &offsetXFloat,
+		OffsetY:     &offsetYFloat,
 		Icon:        nil,
 	}
 

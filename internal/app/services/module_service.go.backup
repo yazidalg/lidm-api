@@ -1,9 +1,26 @@
 package services
 
-import (
-"github.com/yazidalg/lidm_backend/internal/app/models"
-"github.com/yazidalg/lidm_backend/internal/app/repositories"
-"github.com/yazidalg/lidm_backend/internal/app/request"
+func (s *moduleService) CreateModule(request request.ModuleRequest) (*models.Module, error) {
+	module := &models.Module{
+		Title:       request.Title,
+		Description: request.Description,
+	}
+
+	// Handle optional fields
+	if request.OffsetX != nil {
+		module.OffsetX = uint16(*request.OffsetX)
+	}
+	if request.OffsetY != nil {
+		module.OffsetY = uint16(*request.OffsetY)
+	}
+	if request.Icon != nil {
+		module.Icon = *request.Icon
+	}
+	if request.Thumbnail != nil {
+		module.Thumbnail = *request.Thumbnail
+	}idalg/lidm_backend/internal/app/models"
+	"github.com/yazidalg/lidm_backend/internal/app/repositories"
+	"github.com/yazidalg/lidm_backend/internal/app/request"
 )
 
 type ModuleServiceInterface interface {
@@ -30,10 +47,10 @@ func (s *moduleService) CreateModule(request request.ModuleRequest) (*models.Mod
 
 	// Handle optional fields
 	if request.OffsetX != nil {
-		module.OffsetX = uint16(*request.OffsetX)
+		module.OffsetX = *request.OffsetX
 	}
 	if request.OffsetY != nil {
-		module.OffsetY = uint16(*request.OffsetY)
+		module.OffsetY = *request.OffsetY
 	}
 	if request.Icon != nil {
 		module.Icon = *request.Icon
@@ -44,38 +61,24 @@ func (s *moduleService) CreateModule(request request.ModuleRequest) (*models.Mod
 
 	for _, lesson := range request.Lessons {
 		module.Lessons = append(module.Lessons, models.Lesson{
-Title:   lesson.Title,
-Content: lesson.Content,
-})
+			Title:   lesson.Title,
+			Content: lesson.Content,
+		})
 	}
 
-	result, err := s.moduleRepository.CreateModule(module)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return s.moduleRepository.CreateModule(module)
 }
 
 func (s *moduleService) GetModuleByID(id uint32) (*models.Module, error) {
-	result, err := s.moduleRepository.GetModuleByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return s.moduleRepository.GetModuleByID(id)
 }
 
 func (s *moduleService) GetAllModules() ([]models.Module, error) {
-	result, err := s.moduleRepository.GetAllModules()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return s.moduleRepository.GetAllModules()
 }
 
 func (s *moduleService) UpdateModule(id uint32, request request.ModuleRequest) (*models.Module, error) {
+	// Get the existing module
 	module := &models.Module{
 		Title:       request.Title,
 		Description: request.Description,
@@ -83,10 +86,10 @@ func (s *moduleService) UpdateModule(id uint32, request request.ModuleRequest) (
 
 	// Handle optional fields
 	if request.OffsetX != nil {
-		module.OffsetX = uint16(*request.OffsetX)
+		module.OffsetX = *request.OffsetX
 	}
 	if request.OffsetY != nil {
-		module.OffsetY = uint16(*request.OffsetY)
+		module.OffsetY = *request.OffsetY
 	}
 	if request.Icon != nil {
 		module.Icon = *request.Icon
@@ -97,24 +100,16 @@ func (s *moduleService) UpdateModule(id uint32, request request.ModuleRequest) (
 
 	for _, lesson := range request.Lessons {
 		module.Lessons = append(module.Lessons, models.Lesson{
-Title:   lesson.Title,
-Content: lesson.Content,
-})
+			Title:   lesson.Title,
+			Content: lesson.Content,
+		})
 	}
 
-	result, err := s.moduleRepository.UpdateModule(id, module)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	// Delegate to repository for update
+	return s.moduleRepository.UpdateModule(id, module)
 }
 
 func (s *moduleService) DeleteModule(id uint32) error {
-	err := s.moduleRepository.DeleteModule(id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// Delegate to repository for deletion
+	return s.moduleRepository.DeleteModule(id)
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -109,14 +108,16 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 			roleID = 1 // Default to user role if not specified
 		}
 
-		// Create user from token data with correct ID
-		user := models.User{
-			Email:  email,
-			RoleID: uint(roleID),
-			Name:   email[:strings.Index(email, "@")], // Extract name from email
+		// Fetch complete user data from database using email from token
+		user, err := m.authService.GetByEmail(email)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "User not found",
+				"details": err.Error(),
+			})
+			c.Abort()
+			return
 		}
-		// Set the ID manually after struct creation
-		user.ID = uint(userIdFloat)
 
 		// Set user data in context
 		c.Set("user", user)

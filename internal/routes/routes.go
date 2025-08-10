@@ -293,9 +293,9 @@ func NewRoute(
 		activityGroup.GET("/my-last", activityHandler.GetMyLastActivity)
 		activityGroup.GET("/my-streak", activityHandler.GetMyStreak)
 		activityGroup.GET("/recent", activityHandler.GetRecentActivities)
-		activityGroup.GET("/most-active", activityHandler.GetMostActiveUsers) // Summary version
+		activityGroup.GET("/most-active", activityHandler.GetMostActiveUsers)                  // Summary version
 		activityGroup.GET("/most-active-detailed", activityHandler.GetMostActiveUsersDetailed) // Detailed version
-		
+
 		// Admin only routes
 		activityAdminGroup := activityGroup.Group("")
 		activityAdminGroup.Use(authMiddleware.RequireAdmin)

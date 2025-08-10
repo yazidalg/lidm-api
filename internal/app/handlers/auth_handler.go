@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 	"os"
-	"time"
 	"regexp"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -296,14 +296,14 @@ func (h *AuthHandler) BelajarLogin(c *gin.Context) {
 	}
 
 	// Check if email domain is belajar.id
-// Validasi email harus jenjang.belajar.id (sd, smp, sma)
-re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@(sd|smp|sma)\.belajar\.id$`)
-if !re.MatchString(userInfo.Email) {
-	c.JSON(http.StatusForbidden, gin.H{
-		"message": "Hanya akun belajar.id dengan jenjang sd/smp/sma yang diperbolehkan",
-	})
-	return
-}
+	// Validasi email harus jenjang.belajar.id (sd, smp, sma)
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@(sd|smp|sma)\.belajar\.id$`)
+	if !re.MatchString(userInfo.Email) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Hanya akun belajar.id dengan jenjang sd/smp/sma yang diperbolehkan",
+		})
+		return
+	}
 
 	// Check if user exists in database
 	user, err := h.authService.GetUserByEmail(userInfo.Email)
@@ -355,10 +355,10 @@ if !re.MatchString(userInfo.Email) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-// Clear authorization cookie
-c.SetCookie("authorization", "", -1, "/", "", false, true)
+	// Clear authorization cookie
+	c.SetCookie("authorization", "", -1, "/", "", false, true)
 
-c.JSON(http.StatusOK, gin.H{
-"message": "Logout successful",
-})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Logout successful",
+	})
 }
