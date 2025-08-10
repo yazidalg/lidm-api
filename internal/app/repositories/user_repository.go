@@ -7,7 +7,9 @@ import (
 
 type UserRepositoryInterface interface {
 	GetUserById(id int) (models.User, error)
+	GetUserByIDUint(id uint) (*models.User, error)
 	GetAllUsers() ([]models.User, error)
+	UpdateUser(user *models.User) error
 	UpdateUserRole(userID uint, roleID uint) (models.User, error)
 	DeleteUser(userID uint) error
 }
@@ -47,4 +49,19 @@ func (r *userRepository) GetUserById(id int) (models.User, error) {
 	var user models.User
 	err := r.db.Preload("Role").Find(&user, id).Error
 	return user, err
+}
+
+// GetUserByIDUint - Get user by uint ID
+func (r *userRepository) GetUserByIDUint(id uint) (*models.User, error) {
+	var user models.User
+	err := r.db.Preload("Role").First(&user, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// UpdateUser - Update user data
+func (r *userRepository) UpdateUser(user *models.User) error {
+	return r.db.Save(user).Error
 }

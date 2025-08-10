@@ -26,7 +26,20 @@ func (s *moduleService) CreateModule(request request.ModuleRequest) (*models.Mod
 	module := &models.Module{
 		Title:       request.Title,
 		Description: request.Description,
-		Thumbnail:   request.Thumbnail,
+	}
+
+	// Handle optional fields
+	if request.OffsetX != nil {
+		module.OffsetX = *request.OffsetX
+	}
+	if request.OffsetY != nil {
+		module.OffsetY = *request.OffsetY
+	}
+	if request.Icon != nil {
+		module.Icon = *request.Icon
+	}
+	if request.Thumbnail != nil {
+		module.Thumbnail = *request.Thumbnail
 	}
 
 	for _, lesson := range request.Lessons {
@@ -52,6 +65,20 @@ func (s *moduleService) UpdateModule(id uint32, request request.ModuleRequest) (
 	module := &models.Module{
 		Title:       request.Title,
 		Description: request.Description,
+	}
+
+	// Handle optional fields
+	if request.OffsetX != nil {
+		module.OffsetX = *request.OffsetX
+	}
+	if request.OffsetY != nil {
+		module.OffsetY = *request.OffsetY
+	}
+	if request.Icon != nil {
+		module.Icon = *request.Icon
+	}
+	if request.Thumbnail != nil {
+		module.Thumbnail = *request.Thumbnail
 	}
 
 	for _, lesson := range request.Lessons {

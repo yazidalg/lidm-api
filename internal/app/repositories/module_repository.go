@@ -41,8 +41,19 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
-	// Preload related entities if necessary
-	err := r.db.Preload("Lessons").First(&module, id).Error
+	// Preload SubMaterials dengan komponen utama: Video, AR, dan Prequizzes (tanpa Module relationship)
+	err := r.db.
+		Preload("Lessons").                                                      // Legacy support
+		Preload("SubMaterials", func(db *gorm.DB) *gorm.DB {                     // SubMaterials ordered by order field
+			return db.Order("sub_materials.order ASC")
+		}).
+		Preload("SubMaterials.VideoMaterial").                                   // Video content
+		Preload("SubMaterials.VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
+			return db.Order("video_quizzes.timestamp_start ASC")
+		}).
+		Preload("SubMaterials.ARExperiment").                                    // AR experiments
+		Preload("SubMaterials.Prequizzes").                                      // Prequizzes (minimal 10)
+		First(&module, id).Error
 
 	if err != nil {
 		return nil, err
@@ -54,8 +65,20 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 	var modules []models.Module
 
-	// Preload related entities if necessary
-	err := r.db.Preload("Lessons").Find(&modules).Error
+	// Preload SubMaterials dengan komponen utama: Video, AR, dan Prequizzes (tanpa Module relationship)
+	err := r.db.
+		Preload("Lessons").                                                      // Legacy support
+		Preload("SubMaterials", func(db *gorm.DB) *gorm.DB {                     // SubMaterials ordered by order field
+			return db.Order("sub_materials.order ASC")
+		}).
+		Preload("SubMaterials.VideoMaterial").                                   // Video content
+		Preload("SubMaterials.VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
+			return db.Order("video_quizzes.timestamp_start ASC")
+		}).
+		Preload("SubMaterials.ARExperiment").                                    // AR experiments
+		Preload("SubMaterials.Prequizzes").                                      // Prequizzes (minimal 10)
+		Order("created_at ASC").                                                 // Order modules by creation
+		Find(&modules).Error
 
 	if err != nil {
 		return nil, err

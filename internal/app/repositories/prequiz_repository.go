@@ -10,6 +10,7 @@ type PrequizRepositoryInterface interface {
 	GetPrequizByID(id uint) (*models.Prequiz, error)
 	GetAllPrequizzes() ([]models.Prequiz, error)
 	UpdatePrquiz(id uint, prequiz *models.Prequiz) (*models.Prequiz, error)
+	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
 }
 
 type prequizRepository struct {
@@ -76,4 +77,15 @@ func (r *prequizRepository) UpdatePrquiz(id uint, prequiz *models.Prequiz) (*mod
 	}
 
 	return prequiz, nil
+}
+
+func (r *prequizRepository) GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error) {
+	var answers []models.PrequizUserAnswer
+	
+	err := r.db.Preload("User").Preload("Prequiz").Where("user_id = ?", userID).Find(&answers).Error
+	if err != nil {
+		return nil, err
+	}
+	
+	return answers, nil
 }

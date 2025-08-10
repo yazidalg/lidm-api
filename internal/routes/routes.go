@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
+	"github.com/yazidalg/lidm_backend/internal/app/services"
 	"github.com/yazidalg/lidm_backend/internal/middleware"
 )
 
@@ -20,10 +21,20 @@ func NewRoute(
 	lessonHandler *handlers.LessonHandler,
 	progressHandler *handlers.ProgressHandler,
 	prequizHandler *handlers.PrequizHandler,
+	videoQuizHandler *handlers.VideoQuizHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	roleHandler *handlers.RoleHandler,
+	activityHandler *handlers.UserActivityHandler,
+	activityService services.UserActivityServiceInterface,
+	dashboardHandler *handlers.DashboardHandler,
 ) {
 	router := gin.Default()
+
+	// Initialize activity tracking middleware
+	activityMiddleware := middleware.NewActivityTrackingMiddleware(activityService)
+
+	// Static file serving for uploads
+	router.Static("/uploads", "./uploads")
 
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Welcome to the API"})
@@ -31,10 +42,14 @@ func NewRoute(
 
 	// Public routes (tidak perlu auth)
 	authGroupHandler := router.Group("auth")
+	authGroupHandler.Use(activityMiddleware.TrackActivity()) // Track auth activities
 	{
 		authGroupHandler.POST("/register", authHandler.RegisterUser)
 		authGroupHandler.POST("/login", authHandler.LoginUser)
+		authGroupHandler.POST("/google", authHandler.GoogleLogin)
 		authGroupHandler.GET("/verify/:verificationToken", authHandler.VerifyEmail)
+		authGroupHandler.POST("/belajar-login", authHandler.BelajarLogin)
+		authGroupHandler.POST("/logout", authHandler.Logout)
 	}
 
 	// Forgot password routes (public)
@@ -48,6 +63,7 @@ func NewRoute(
 	// User routes (authenticated users only)
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(authMiddleware.RequireAuth)
+	userGroupHandler.Use(activityMiddleware.TrackActivity()) // Track user activities
 	{
 		userGroupHandler.GET("/profile", userHandler.GetUserById)
 	}
@@ -112,6 +128,7 @@ func NewRoute(
 	// Quiz routes - Admin only untuk CUD, User bisa Read
 	quizGroupHandler := router.Group("quiz")
 	quizGroupHandler.Use(authMiddleware.RequireAuth)
+	quizGroupHandler.Use(activityMiddleware.TrackActivity()) // Track quiz activities
 	{
 		// Admin only routes
 		quizAdminGroup := quizGroupHandler.Group("")
@@ -154,6 +171,7 @@ func NewRoute(
 	// Module routes - Admin only untuk CUD, User bisa Read
 	moduleGroupHandler := router.Group("module")
 	moduleGroupHandler.Use(authMiddleware.RequireAuth)
+	moduleGroupHandler.Use(activityMiddleware.TrackActivity()) // Track module activities
 	{
 		// Admin only routes
 		moduleAdminGroup := moduleGroupHandler.Group("")
@@ -162,6 +180,8 @@ func NewRoute(
 			moduleAdminGroup.POST("/create", moduleHandler.CreateModule)
 			moduleAdminGroup.PUT("/:id", moduleHandler.UpdateModule)
 			moduleAdminGroup.DELETE("/:id", moduleHandler.DeleteModule)
+			moduleAdminGroup.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
+			moduleAdminGroup.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
 		}
 
 		// User accessible routes
@@ -172,6 +192,7 @@ func NewRoute(
 	// Lesson routes - Admin only untuk CUD, User bisa Read
 	lessonGroupHandler := router.Group("lesson")
 	lessonGroupHandler.Use(authMiddleware.RequireAuth)
+	lessonGroupHandler.Use(activityMiddleware.TrackActivity()) // Track lesson activities
 	{
 		// Admin only routes
 		lessonAdminGroup := lessonGroupHandler.Group("")
@@ -218,6 +239,28 @@ func NewRoute(
 		// User accessible routes
 		prequizGroupHandler.GET("/:id", prequizHandler.GetPrequizByID)
 		prequizGroupHandler.GET("/all", prequizHandler.GetAllPrequizzes)
+		prequizGroupHandler.GET("/user-answers", prequizHandler.GetUserPrequizAnswers)
+	}
+
+	// Video Quiz routes - Admin only untuk CUD, User bisa Read
+	videoQuizGroupHandler := router.Group("video-quiz")
+	videoQuizGroupHandler.Use(authMiddleware.RequireAuth)
+	{
+		// Admin only routes for Create, Update, Delete
+		videoQuizAdminGroup := videoQuizGroupHandler.Group("")
+		videoQuizAdminGroup.Use(authMiddleware.RequireAdmin)
+		{
+			videoQuizAdminGroup.POST("/create", videoQuizHandler.CreateVideoQuiz)
+			videoQuizAdminGroup.PUT("/:id", videoQuizHandler.UpdateVideoQuiz)
+			videoQuizAdminGroup.DELETE("/:id", videoQuizHandler.DeleteVideoQuiz)
+		}
+
+		// User accessible routes
+		videoQuizGroupHandler.GET("/:id", videoQuizHandler.GetVideoQuizByID)
+		videoQuizGroupHandler.GET("/video-material/:video_material_id", videoQuizHandler.GetVideoQuizzesByVideoMaterial)
+		videoQuizGroupHandler.POST("/submit", videoQuizHandler.SubmitVideoQuizAnswer)
+		videoQuizGroupHandler.GET("/user-answers", videoQuizHandler.GetAllUserVideoQuizAnswers)
+		videoQuizGroupHandler.GET("/user-answers/:video_material_id", videoQuizHandler.GetUserVideoQuizAnswers)
 	}
 
 	// Admin routes - Khusus untuk management
@@ -236,6 +279,38 @@ func NewRoute(
 		adminGroup.GET("/roles/:id", roleHandler.GetRoleById)
 		adminGroup.PUT("/roles/:id", roleHandler.UpdateRole)
 		adminGroup.DELETE("/roles/:id", roleHandler.DeleteRole)
+	}
+
+	// Public RAG endpoint (no auth required for AI/knowledge systems)
+	router.GET("/user-activity/for-rag", activityHandler.GetActivitiesForRAG) // Enhanced data for RAG/AI
+
+	// User Activity routes - Admin dan User bisa akses
+	activityGroup := router.Group("user-activity")
+	activityGroup.Use(authMiddleware.RequireAuth)
+	{
+		// User accessible routes
+		activityGroup.GET("/my-activities", activityHandler.GetMyActivities)
+		activityGroup.GET("/my-last", activityHandler.GetMyLastActivity)
+		activityGroup.GET("/my-streak", activityHandler.GetMyStreak)
+		activityGroup.GET("/recent", activityHandler.GetRecentActivities)
+		activityGroup.GET("/most-active", activityHandler.GetMostActiveUsers) // Summary version
+		activityGroup.GET("/most-active-detailed", activityHandler.GetMostActiveUsersDetailed) // Detailed version
+		
+		// Admin only routes
+		activityAdminGroup := activityGroup.Group("")
+		activityAdminGroup.Use(authMiddleware.RequireAdmin)
+		{
+			activityAdminGroup.GET("/users/:user_id", activityHandler.GetUserActivities)
+			activityAdminGroup.GET("/stats", activityHandler.GetActivityStats)
+			activityAdminGroup.POST("/log", activityHandler.LogActivity)
+		}
+	}
+
+	// Dashboard routes - Admin dan User bisa akses
+	dashboardGroup := router.Group("dashboard")
+	dashboardGroup.Use(authMiddleware.RequireAuth)
+	{
+		dashboardGroup.GET("/", dashboardHandler.GetDashboard)
 	}
 
 	router.Run(":3000")

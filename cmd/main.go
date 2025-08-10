@@ -29,7 +29,13 @@ func main() {
 	lessonHandler := helpers.NewBuildLesson(db)
 	progressHandler := helpers.NewBuildProgress(db)
 	prequizHandler, prequizService := helpers.NewBuildPrequiz(db)
+	videoQuizHandler, videoQuizService := helpers.NewBuildVideoQuiz(db)
+	activityHandler, activityService := helpers.NewBuildUserActivity(db)
+	dashboardHandler := helpers.NewBuildDashboard(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService)
+
+	// Suppress unused variable warning for videoQuizService if needed
+	_ = videoQuizService
 
 	routes.NewRoute(
 		authHandler,
@@ -45,7 +51,11 @@ func main() {
 		lessonHandler,
 		progressHandler,
 		prequizHandler,
+		videoQuizHandler,
 		authMiddleware,
 		roleHandler, // Add roleHandler parameter
+		activityHandler,
+		activityService,
+		dashboardHandler,
 	)
 }

@@ -20,6 +20,14 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Module{},
+		&models.SubMaterial{},
+		&models.VideoMaterial{},
+		&models.VideoQuiz{},
+		&models.VideoQuizUserAnswer{},
+		&models.ARExperiment{},
+		&models.QuizQuestion{},
+		&models.Flashcard{},
+		&models.UserFlashcardProgress{},
 		&models.Quiz{},
 		&models.Participant{},
 		&models.Question{},
@@ -30,7 +38,13 @@ func Migrate(db *gorm.DB) error {
 		&models.Progress{},
 		&models.Prequiz{},
 		&models.QuizSession{},
+		&models.UserActivity{},
 	); err != nil {
+		return err
+	}
+
+	// Seed default admin user
+	if err := SeedAdminUser(db); err != nil {
 		return err
 	}
 

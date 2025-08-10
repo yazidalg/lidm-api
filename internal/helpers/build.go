@@ -181,3 +181,40 @@ func NewBuildRole(db *gorm.DB) *handlers.RoleHandler {
 	roleHandler := handlers.NewRoleHandler(roleService)
 	return roleHandler
 }
+
+func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.UserActivityServiceInterface) {
+	activityRepository := repositories.NewUserActivityRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	activityService := services.NewUserActivityService(activityRepository, userRepository)
+	
+	// Add lesson and module service for enhanced RAG data
+	lessonRepository := repositories.NewLessonRepository(db)
+	moduleRepository := repositories.NewModuleRepository(db)
+	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
+	moduleService := services.NewModuleService(moduleRepository)
+	
+	activityHandler := handlers.NewUserActivityHandler(activityService, lessonService, moduleService)
+	return activityHandler, activityService
+}
+
+func NewBuildDashboard(db *gorm.DB) *handlers.DashboardHandler {
+	activityRepository := repositories.NewUserActivityRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	activityService := services.NewUserActivityService(activityRepository, userRepository)
+
+	roleRepository := repositories.NewRoleRepository(db)
+	roleService := services.NewRoleService(roleRepository)
+	userService := services.NewUserService(userRepository, roleService)
+
+	dashboardHandler := handlers.NewDashboardHandler(activityService, userService)
+	return dashboardHandler
+}
+
+func NewBuildVideoQuiz(db *gorm.DB) (*handlers.VideoQuizHandler, services.VideoQuizServiceInterface) {
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	videoQuizService := services.NewVideoQuizService(videoQuizRepository, userRepository)
+	videoQuizHandler := handlers.NewVideoQuizHandler(videoQuizService)
+
+	return videoQuizHandler, videoQuizService
+}

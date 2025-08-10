@@ -11,6 +11,7 @@ type PrequizServiceInterface interface {
 	GetPrequizByID(id uint) (*models.Prequiz, error)
 	GetAllPrequizzes() ([]models.Prequiz, error)
 	UpdatePrequiz(id uint, prequiz request.PrequizRequest) (*models.Prequiz, error)
+	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
 }
 
 type prequizService struct {
@@ -34,7 +35,7 @@ func NewPrequizService(
 func (s *prequizService) CreatePrequiz(prequiz request.PrequizRequest) (*models.Prequiz, error) {
 
 	prequizModel := models.Prequiz{
-		LessonID:      prequiz.LessonID,
+		SubMaterialID: prequiz.SubMaterialID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,
@@ -55,7 +56,7 @@ func (s *prequizService) GetAllPrequizzes() ([]models.Prequiz, error) {
 func (s *prequizService) UpdatePrequiz(id uint, prequiz request.PrequizRequest) (*models.Prequiz, error) {
 
 	prequizModel := models.Prequiz{
-		LessonID:      prequiz.LessonID,
+		SubMaterialID: prequiz.SubMaterialID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,
@@ -63,4 +64,8 @@ func (s *prequizService) UpdatePrequiz(id uint, prequiz request.PrequizRequest) 
 	}
 
 	return s.prequizRepo.UpdatePrquiz(id, &prequizModel)
+}
+
+func (s *prequizService) GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error) {
+	return s.prequizRepo.GetUserPrequizAnswers(userID)
 }

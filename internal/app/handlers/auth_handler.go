@@ -4,11 +4,13 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
+	"github.com/yazidalg/lidm_backend/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -123,12 +125,20 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
+	// Generate JWT token with consistent structure
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = os.Getenv("SECRET") // fallback to SECRET if JWT_SECRET not set
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": findByEmail.ID,
-		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		"id":      findByEmail.ID,
+		"email":   findByEmail.Email,
+		"role_id": findByEmail.RoleID,
+		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
 	})
 
-	tokenStr, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	tokenStr, err := token.SignedString([]byte(jwtSecret))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -139,12 +149,13 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("authorization", tokenStr, 3600*24, "", "", false, true)
+	c.SetCookie("authorization", tokenStr, 3600*24*7, "", "", false, true) // 7 days
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Login successful",
-		"data":    tokenStr,
+		"token":   tokenStr,
+		"user":    findByEmail,
 	})
 }
 
@@ -181,4 +192,173 @@ func (h *AuthHandler) VerifyEmail(c *gin.Context) {
 		"message": "User verified successfully",
 		"data":    user,
 	})
+}
+
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	var body struct {
+		IdToken string `json:"id_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Initialize Google Auth (you should get CLIENT_ID from environment)
+	googleAuth := utils.NewGoogleAuth(os.Getenv("GOOGLE_CLIENT_ID"))
+
+	// Verify Google token
+	userInfo, err := googleAuth.VerifyGoogleToken(body.IdToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid Google token",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Check if user exists in database
+	user, err := h.authService.GetUserByEmail(userInfo.Email)
+	if err != nil {
+		// User doesn't exist, create new user
+		registerReq := request.UserRegisterRequest{
+			Name:     userInfo.Name,
+			Email:    userInfo.Email,
+			Password: "", // No password for Google auth users
+			Class:    "", // Will need to be updated later
+		}
+
+		user, err = h.authService.RegisterUserWithGoogle(registerReq, userInfo.Picture)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to create user",
+				"details": err.Error(),
+			})
+			return
+		}
+	}
+
+	// Generate JWT token with consistent structure
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = os.Getenv("SECRET") // fallback to SECRET if JWT_SECRET not set
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":      user.ID,
+		"email":   user.Email,
+		"role_id": user.RoleID,
+		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+	})
+
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to generate token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   tokenString,
+		"user":    user,
+	})
+}
+
+func (h *AuthHandler) BelajarLogin(c *gin.Context) {
+	var body struct {
+		IdToken string `json:"id_token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Initialize Google Auth (you should get CLIENT_ID from environment)
+	googleAuth := utils.NewGoogleAuth(os.Getenv("GOOGLE_CLIENT_ID"))
+
+	// Verify Google token
+	userInfo, err := googleAuth.VerifyGoogleToken(body.IdToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid Google token",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Check if email domain is belajar.id
+// Validasi email harus jenjang.belajar.id (sd, smp, sma)
+re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@(sd|smp|sma)\.belajar\.id$`)
+if !re.MatchString(userInfo.Email) {
+	c.JSON(http.StatusForbidden, gin.H{
+		"message": "Hanya akun belajar.id dengan jenjang sd/smp/sma yang diperbolehkan",
+	})
+	return
+}
+
+	// Check if user exists in database
+	user, err := h.authService.GetUserByEmail(userInfo.Email)
+	if err != nil {
+		// User doesn't exist, create new user
+		registerReq := request.UserRegisterRequest{
+			Name:     userInfo.Name,
+			Email:    userInfo.Email,
+			Password: "", // No password for Google auth users
+			Class:    "", // Will need to be updated later
+		}
+
+		user, err = h.authService.RegisterUserWithGoogle(registerReq, userInfo.Picture)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to create user",
+				"details": err.Error(),
+			})
+			return
+		}
+	}
+
+	// Generate JWT token with consistent structure
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = os.Getenv("SECRET") // fallback to SECRET if JWT_SECRET not set
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":      user.ID,
+		"email":   user.Email,
+		"role_id": user.RoleID,
+		"exp":     time.Now().Add(time.Hour * 24 * 7).Unix(), // 7 days
+	})
+
+	tokenString, err := token.SignedString([]byte(jwtSecret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to generate token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Login successful",
+		"token":   tokenString,
+		"user":    user,
+	})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+// Clear authorization cookie
+c.SetCookie("authorization", "", -1, "/", "", false, true)
+
+c.JSON(http.StatusOK, gin.H{
+"message": "Logout successful",
+})
 }

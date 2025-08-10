@@ -11,8 +11,10 @@ import (
 
 type AuthServiceInterface interface {
 	RegisterUser(user request.UserRegisterRequest) (models.User, error)
+	RegisterUserWithGoogle(user request.UserRegisterRequest, picture string) (models.User, error)
 	LoginUser(id int) (models.User, error)
 	GetByEmail(email string) (models.User, error)
+	GetUserByEmail(email string) (models.User, error)
 	GetByVerificationToken(token string) (models.User, error)
 	VerifyUser(user models.User) (models.User, error)
 	GetVerifiedUser(email string) (models.User, error)
@@ -86,4 +88,38 @@ func (s *authService) VerifyUser(user models.User) (models.User, error) {
 
 func (s *authService) GetVerifiedUser(email string) (models.User, error) {
 	return s.authRepository.GetVerifiedUser(email)
+}
+
+func (s *authService) GetUserByEmail(email string) (models.User, error) {
+	return s.authRepository.GetByEmail(email)
+}
+
+func (s *authService) RegisterUserWithGoogle(user request.UserRegisterRequest, picture string) (models.User, error) {
+	// Get default user role
+	role, err := s.roleService.GetRoleByName(models.RoleUserName)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	userData := models.User{
+		Name:              user.Name,
+		Email:             user.Email,
+		Class:             user.Class,
+		Password:          "", // No password for Google auth
+		RoleID:            role.ID,
+		IsVerified:        true, // Google users are pre-verified
+		VerificationToken: "",   // No verification needed
+		Point:             0,
+		TotalXP:           0,
+		ProfilePicture:    picture, // Store Google profile picture
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
+	}
+
+	createdUser, err := s.authRepository.RegisterUser(userData)
+	if err != nil {
+		return userData, err
+	}
+
+	return createdUser, nil
 }

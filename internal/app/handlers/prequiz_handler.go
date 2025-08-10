@@ -38,10 +38,10 @@ func (h *PrequizHandler) CreatePrequiz(c *gin.Context) {
 		return
 	}
 
-	lesson, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
-	if lessonErr != nil || lesson == nil || lesson.ID == 0 {
+	// Validate SubMaterialID exists (simple validation)
+	if request.SubMaterialID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Lesson or user not found",
+			"message": "SubMaterial ID is required",
 			"error":   "Failed to create prequiz",
 		})
 		return
@@ -112,10 +112,10 @@ func (h *PrequizHandler) UpdatePrequiz(c *gin.Context) {
 		return
 	}
 
-	lesson, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
-	if lessonErr != nil || lesson == nil {
+	// Validate SubMaterialID exists (simple validation)
+	if request.SubMaterialID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Lesson or user not found",
+			"message": "SubMaterial ID is required",
 			"error":   "Failed to update prequiz",
 		})
 		return
@@ -138,5 +138,39 @@ func (h *PrequizHandler) UpdatePrequiz(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Prequiz updated successfully",
 		"data":    prequiz,
+	})
+}
+
+func (h *PrequizHandler) GetUserPrequizAnswers(c *gin.Context) {
+	userIDStr := c.Query("user_id")
+	if userIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User ID is required",
+			"error":   "Missing user_id parameter",
+		})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	answers, err := h.prequizService.GetUserPrequizAnswers(uint(userID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to get user prequiz answers",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User prequiz answers retrieved successfully",
+		"data":    answers,
 	})
 }

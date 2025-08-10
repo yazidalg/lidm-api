@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -42,22 +43,38 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 		}
 	}
 
+	// Get JWT secret with fallback
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = os.Getenv("SECRET")
+	}
+
+	if jwtSecret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "JWT secret not configured",
+		})
+		c.Abort()
+		return
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(os.Getenv("SECRET")), nil
+		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Invalid token",
+			"details": err.Error(),
 		})
 		c.Abort()
 		return
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Check token expiration
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"message": "Token expired",
@@ -66,29 +83,51 @@ func (m *AuthMiddleware) RequireAuth(c *gin.Context) {
 			return
 		}
 
-		userIdFloat, ok := claims["sub"].(float64)
+		// Extract the user ID from token claims
+		userIdFloat, ok := claims["id"].(float64)
 		if !ok {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "Invalid token claims",
+				"message": "Invalid token claims - user ID not found",
 			})
 			c.Abort()
 			return
 		}
 
-		user, err := m.authService.LoginUser(int(userIdFloat))
-		if err != nil {
+		// Extract email from token claims
+		email, emailExists := claims["email"].(string)
+		if !emailExists {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "User not found",
+				"message": "Invalid token claims - email not found",
 			})
 			c.Abort()
 			return
 		}
 
+		// Extract role_id from token claims
+		roleID, roleExists := claims["role_id"].(float64)
+		if !roleExists {
+			roleID = 1 // Default to user role if not specified
+		}
+
+		// Create user from token data with correct ID
+		user := models.User{
+			Email:  email,
+			RoleID: uint(roleID),
+			Name:   email[:strings.Index(email, "@")], // Extract name from email
+		}
+		// Set the ID manually after struct creation
+		user.ID = uint(userIdFloat)
+
+		// Set user data in context
 		c.Set("user", user)
+		c.Set("userID", userIdFloat)
+		c.Set("user_id", userIdFloat) // For activity tracking compatibility
+		c.Set("email", email)
+		c.Set("roleID", roleID)
 		c.Next()
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "Invalid token",
+			"message": "Invalid token claims",
 		})
 		c.Abort()
 		return
