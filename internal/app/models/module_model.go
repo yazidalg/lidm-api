@@ -8,14 +8,13 @@ import (
 
 type Module struct {
 	gorm.Model
-	Title       string    `gorm:"not null" json:"title"`
-	Description string    `gorm:"type:text" json:"description"`
-	OffsetX     float64   `json:"offset_x"`
-	OffsetY     float64   `json:"offset_y"`
-	Icon        string    `json:"icon"`
-	Thumbnail   string    `json:"thumbnail"`
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	Title       string
+	Description string
+	Thumbnail   string
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
+	OffsetX     uint16    `gorm:"default:0"` // Offset for the lesson in the module
+	OffsetY     uint16    `gorm:"default:0"` // Offset for the lesson in the module
 
 	// Relationships
 	Lessons      []Lesson      `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"lessons,omitempty"` // Legacy relationship
