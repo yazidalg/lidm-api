@@ -96,15 +96,22 @@ func ParseToken(tokenStr string) (uint, error) {
 					var payload map[string]any
 					if jsonErr := json.Unmarshal(payloadBytes, &payload); jsonErr == nil {
 						// try id / sub keys
-						if v, ok := payload["sub"]; ok { payload["id"] = v }
+						if v, ok := payload["sub"]; ok {
+							payload["id"] = v
+						}
 						if raw, ok := payload["id"]; ok {
 							switch vv := raw.(type) {
-							case float64: return uint(vv), nil
-							case int: return uint(vv), nil
-							case int64: return uint(vv), nil
+							case float64:
+								return uint(vv), nil
+							case int:
+								return uint(vv), nil
+							case int64:
+								return uint(vv), nil
 							case string:
 								var id uint
-								if _, scanErr := fmt.Sscanf(vv, "%d", &id); scanErr == nil { return id, nil }
+								if _, scanErr := fmt.Sscanf(vv, "%d", &id); scanErr == nil {
+									return id, nil
+								}
 							}
 						}
 					}
@@ -118,21 +125,36 @@ func ParseToken(tokenStr string) (uint, error) {
 // ExtractUnverifiedUserID decodes JWT payload tanpa verifikasi signature (HANYA untuk dev / fallback)
 func ExtractUnverifiedUserID(tokenStr string) (uint, error) {
 	parts := strings.Split(tokenStr, ".")
-	if len(parts) != 3 { return 0, fmt.Errorf("invalid token format") }
+	if len(parts) != 3 {
+		return 0, fmt.Errorf("invalid token format")
+	}
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil { return 0, err }
+	if err != nil {
+		return 0, err
+	}
 	var payload map[string]any
-	if err := json.Unmarshal(payloadBytes, &payload); err != nil { return 0, err }
+	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
+		return 0, err
+	}
 	// prefer id then sub
 	var raw any
-	if v, ok := payload["id"]; ok { raw = v } else if v, ok := payload["sub"]; ok { raw = v }
+	if v, ok := payload["id"]; ok {
+		raw = v
+	} else if v, ok := payload["sub"]; ok {
+		raw = v
+	}
 	switch v := raw.(type) {
-	case float64: return uint(v), nil
-	case int: return uint(v), nil
-	case int64: return uint(v), nil
+	case float64:
+		return uint(v), nil
+	case int:
+		return uint(v), nil
+	case int64:
+		return uint(v), nil
 	case string:
 		var id uint
-		if _, scanErr := fmt.Sscanf(v, "%d", &id); scanErr == nil { return id, nil }
+		if _, scanErr := fmt.Sscanf(v, "%d", &id); scanErr == nil {
+			return id, nil
+		}
 	}
 	return 0, fmt.Errorf("user id not found in payload")
 }

@@ -19,7 +19,9 @@ func main() {
 	// Optional quiz seeding via env: SEED_QUIZ_MODULES="Module Title 1,Module Title 2"
 	if modsEnv := os.Getenv("SEED_QUIZ_MODULES"); modsEnv != "" {
 		modules := strings.Split(modsEnv, ",")
-		for i := range modules { modules[i] = strings.TrimSpace(modules[i]) }
+		for i := range modules {
+			modules[i] = strings.TrimSpace(modules[i])
+		}
 		database.SeedQuizData(db, modules)
 	}
 

@@ -2,8 +2,8 @@ package utils
 
 import (
 	"math/rand"
-	"time"
 	"strconv"
+	"time"
 )
 
 func GenerateInviteCode(length int) string {

@@ -199,13 +199,13 @@ func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.
 	activityRepository := repositories.NewUserActivityRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 	activityService := services.NewUserActivityService(activityRepository, userRepository)
-	
+
 	// Add lesson and module service for enhanced RAG data
 	lessonRepository := repositories.NewLessonRepository(db)
 	moduleRepository := repositories.NewModuleRepository(db)
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 	moduleService := services.NewModuleService(moduleRepository)
-	
+
 	activityHandler := handlers.NewUserActivityHandler(activityService, lessonService, moduleService)
 	return activityHandler, activityService
 }

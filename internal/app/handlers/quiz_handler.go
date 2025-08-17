@@ -185,11 +185,20 @@ func (h *QuizHandler) GetQuizByID(c *gin.Context) {
 // GetQuizzesByModule returns all quizzes for a given module id
 func (h *QuizHandler) GetQuizzesByModule(c *gin.Context) {
 	moduleIDParam := c.Param("module_id")
-	if moduleIDParam == "" { c.JSON(http.StatusBadRequest, gin.H{"error":"module_id is required"}); return }
+	if moduleIDParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "module_id is required"})
+		return
+	}
 	idUint64, err := strconv.ParseUint(moduleIDParam, 10, 32)
-	if err != nil { c.JSON(http.StatusBadRequest, gin.H{"error":"invalid module_id"}); return }
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid module_id"})
+		return
+	}
 	quizzes, err := h.quizService.GetQuizzesByModule(uint(idUint64))
-	if err != nil { c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}); return }
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"data": quizzes})
 }
 

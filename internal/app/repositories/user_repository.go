@@ -86,7 +86,7 @@ func (r *userRepository) ResetLivesIfNeeded(userID uint, maxLives int) error {
 	now := time.Now()
 	if user.LifeResetAt == nil || (user.LifeResetAt.Year() != now.Year() || user.LifeResetAt.YearDay() != now.YearDay()) {
 		return r.db.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
-			"lives":        maxLives,
+			"lives":         maxLives,
 			"life_reset_at": now,
 		}).Error
 	}
