@@ -1,0 +1,1595 @@
+2025/08/18 13:22:39 .env file loaded
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[7.520ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[5.297ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[4.017ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'roles' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[0.349ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[1.284ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[0.877ms] [34;1m[rows:-][0m SELECT * FROM `roles` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[5.427ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'roles' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.343ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.258ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:10
+[0m[33m[3.085ms] [34;1m[rows:2][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'lidm_db' 
+	AND TABLE_NAME = 'roles' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.364ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.142ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m
+[0m[33m[4.383ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'roles' AND constraint_name = 'uni_roles_name'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/app/models/role_model.go:50
+[0m[33m[1.229ms] [34;1m[rows:1][0m SELECT * FROM `roles` WHERE name = 'user' ORDER BY `roles`.`id` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/app/models/role_model.go:50
+[0m[33m[0.979ms] [34;1m[rows:1][0m SELECT * FROM `roles` WHERE name = 'admin' ORDER BY `roles`.`id` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.431ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.558ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.918ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'roles' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.328ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[7.549ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.096ms] [34;1m[rows:-][0m SELECT * FROM `roles` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[4.603ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'roles' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.458ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.159ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.710ms] [34;1m[rows:2][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'lidm_db' 
+	AND TABLE_NAME = 'roles' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.316ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.414ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m
+[0m[33m[2.147ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'roles' AND constraint_name = 'uni_roles_name'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.351ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.451ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.845ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'users' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.567ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.595ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.903ms] [34;1m[rows:-][0m SELECT * FROM `users` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.957ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'users' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.378ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.304ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.980ms] [34;1m[rows:4][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'lidm_db' 
+	AND TABLE_NAME = 'users' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.778ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.990ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m
+[0m[33m[3.271ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'users' AND constraint_name = 'uni_users_email'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.334ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.333ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[7.981ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'users' AND constraint_name = 'fk_roles_users'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.302ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.166ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.210ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'users' AND index_name = 'idx_users_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.351ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.162ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.551ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'modules' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.436ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.756ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.111ms] [34;1m[rows:-][0m SELECT * FROM `modules` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[7.971ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'modules' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.543ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.675ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.687ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'modules' AND index_name = 'idx_modules_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.524ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.690ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.546ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'ar_experiments' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.381ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.769ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.655ms] [34;1m[rows:-][0m SELECT * FROM `ar_experiments` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.667ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'ar_experiments' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.280ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.270ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.843ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'ar_experiments' AND index_name = 'idx_ar_experiments_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.454ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.119ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.010ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'sub_materials' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.397ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.120ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.003ms] [34;1m[rows:-][0m SELECT * FROM `sub_materials` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.512ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'sub_materials' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.337ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.219ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.844ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'sub_materials' AND constraint_name = 'fk_modules_sub_materials'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.296ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[4.996ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[27.530ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'sub_materials' AND constraint_name = 'fk_sub_materials_ar_experiment'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.252ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.566ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.987ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_materials' AND index_name = 'idx_sub_materials_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.589ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.788ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.902ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_materials' AND index_name = 'idx_sub_materials_module_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.332ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.345ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.815ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_materials' AND index_name = 'idx_sub_materials_ar_experiment_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.635ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.276ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.271ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'video_materials' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.321ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.369ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.481ms] [34;1m[rows:-][0m SELECT * FROM `video_materials` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[25.725ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'video_materials' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.487ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[4.018ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.002ms] [34;1m[rows:3][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'lidm_db' 
+	AND TABLE_NAME = 'video_materials' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.686ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.627ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.809ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'video_materials' AND constraint_name = 'uni_video_materials_sub_material_id'
+
+2025/08/18 13:22:39 [32m
+[0m[33m[0.492ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.599ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m
+[0m[33m[1.826ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_materials' AND index_name = 'idx_video_materials_sub_material_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.287ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.840ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.695ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'video_materials' AND constraint_name = 'fk_sub_materials_video_material'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.517ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.702ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.101ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_materials' AND index_name = 'idx_video_materials_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.300ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.472ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.341ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_materials' AND index_name = 'idx_video_materials_sub_material_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.293ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.136ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.371ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'video_quizzes' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.212ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.816ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.009ms] [34;1m[rows:-][0m SELECT * FROM `video_quizzes` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.372ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'video_quizzes' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.916ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.596ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.961ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'video_quizzes' AND constraint_name = 'fk_video_materials_video_quizzes'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.441ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.316ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.903ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_quizzes' AND index_name = 'idx_video_quizzes_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[21.758ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.413ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[5.837ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_quizzes' AND index_name = 'idx_video_quizzes_video_material_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.837ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.622ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.630ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.931ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[4.952ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.167ms] [34;1m[rows:-][0m SELECT * FROM `video_quiz_user_answers` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.107ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.450ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.070ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.484ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND constraint_name = 'fk_video_quiz_user_answers_user'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.513ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.342ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.507ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND constraint_name = 'fk_video_quizzes_user_answers'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.304ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.109ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.679ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND index_name = 'idx_video_quiz_user_answers_deleted_at'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.299ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.939ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.749ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND index_name = 'idx_video_quiz_user_answers_video_quiz_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.152ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.306ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.131ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'video_quiz_user_answers' AND index_name = 'idx_video_quiz_user_answers_user_id'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.432ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.574ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.303ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'questions' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.373ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.351ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.109ms] [34;1m[rows:-][0m SELECT * FROM `questions` LIMIT 1
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.621ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'questions' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:39 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.207ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.840ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.902ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'questions' AND constraint_name = 'fk_questions_module'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.281ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.190ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.218ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'questions' AND index_name = 'idx_questions_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.151ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.723ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.044ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'questions' AND index_name = 'idx_questions_module_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.147ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.700ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.331ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.152ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.035ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.521ms] [34;1m[rows:-][0m SELECT * FROM `quizzes` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.603ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m
+[0m[33m[0.183ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m
+[0m[33m[0.738ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.333ms] [34;1m[rows:6][0m 
+SELECT
+	TABLE_NAME,
+	COLUMN_NAME,
+	INDEX_NAME,
+	NON_UNIQUE 
+FROM
+	information_schema.STATISTICS 
+WHERE
+	TABLE_SCHEMA = 'lidm_db' 
+	AND TABLE_NAME = 'quizzes' 
+ORDER BY
+	INDEX_NAME,
+	SEQ_IN_INDEX
+
+2025/08/18 13:22:40 [32m
+[0m[33m[0.251ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m
+[0m[33m[1.322ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m
+[0m[33m[1.316ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quizzes' AND constraint_name = 'uni_quizzes_invite_code'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.180ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.748ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.152ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quizzes' AND constraint_name = 'fk_modules_quizzes'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.125ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.689ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.022ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quizzes' AND constraint_name = 'fk_quizzes_winner'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.300ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[23.484ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.073ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quizzes' AND constraint_name = 'fk_quizzes_host'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.122ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.231ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.576ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' AND index_name = 'idx_quizzes_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.147ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.056ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.933ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' AND index_name = 'idx_quizzes_module_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.142ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.610ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.982ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' AND index_name = 'idx_quizzes_winner_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.180ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.752ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.434ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quizzes' AND index_name = 'idx_quizzes_host_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.172ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.717ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.032ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'quiz_questions' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.123ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.551ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.339ms] [34;1m[rows:-][0m SELECT * FROM `quiz_questions` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.115ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'quiz_questions' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.153ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.544ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.247ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quiz_questions' AND constraint_name = 'fk_quiz_questions_question'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.425ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.879ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.929ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quiz_questions' AND constraint_name = 'fk_quiz_questions_quiz'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.090ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.563ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.949ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'flashcards' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.125ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.545ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.337ms] [34;1m[rows:-][0m SELECT * FROM `flashcards` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[27.994ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'flashcards' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.256ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.930ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.299ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'flashcards' AND index_name = 'idx_flashcards_sub_material_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.232ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.732ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.110ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'flashcards' AND index_name = 'idx_flashcards_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.129ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.826ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.908ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.221ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.009ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.461ms] [34;1m[rows:-][0m SELECT * FROM `user_flashcard_progresses` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.653ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.158ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.670ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.260ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND constraint_name = 'fk_user_flashcard_progresses_user'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.023ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.201ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.204ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND constraint_name = 'fk_flashcards_user_flashcard_progresses'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.151ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.708ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.155ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND index_name = 'idx_user_flashcard_progresses_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.167ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.923ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[27.917ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND index_name = 'idx_user_flashcard_progresses_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.644ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.270ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.780ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_flashcard_progresses' AND index_name = 'idx_user_flashcard_progresses_flashcard_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.540ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.859ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.022ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'participants' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.382ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.163ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.126ms] [34;1m[rows:-][0m SELECT * FROM `participants` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.228ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'participants' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.288ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.957ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.777ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'participants' AND constraint_name = 'fk_quizzes_participants'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.271ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.035ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.635ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'participants' AND constraint_name = 'fk_users_participants'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.320ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.299ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.468ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'participants' AND index_name = 'idx_participants_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.160ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.816ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.127ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'participants' AND index_name = 'idx_participants_quiz_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.351ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.780ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.264ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'participants' AND index_name = 'idx_participants_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.244ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.117ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.302ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'answers' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.148ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.635ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.501ms] [34;1m[rows:-][0m SELECT * FROM `answers` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.864ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'answers' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.229ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.880ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.393ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'answers' AND constraint_name = 'fk_answers_participant'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.157ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.715ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[25.948ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'answers' AND constraint_name = 'fk_answers_question'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.309ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.227ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.823ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'answers' AND index_name = 'idx_answers_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.332ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.575ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.570ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'answers' AND index_name = 'idx_answers_question_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.311ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.425ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.987ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'answers' AND index_name = 'idx_answers_participant_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.481ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.318ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.408ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'leaderboards' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.293ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.217ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.782ms] [34;1m[rows:-][0m SELECT * FROM `leaderboards` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.615ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'leaderboards' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.337ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.397ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.051ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'leaderboards' AND constraint_name = 'fk_users_leaderboard'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.279ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.870ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.443ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'leaderboards' AND index_name = 'idx_leaderboards_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.863ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.844ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.128ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'leaderboards' AND index_name = 'idx_leaderboards_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.198ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.854ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.213ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'lessons' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.249ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.228ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.591ms] [34;1m[rows:-][0m SELECT * FROM `lessons` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.914ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'lessons' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.285ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.674ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.864ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'lessons' AND constraint_name = 'fk_modules_lessons'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.146ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.592ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.424ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'lessons' AND index_name = 'idx_lessons_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.319ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.043ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.029ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'lessons' AND index_name = 'idx_lessons_module_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.222ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.698ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.179ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'resources' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.214ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.706ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.446ms] [34;1m[rows:-][0m SELECT * FROM `resources` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[25.505ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'resources' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.170ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.388ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.072ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'resources' AND constraint_name = 'fk_resources_lesson'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.314ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.418ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.128ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'resources' AND index_name = 'idx_resources_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.296ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.593ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.030ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'resources' AND index_name = 'idx_resources_lesson_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.483ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[5.360ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.474ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'progresses' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.425ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.580ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[5.734ms] [34;1m[rows:-][0m SELECT * FROM `progresses` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[6.971ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'progresses' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.531ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.914ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[4.377ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'progresses' AND constraint_name = 'fk_lessons_progress'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.477ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.433ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[27.055ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'progresses' AND constraint_name = 'fk_users_progress'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.559ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.706ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[4.584ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'progresses' AND index_name = 'idx_progresses_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.440ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.425ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.984ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'progresses' AND index_name = 'idx_progresses_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.532ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.852ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[3.188ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'progresses' AND index_name = 'idx_progresses_lesson_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.509ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.577ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.701ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'prequizzes' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.451ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.855ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.049ms] [34;1m[rows:-][0m SELECT * FROM `prequizzes` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.826ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'prequizzes' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.295ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.050ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.070ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'prequizzes' AND constraint_name = 'fk_sub_materials_prequizzes'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.458ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.730ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.116ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'prequizzes' AND index_name = 'idx_prequizzes_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.341ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.384ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.600ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'prequizzes' AND index_name = 'idx_prequizzes_sub_material_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.377ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.506ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.552ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.289ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.001ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.025ms] [34;1m[rows:-][0m SELECT * FROM `prequiz_user_answers` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.734ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.569ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.187ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.353ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND constraint_name = 'fk_prequiz_user_answers_user'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.202ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.756ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.053ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND constraint_name = 'fk_prequizzes_user_answers'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.205ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.045ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.777ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND index_name = 'idx_prequiz_user_answers_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.708ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.437ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.428ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND index_name = 'idx_prequiz_user_answers_prequiz_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.206ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.589ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.799ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'prequiz_user_answers' AND index_name = 'idx_prequiz_user_answers_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.149ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.694ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.274ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.398ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.285ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.578ms] [34;1m[rows:-][0m SELECT * FROM `quiz_sessions` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[26.760ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.331ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.422ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.566ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND constraint_name = 'fk_quiz_sessions_quiz'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.294ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.498ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.787ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND constraint_name = 'fk_quiz_sessions_participant'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.286ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.124ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.917ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND constraint_name = 'fk_quiz_sessions_question'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.253ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.168ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.353ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND index_name = 'idx_quiz_sessions_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.422ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.168ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.405ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND index_name = 'idx_quiz_sessions_quiz_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.277ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.792ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.349ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND index_name = 'idx_quiz_sessions_participant_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.271ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.916ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[24.515ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'quiz_sessions' AND index_name = 'idx_quiz_sessions_question_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.318ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.660ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.124ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'user_activities' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.404ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.437ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.768ms] [34;1m[rows:-][0m SELECT * FROM `user_activities` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.056ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'user_activities' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.294ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.898ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.258ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'user_activities' AND constraint_name = 'fk_user_activities_user'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.208ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.792ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.248ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_activities' AND index_name = 'idx_user_activities_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.400ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.259ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.228ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_activities' AND index_name = 'idx_user_activities_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.135ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.629ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.414ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'user_activities' AND index_name = 'idx_user_activities_activity_type'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.394ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.275ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[26.883ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.tables WHERE table_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND table_type = 'BASE TABLE'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.499ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.140ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.924ms] [34;1m[rows:-][0m SELECT * FROM `sub_material_progresses` LIMIT 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.236ms] [34;1m[rows:-][0m SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'lidm_db' AND table_name = 'sub_material_progresses' ORDER BY ORDINAL_POSITION
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.218ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.951ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.429ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND constraint_name = 'fk_sub_material_progresses_user'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.264ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.118ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.079ms] [34;1m[rows:-][0m SELECT count(*) FROM INFORMATION_SCHEMA.table_constraints WHERE constraint_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND constraint_name = 'fk_sub_material_progresses_sub_material'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.407ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.142ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.245ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND index_name = 'idx_sub_material_progresses_sub_material_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.550ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.660ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[2.521ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND index_name = 'idx_sub_material_progresses_deleted_at'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[0.262ms] [34;1m[rows:-][0m SELECT DATABASE()
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[1.228ms] [34;1m[rows:1][0m SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'lidm_db%' ORDER BY SCHEMA_NAME='lidm_db' DESC,SCHEMA_NAME limit 1
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/migrate.go:20
+[0m[33m[29.320ms] [34;1m[rows:-][0m SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'lidm_db' AND table_name = 'sub_material_progresses' AND index_name = 'idx_sub_material_progresses_user_id'
+
+2025/08/18 13:22:40 [32m/Users/abdulazisalayubbi/Documents/project/lidm/lidm-api/internal/database/seed_admin.go:12
+[0m[33m[1.508ms] [34;1m[rows:1][0m SELECT * FROM `users` WHERE email = 'admin@lidm.com' AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (3 handlers)
+[GIN-debug] GET    /                         --> github.com/yazidalg/lidm_backend/internal/routes.NewRoute.func1 (3 handlers)
+[GIN-debug] POST   /auth/register            --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).RegisterUser-fm (4 handlers)
+[GIN-debug] POST   /auth/login               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).LoginUser-fm (4 handlers)
+[GIN-debug] POST   /auth/google              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).GoogleLogin-fm (4 handlers)
+[GIN-debug] GET    /auth/verify/:verificationToken --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).VerifyEmail-fm (4 handlers)
+[GIN-debug] POST   /auth/belajar-login       --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).BelajarLogin-fm (4 handlers)
+[GIN-debug] POST   /auth/logout              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AuthHandler).Logout-fm (4 handlers)
+[GIN-debug] POST   /password/forgot          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ForgotPasswordHandler).RequestPasswordReset-fm (3 handlers)
+[GIN-debug] POST   /password/verify-otp      --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ForgotPasswordHandler).VerifyOTP-fm (3 handlers)
+[GIN-debug] POST   /password/reset           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ForgotPasswordHandler).ResetPassword-fm (3 handlers)
+[GIN-debug] GET    /user/profile             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserHandler).GetUserById-fm (5 handlers)
+[GIN-debug] POST   /question/create          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).CreateQuestion-fm (5 handlers)
+[GIN-debug] PUT    /question/:id             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).UpdateQuestion-fm (5 handlers)
+[GIN-debug] DELETE /question/:id             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).DeleteQuestion-fm (5 handlers)
+[GIN-debug] GET    /question/:id             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).GetQuestionByID-fm (4 handlers)
+[GIN-debug] GET    /question/all             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).GetAllQuestions-fm (4 handlers)
+[GIN-debug] GET    /question/random          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuestionHandler).GetRandomQuestion-fm (4 handlers)
+[GIN-debug] POST   /answer/create            --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AnswerHandler).CreateAnswer-fm (5 handlers)
+[GIN-debug] PUT    /answer/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AnswerHandler).UpdateAnswer-fm (5 handlers)
+[GIN-debug] DELETE /answer/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AnswerHandler).DeleteAnswer-fm (5 handlers)
+[GIN-debug] GET    /answer/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AnswerHandler).GetAnswerByID-fm (4 handlers)
+[GIN-debug] GET    /answer/all               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*AnswerHandler).GetAllAnswers-fm (4 handlers)
+[GIN-debug] GET    /participant/all          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).GetAllParticipants-fm (5 handlers)
+[GIN-debug] PUT    /participant/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).UpdateParticipant-fm (5 handlers)
+[GIN-debug] DELETE /participant/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).DeleteParticipant-fm (5 handlers)
+[GIN-debug] POST   /participant/create       --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).CreateParticipant-fm (4 handlers)
+[GIN-debug] GET    /participant/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).GetParticipantByID-fm (4 handlers)
+[GIN-debug] GET    /participant/quiz/:quiz_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).GetParticipantsByQuizID-fm (4 handlers)
+[GIN-debug] GET    /participant/user/:user_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ParticipantHandler).GetParticipantsByUserID-fm (4 handlers)
+[GIN-debug] PUT    /quiz/:id                 --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).UpdateQuiz-fm (6 handlers)
+[GIN-debug] DELETE /quiz/:id                 --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).DeleteQuiz-fm (6 handlers)
+[GIN-debug] GET    /quiz/:id                 --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).GetQuizByID-fm (5 handlers)
+[GIN-debug] GET    /quiz/all                 --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).GetAllQuizzes-fm (5 handlers)
+[GIN-debug] GET    /quiz/module/:module_id   --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).GetQuizzesByModule-fm (5 handlers)
+[GIN-debug] POST   /quiz/create              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).CreateQuizLobby-fm (5 handlers)
+[GIN-debug] POST   /quiz/join                --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizHandler).JoinQuizLobby-fm (5 handlers)
+[GIN-debug] POST   /quiz-sessions/           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).CreateQuizSession-fm (4 handlers)
+[GIN-debug] POST   /quiz-sessions/join       --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).JoinQuiz-fm (4 handlers)
+[GIN-debug] POST   /quiz-sessions/answer     --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).AnswerQuestion-fm (4 handlers)
+[GIN-debug] GET    /quiz-sessions/:quiz_id   --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).GetQuizSession-fm (4 handlers)
+[GIN-debug] GET    /quiz-sessions/:quiz_id/results --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).GetQuizResult-fm (4 handlers)
+[GIN-debug] POST   /quiz-sessions/:quiz_id/finish --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*QuizSessionHandler).FinishQuiz-fm (4 handlers)
+[GIN-debug] GET    /ws/:roomName             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*SocketHandler).ServeWs-fm (4 handlers)
+[GIN-debug] GET    /ws/matchmaking           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*SocketHandler).MatchMaking-fm (4 handlers)
+[GIN-debug] GET    /ws/prequiz               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*SocketHandler).PreQuiz-fm (4 handlers)
+[GIN-debug] GET    /ws/quiz-session/:quiz_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*SocketHandler).QuizSession-fm (4 handlers)
+[GIN-debug] POST   /module/create            --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).CreateModule-fm (6 handlers)
+[GIN-debug] PUT    /module/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).UpdateModule-fm (6 handlers)
+[GIN-debug] DELETE /module/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).DeleteModule-fm (6 handlers)
+[GIN-debug] POST   /module/:id/upload-icon   --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).UploadModuleIcon-fm (6 handlers)
+[GIN-debug] DELETE /module/:id/delete-icon   --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).DeleteModuleIcon-fm (6 handlers)
+[GIN-debug] GET    /module/:id/progress      --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ProgressHandler).GetModuleProgress-fm (5 handlers)
+[GIN-debug] GET    /module/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).GetModuleByID-fm (5 handlers)
+[GIN-debug] GET    /module/all               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ModuleHandler).GetAllModulesWithProgress-fm (5 handlers)
+[GIN-debug] POST   /lesson/create            --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*LessonHandler).CreateLesson-fm (6 handlers)
+[GIN-debug] PUT    /lesson/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*LessonHandler).UpdateLesson-fm (6 handlers)
+[GIN-debug] DELETE /lesson/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*LessonHandler).DeleteLesson-fm (6 handlers)
+[GIN-debug] GET    /lesson/:id               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*LessonHandler).GetLessonByID-fm (5 handlers)
+[GIN-debug] GET    /lesson/all               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*LessonHandler).GetAllLessons-fm (5 handlers)
+[GIN-debug] GET    /progress/all             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ProgressHandler).GetAllProgress-fm (5 handlers)
+[GIN-debug] POST   /progress/create          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ProgressHandler).CreateProgress-fm (4 handlers)
+[GIN-debug] PUT    /progress/:id             --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ProgressHandler).UpdateProgress-fm (4 handlers)
+[GIN-debug] GET    /progress/module/:id      --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*ProgressHandler).GetModuleProgress-fm (4 handlers)
+[GIN-debug] POST   /prequiz/create           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).CreatePrequiz-fm (5 handlers)
+[GIN-debug] PUT    /prequiz/:id              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).UpdatePrequiz-fm (5 handlers)
+[GIN-debug] GET    /prequiz/:id              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).GetPrequizByID-fm (4 handlers)
+[GIN-debug] GET    /prequiz/all              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).GetAllPrequizzes-fm (4 handlers)
+[GIN-debug] GET    /prequiz/submaterial/:sub_material_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).GetPrequizzesBySubMaterial-fm (4 handlers)
+[GIN-debug] GET    /prequiz/user-answers     --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).GetUserPrequizAnswers-fm (4 handlers)
+[GIN-debug] POST   /prequiz/submit           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*PrequizHandler).SubmitPrequizAnswer-fm (4 handlers)
+[GIN-debug] POST   /video-quiz/create        --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).CreateVideoQuiz-fm (5 handlers)
+[GIN-debug] PUT    /video-quiz/:id           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).UpdateVideoQuiz-fm (5 handlers)
+[GIN-debug] DELETE /video-quiz/:id           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).DeleteVideoQuiz-fm (5 handlers)
+[GIN-debug] GET    /video-quiz/:id           --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).GetVideoQuizByID-fm (4 handlers)
+[GIN-debug] GET    /video-quiz/video-material/:video_material_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).GetVideoQuizzesByVideoMaterial-fm (4 handlers)
+[GIN-debug] POST   /video-quiz/submit        --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).SubmitVideoQuizAnswer-fm (4 handlers)
+[GIN-debug] GET    /video-quiz/user-answers  --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).GetAllUserVideoQuizAnswers-fm (4 handlers)
+[GIN-debug] GET    /video-quiz/user-answers/:video_material_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*VideoQuizHandler).GetUserVideoQuizAnswers-fm (4 handlers)
+[GIN-debug] GET    /admin/users              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserHandler).GetAllUsers-fm (5 handlers)
+[GIN-debug] PUT    /admin/users/:id/role     --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserHandler).UpdateUserRole-fm (5 handlers)
+[GIN-debug] DELETE /admin/users/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserHandler).DeleteUser-fm (5 handlers)
+[GIN-debug] GET    /admin/roles              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*RoleHandler).GetAllRoles-fm (5 handlers)
+[GIN-debug] POST   /admin/roles              --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*RoleHandler).CreateRole-fm (5 handlers)
+[GIN-debug] GET    /admin/roles/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*RoleHandler).GetRoleById-fm (5 handlers)
+[GIN-debug] PUT    /admin/roles/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*RoleHandler).UpdateRole-fm (5 handlers)
+[GIN-debug] DELETE /admin/roles/:id          --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*RoleHandler).DeleteRole-fm (5 handlers)
+[GIN-debug] GET    /user-activity/for-rag    --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetActivitiesForRAG-fm (3 handlers)
+[GIN-debug] GET    /user-activity/my-activities --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetMyActivities-fm (4 handlers)
+[GIN-debug] GET    /user-activity/my-last    --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetMyLastActivity-fm (4 handlers)
+[GIN-debug] GET    /user-activity/my-streak  --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetMyStreak-fm (4 handlers)
+[GIN-debug] GET    /user-activity/recent     --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetRecentActivities-fm (4 handlers)
+[GIN-debug] GET    /user-activity/most-active --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetMostActiveUsers-fm (4 handlers)
+[GIN-debug] GET    /user-activity/most-active-detailed --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetMostActiveUsersDetailed-fm (4 handlers)
+[GIN-debug] GET    /user-activity/users/:user_id --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetUserActivities-fm (5 handlers)
+[GIN-debug] GET    /user-activity/stats      --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).GetActivityStats-fm (5 handlers)
+[GIN-debug] POST   /user-activity/log        --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*UserActivityHandler).LogActivity-fm (5 handlers)
+[GIN-debug] GET    /dashboard/               --> github.com/yazidalg/lidm_backend/internal/app/handlers.(*DashboardHandler).GetDashboard-fm (4 handlers)
+[GIN-debug] GET    /socket.io/*any           --> github.com/yazidalg/lidm_backend/internal/realtime/socketio.StartSocketIOServer.WrapH.func3 (3 handlers)
+[GIN-debug] POST   /socket.io/*any           --> github.com/yazidalg/lidm_backend/internal/realtime/socketio.StartSocketIOServer.WrapH.func4 (3 handlers)
+[GIN-debug] OPTIONS /socket.io/*any           --> github.com/yazidalg/lidm_backend/internal/realtime/socketio.StartSocketIOServer.WrapH.func5 (3 handlers)
+[GIN-debug] GET    /socket-io-health         --> github.com/yazidalg/lidm_backend/internal/realtime/socketio.StartSocketIOServer.func2 (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :3000
+[GIN-debug] [ERROR] listen tcp :3000: bind: address already in use

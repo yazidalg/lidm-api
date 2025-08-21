@@ -1,6 +1,9 @@
 package services
 
 import (
+	"errors"
+	"time"
+	
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
@@ -12,22 +15,21 @@ type PrequizServiceInterface interface {
 	GetAllPrequizzes() ([]models.Prequiz, error)
 	UpdatePrequiz(id uint, prequiz request.PrequizRequest) (*models.Prequiz, error)
 	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
+	SubmitPrequizAnswer(userID uint, answer request.PrequizAnswerRequest) (*models.PrequizUserAnswer, error)
+	GetPrequizzesBySubMaterial(subMaterialID uint) ([]models.Prequiz, error)
 }
 
 type prequizService struct {
 	prequizRepo repositories.PrequizRepositoryInterface
-	lessonRepo  repositories.LessonRepositoryInterface
 	userRepo    repositories.UserRepositoryInterface
 }
 
 func NewPrequizService(
 	prequizRepo repositories.PrequizRepositoryInterface,
-	lessonRepo repositories.LessonRepositoryInterface,
 	userRepo repositories.UserRepositoryInterface,
 ) *prequizService {
 	return &prequizService{
 		prequizRepo: prequizRepo,
-		lessonRepo:  lessonRepo,
 		userRepo:    userRepo,
 	}
 }
@@ -68,4 +70,39 @@ func (s *prequizService) UpdatePrequiz(id uint, prequiz request.PrequizRequest) 
 
 func (s *prequizService) GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error) {
 	return s.prequizRepo.GetUserPrequizAnswers(userID)
+}
+
+func (s *prequizService) SubmitPrequizAnswer(userID uint, answer request.PrequizAnswerRequest) (*models.PrequizUserAnswer, error) {
+	// Check if user already answered this prequiz
+	hasAnswered, err := s.prequizRepo.HasUserAnsweredPrequiz(userID, answer.PrequizID)
+	if err != nil {
+		return nil, err
+	}
+	
+	if hasAnswered {
+		return nil, errors.New("user has already answered this prequiz")
+	}
+
+	// Get the prequiz to check correct answer
+	prequiz, err := s.prequizRepo.GetPrequizByID(answer.PrequizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if answer is correct
+	isCorrect := prequiz.CorrectAnswer == answer.SelectedAnswer
+
+	userAnswer := models.PrequizUserAnswer{
+		PrequizID:  answer.PrequizID,
+		UserID:     userID,
+		Answer:     answer.SelectedAnswer,
+		IsCorrect:  isCorrect,
+		AnsweredAt: time.Now().Unix(),
+	}
+
+	return s.prequizRepo.SubmitPrequizAnswer(&userAnswer)
+}
+
+func (s *prequizService) GetPrequizzesBySubMaterial(subMaterialID uint) ([]models.Prequiz, error) {
+	return s.prequizRepo.GetPrequizzesBySubMaterial(subMaterialID, 0) // 0 means no limit
 }

@@ -185,9 +185,11 @@ func NewRoute(
 			moduleAdminGroup.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
 		}
 
-		// User accessible routes
+		// User accessible routes (register more specific pattern before generic one)
+		moduleGroupHandler.GET("/:id/progress", progressHandler.GetModuleProgress)
 		moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
-		moduleGroupHandler.GET("/all", moduleHandler.GetAllModules)
+		// Use progress-aware endpoint for authenticated users
+		moduleGroupHandler.GET("/all", moduleHandler.GetAllModulesWithProgress)
 	}
 
 	// Lesson routes - Admin only untuk CUD, User bisa Read
@@ -223,6 +225,8 @@ func NewRoute(
 		// User accessible routes
 		progressGroupHandler.POST("/create", progressHandler.CreateProgress)
 		progressGroupHandler.PUT("/:id", progressHandler.UpdateProgress)
+		// Alias endpoint to fetch module progress via progress namespace
+		progressGroupHandler.GET("/module/:id", progressHandler.GetModuleProgress)
 	}
 
 	// Prequiz routes - Admin only untuk CUD, User bisa Read
@@ -240,7 +244,9 @@ func NewRoute(
 		// User accessible routes
 		prequizGroupHandler.GET("/:id", prequizHandler.GetPrequizByID)
 		prequizGroupHandler.GET("/all", prequizHandler.GetAllPrequizzes)
+		prequizGroupHandler.GET("/submaterial/:sub_material_id", prequizHandler.GetPrequizzesBySubMaterial)
 		prequizGroupHandler.GET("/user-answers", prequizHandler.GetUserPrequizAnswers)
+		prequizGroupHandler.POST("/submit", prequizHandler.SubmitPrequizAnswer)
 	}
 
 	// Video Quiz routes - Admin only untuk CUD, User bisa Read

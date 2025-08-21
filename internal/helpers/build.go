@@ -125,14 +125,20 @@ func NewBuildSocket(
 
 func NewBuildModule(db *gorm.DB) *handlers.ModuleHandler {
 	moduleRepository := repositories.NewModuleRepository(db)
-	moduleService := services.NewModuleService(moduleRepository)
+	progressRepository := repositories.NewProgressRepository(db)
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	prequizRepository := repositories.NewPrequizRepository(db)
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
 	moduleHandler := handlers.NewModuleHandler(moduleService)
 	return moduleHandler
 }
 
 func NewBuildLesson(db *gorm.DB) *handlers.LessonHandler {
 	moduleRepository := repositories.NewModuleRepository(db)
-	moduleService := services.NewModuleService(moduleRepository)
+	progressRepository := repositories.NewProgressRepository(db)
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	prequizRepository := repositories.NewPrequizRepository(db)
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
 	lessonRepository := repositories.NewLessonRepository(db)
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 	lessonHandler := handlers.NewLessonHandler(lessonService, moduleService)
@@ -150,28 +156,32 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	lessonRepository := repositories.NewLessonRepository(db)
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 
+	// Extra repos/services needed for aggregation
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	videoQuizService := services.NewVideoQuizService(videoQuizRepository, userRepository)
+
+	prequizRepository := repositories.NewPrequizRepository(db)
+	prequizService := services.NewPrequizService(prequizRepository, userRepository)
+
 	progressRepository := repositories.NewProgressRepository(db)
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
+
 	progressService := services.NewProgressService(progressRepository, userRepository, lessonRepository)
-	progressHandler := handlers.NewProgressHandler(progressService, userService, lessonService)
+	progressHandler := handlers.NewProgressHandler(progressService, userService, lessonService, moduleService, videoQuizService, prequizService)
 
 	return progressHandler
 }
 
 func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizServiceInterface) {
-	moduleRepository := repositories.NewModuleRepository(db)
-
 	prequizRepository := repositories.NewPrequizRepository(db)
-
-	lessonRepository := repositories.NewLessonRepository(db)
-	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 
 	userRepository := repositories.NewUserRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
 	userService := services.NewUserService(userRepository, roleService)
 
-	prequizService := services.NewPrequizService(prequizRepository, lessonRepository, userRepository)
-	prequizHandler := handlers.NewPrequizHandler(prequizService, lessonService, userService)
+	prequizService := services.NewPrequizService(prequizRepository, userRepository)
+	prequizHandler := handlers.NewPrequizHandler(prequizService, userService)
 
 	return prequizHandler, prequizService
 }
@@ -204,7 +214,10 @@ func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.
 	lessonRepository := repositories.NewLessonRepository(db)
 	moduleRepository := repositories.NewModuleRepository(db)
 	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
-	moduleService := services.NewModuleService(moduleRepository)
+	progressRepository := repositories.NewProgressRepository(db)
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	prequizRepository := repositories.NewPrequizRepository(db)
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
 
 	activityHandler := handlers.NewUserActivityHandler(activityService, lessonService, moduleService)
 	return activityHandler, activityService

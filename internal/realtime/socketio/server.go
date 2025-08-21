@@ -77,7 +77,8 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	if s.Answered[q.ID] {
 		return
 	}
-	correct := option == q.CorrectAnswer
+	// Compare by index to be case-insensitive and robust
+	correct := optionIndex(option) == optionIndex(q.CorrectAnswer)
 	if correct {
 		_ = s.UserSvc.AddXP(userID, 10)
 	} else {
@@ -258,7 +259,8 @@ func (s *MultiplayerSession) processAnswer(io *socket.Server, q models.Question,
 	log.Printf("[socket.io] Processing answer from user %d for question %d: option=%s",
 		ans.UserID, q.ID, ans.Option)
 
-	correct := ans.Option == q.CorrectAnswer
+	// Compare by index to avoid case/key mismatches
+	correct := optionIndex(ans.Option) == optionIndex(q.CorrectAnswer)
 	if correct {
 		s.Scores[ans.UserID] += 10
 		if s.UserSvc != nil {
@@ -792,6 +794,7 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			log.Printf("[socket.io] submit_answer raw=%#v", args)
 			var quizID, questionID, userID uint
 			var option string
+			var selectedIndex *int
 			parsed := false
 
 			if len(args) == 1 {
@@ -806,10 +809,21 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 					if opt, ok := v["option"].(string); ok {
 						option = opt
 					}
+					// Also allow nested options.selected_index or top-level selected_index
+					if idxf, ok := v["selected_index"].(float64); ok {
+						i := int(idxf)
+						selectedIndex = &i
+					}
+					if optObj, ok := v["options"].(map[string]any); ok {
+						if idxf, ok := optObj["selected_index"].(float64); ok {
+							i := int(idxf)
+							selectedIndex = &i
+						}
+					}
 					if uidf, ok := v["user_id"].(float64); ok {
 						userID = uint(uidf)
 					}
-					parsed = quizID != 0 && questionID != 0 && option != "" && userID != 0
+					parsed = quizID != 0 && questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
 				case string:
 					s := strings.TrimSpace(v)
 					if strings.HasPrefix(s, "{") {
@@ -824,10 +838,20 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 							if opt, ok := obj["option"].(string); ok {
 								option = opt
 							}
+							if idxf, ok := obj["selected_index"].(float64); ok {
+								i := int(idxf)
+								selectedIndex = &i
+							}
+							if optObj, ok := obj["options"].(map[string]any); ok {
+								if idxf, ok := optObj["selected_index"].(float64); ok {
+									i := int(idxf)
+									selectedIndex = &i
+								}
+							}
 							if uidf, ok := obj["user_id"].(float64); ok {
 								userID = uint(uidf)
 							}
-							parsed = quizID != 0 && questionID != 0 && option != "" && userID != 0
+							parsed = quizID != 0 && questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
 						}
 					}
 				}
@@ -836,7 +860,15 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				if len(args) >= 4 {
 					qidf, okQ := args[0].(float64)
 					qnidf, okQN := args[1].(float64)
+					// third arg can be option string or selected index (number)
 					opt, okOpt := args[2].(string)
+					if !okOpt {
+						if idxf, ok := args[2].(float64); ok {
+							i := int(idxf)
+							selectedIndex = &i
+							okOpt = true
+						}
+					}
 					uidf, okUID := args[3].(float64)
 					if okQ && okQN && okOpt && okUID {
 						quizID = uint(qidf)
@@ -850,6 +882,14 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			if !parsed {
 				log.Printf("[socket.io] submit_answer: invalid args: %#v", args)
 				return
+			}
+
+			// If only index is provided, map to option key
+			if option == "" && selectedIndex != nil {
+				norm := normalizeIndex(*selectedIndex)
+				if norm >= 0 {
+					option = optionKey(norm)
+				}
 			}
 
 			// Check for multiplayer session
@@ -938,6 +978,33 @@ func optionIndex(key string) int {
 	}
 }
 
+// optionKey returns canonical option key (a/b/c/d) for an index, or empty string if out of range
+func optionKey(idx int) string {
+	switch idx {
+	case 0:
+		return "a"
+	case 1:
+		return "b"
+	case 2:
+		return "c"
+	case 3:
+		return "d"
+	default:
+		return ""
+	}
+}
+
+// normalizeIndex accepts either 0-based [0..3] or 1-based [1..4] index and returns 0-based, otherwise -1
+func normalizeIndex(idx int) int {
+	if idx >= 0 && idx <= 3 {
+		return idx
+	}
+	if idx >= 1 && idx <= 4 {
+		return idx - 1
+	}
+	return -1
+}
+
 // sanitizeQuestions returns a client-safe list of questions without revealing correct answers
 func sanitizeQuestions(qs []models.Question) []map[string]any {
 	out := make([]map[string]any, 0, len(qs))
@@ -961,6 +1028,9 @@ func sanitizeQuestions(qs []models.Question) []map[string]any {
 			"answer_time": q.AnswerTime,
 			"module_id":   q.ModuleID,
 			"booster":     booster,
+			// Expose correct answer as requested by FE
+			"correct_index":  optionIndex(q.CorrectAnswer),
+			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
 		})
 	}
 	return out

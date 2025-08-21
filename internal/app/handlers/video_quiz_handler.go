@@ -154,13 +154,15 @@ func (h *VideoQuizHandler) SubmitVideoQuizAnswer(c *gin.Context) {
 		return
 	}
 
-	userID, ok := userIDInterface.(uint)
+	// Convert float64 to uint (JWT stores numbers as float64)
+	userIDFloat, ok := userIDInterface.(float64)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"message": "Invalid user ID",
 		})
 		return
 	}
+	userID := uint(userIDFloat)
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -179,9 +181,26 @@ func (h *VideoQuizHandler) SubmitVideoQuizAnswer(c *gin.Context) {
 		return
 	}
 
+	// Fetch quiz details to include explanation in the response
+	videoQuiz, _ := h.videoQuizService.GetVideoQuizByID(request.VideoQuizID)
+
+	responsePayload := gin.H{
+		"video_quiz_id":   result.VideoQuizID,
+		"selected_answer": result.SelectedAnswer,
+		"is_correct":      result.IsCorrect,
+		"answered_at":     result.AnsweredAt,
+		"response_time":   result.ResponseTime,
+	}
+	if videoQuiz != nil {
+		responsePayload["question"] = videoQuiz.Question
+		responsePayload["correct_answer"] = videoQuiz.CorrectAnswer
+		responsePayload["explanation"] = videoQuiz.Explanation
+		responsePayload["options"] = videoQuiz.Options
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Video quiz answer submitted successfully",
-		"data":    result,
+		"data":    responsePayload,
 	})
 }
 

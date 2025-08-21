@@ -37,8 +37,10 @@ func Migrate(db *gorm.DB) error {
 		&models.Resource{},
 		&models.Progress{},
 		&models.Prequiz{},
+		&models.PrequizUserAnswer{},
 		&models.QuizSession{},
 		&models.UserActivity{},
+		&models.SubMaterialProgress{}, // Add new progress tracking model
 	); err != nil {
 		return err
 	}

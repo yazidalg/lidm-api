@@ -11,6 +11,9 @@ type PrequizRepositoryInterface interface {
 	GetAllPrequizzes() ([]models.Prequiz, error)
 	UpdatePrquiz(id uint, prequiz *models.Prequiz) (*models.Prequiz, error)
 	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
+	SubmitPrequizAnswer(answer *models.PrequizUserAnswer) (*models.PrequizUserAnswer, error)
+	HasUserAnsweredPrequiz(userID uint, prequizID uint) (bool, error)
+	GetPrequizzesBySubMaterial(subMaterialID uint, limit int) ([]models.Prequiz, error)
 }
 
 type prequizRepository struct {
@@ -39,7 +42,7 @@ func (r *prequizRepository) CreatePrequiz(prequiz *models.Prequiz) (*models.Preq
 func (r *prequizRepository) GetPrequizByID(id uint) (*models.Prequiz, error) {
 	var prequiz models.Prequiz
 
-	err := r.db.Preload("Lesson").First(&prequiz, id).Error
+	err := r.db.First(&prequiz, id).Error
 	if err != nil {
 		return nil, err // Other error
 	}
@@ -50,7 +53,7 @@ func (r *prequizRepository) GetPrequizByID(id uint) (*models.Prequiz, error) {
 func (r *prequizRepository) GetAllPrequizzes() ([]models.Prequiz, error) {
 	var prequizzes []models.Prequiz
 
-	err := r.db.Preload("Lesson").Find(&prequizzes).Error
+	err := r.db.Find(&prequizzes).Error
 	if err != nil {
 		return nil, err // Other error
 	}
@@ -88,4 +91,44 @@ func (r *prequizRepository) GetUserPrequizAnswers(userID uint) ([]models.Prequiz
 	}
 	
 	return answers, nil
+}
+
+func (r *prequizRepository) SubmitPrequizAnswer(answer *models.PrequizUserAnswer) (*models.PrequizUserAnswer, error) {
+	tx := r.db.Begin()
+
+	if err := tx.Create(answer).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return answer, nil
+}
+
+func (r *prequizRepository) HasUserAnsweredPrequiz(userID uint, prequizID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.PrequizUserAnswer{}).Where("user_id = ? AND prequiz_id = ?", userID, prequizID).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *prequizRepository) GetPrequizzesBySubMaterial(subMaterialID uint, limit int) ([]models.Prequiz, error) {
+	var prequizzes []models.Prequiz
+	
+	query := r.db.Where("sub_material_id = ?", subMaterialID)
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	
+	err := query.Find(&prequizzes).Error
+	if err != nil {
+		return nil, err
+	}
+	
+	return prequizzes, nil
 }

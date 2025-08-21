@@ -43,6 +43,12 @@ func SeedFotosintesisData(db *gorm.DB) {
 	db.Exec("DELETE FROM sub_materials")
 	db.Exec("DELETE FROM modules WHERE title LIKE '%Fotosintesis%'")
 
+	// Seed roles first if they don't exist
+	if err := models.SeedRoles(db); err != nil {
+		log.Printf("Error seeding roles: %v", err)
+		return
+	}
+
 	// Create Module: Fotosintesis untuk Kelas 4 SD
 	module := models.Module{
 		Title:       "Belajar Fotosintesis - Kelas 4 SD",
@@ -95,20 +101,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 		return
 	}
 
-	// Prequizzes untuk SubMaterial 1 (minimal 10)
+	// Prequizzes untuk SubMaterial 1 (hanya 3)
 	prequizzes1 := []models.Prequiz{
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Apakah kamu pernah melihat tumbuhan?",
-			Options: models.Options{
-				OptionA: "Ya, setiap hari",
-				OptionB: "Kadang-kadang",
-				OptionC: "Jarang sekali",
-				OptionD: "Tidak pernah",
-			},
-			CorrectAnswer: "A",
-			Explanation:   "Bagus! Tumbuhan ada di mana-mana di sekitar kita. Mari kita pelajari lebih lanjut!",
-		},
 		{
 			SubMaterialID: subMaterial1.ID,
 			Question:      "Menurutmu, bagaimana tumbuhan mendapatkan makanan?",
@@ -132,78 +126,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 			},
 			CorrectAnswer: "A",
 			Explanation:   "Ya! Daun biasanya berwarna hijau. Warna hijau ini sangat penting untuk fotosintesis!",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Kapan tumbuhan terlihat paling segar?",
-			Options: models.Options{
-				OptionA: "Saat malam",
-				OptionB: "Saat pagi hari",
-				OptionC: "Saat siang hari",
-				OptionD: "Tidak ada bedanya",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Benar! Pagi hari tumbuhan terlihat segar karena sudah siap menerima sinar matahari!",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Apa yang terjadi jika tumbuhan tidak disiram?",
-			Options: models.Options{
-				OptionA: "Akan tumbuh lebih cepat",
-				OptionB: "Tidak ada perubahan",
-				OptionC: "Akan layu dan kering",
-				OptionD: "Akan berubah warna menjadi ungu",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Ya! Tumbuhan membutuhkan air untuk hidup. Tanpa air, mereka akan layu dan kering.",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Di mana biasanya kamu melihat banyak tumbuhan?",
-			Options: models.Options{
-				OptionA: "Di taman atau kebun",
-				OptionB: "Di dalam lemari es",
-				OptionC: "Di dalam mobil",
-				OptionD: "Di dalam tas",
-			},
-			CorrectAnswer: "A",
-			Explanation:   "Benar! Taman dan kebun adalah tempat yang bagus untuk melihat berbagai jenis tumbuhan!",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Menurutmu, apakah tumbuhan bisa bernapas?",
-			Options: models.Options{
-				OptionA: "Ya, seperti manusia",
-				OptionB: "Tidak, mereka tidak hidup",
-				OptionC: "Ya, tapi caranya berbeda",
-				OptionD: "Hanya saat malam hari",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Pintar! Tumbuhan bisa bernapas, tapi caranya berbeda dari manusia. Mari kita pelajari!",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Bagian tumbuhan mana yang biasanya berwarna hijau?",
-			Options: models.Options{
-				OptionA: "Akar",
-				OptionB: "Daun",
-				OptionC: "Batang",
-				OptionD: "Bunga",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Benar! Daun biasanya berwarna hijau karena mengandung zat khusus yang disebut klorofil!",
-		},
-		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Apa yang kamu rasakan saat berada di dekat banyak tumbuhan?",
-			Options: models.Options{
-				OptionA: "Udara terasa lebih segar",
-				OptionB: "Tidak ada perbedaan",
-				OptionC: "Udara terasa lebih panas",
-				OptionD: "Sulit bernapas",
-			},
-			CorrectAnswer: "A",
-			Explanation:   "Ya! Tumbuhan membantu membuat udara lebih segar dengan menghasilkan oksigen!",
 		},
 		{
 			SubMaterialID: subMaterial1.ID,
@@ -297,32 +219,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 		return
 	}
 
-	// Prequizzes untuk SubMaterial 2 (minimal 10)
+	// Prequizzes untuk SubMaterial 2 (hanya 3)
 	prequizzes2 := []models.Prequiz{
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Apa yang kamu ketahui tentang daun hijau?",
-			Options: models.Options{
-				OptionA: "Hanya untuk hiasan",
-				OptionB: "Bisa membuat makanan",
-				OptionC: "Tidak berguna",
-				OptionD: "Hanya untuk berteduh",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Daun hijau mengandung klorofil yang bisa membuat makanan melalui fotosintesis!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Menurutmu, apa yang terjadi jika tidak ada matahari?",
-			Options: models.Options{
-				OptionA: "Tumbuhan tetap sehat",
-				OptionB: "Tidak ada perubahan",
-				OptionC: "Tumbuhan tidak bisa membuat makanan",
-				OptionD: "Tumbuhan tumbuh lebih cepat",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Tanpa matahari, tumbuhan tidak bisa melakukan fotosintesis untuk membuat makanan!",
-		},
 		{
 			SubMaterialID: subMaterial2.ID,
 			Question:      "Apa yang dihasilkan tumbuhan yang berguna untuk kita?",
@@ -334,18 +232,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 			},
 			CorrectAnswer: "B",
 			Explanation:   "Tumbuhan menghasilkan oksigen yang kita butuhkan untuk bernapas!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Bagian tumbuhan mana yang menyerap air?",
-			Options: models.Options{
-				OptionA: "Daun",
-				OptionB: "Bunga",
-				OptionC: "Akar",
-				OptionD: "Batang",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Akar berfungsi menyerap air dan mineral dari tanah untuk tumbuhan!",
 		},
 		{
 			SubMaterialID: subMaterial2.ID,
@@ -361,30 +247,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 		},
 		{
 			SubMaterialID: subMaterial2.ID,
-			Question:      "Gas apa yang diambil tumbuhan dari udara?",
-			Options: models.Options{
-				OptionA: "Oksigen",
-				OptionB: "Nitrogen",
-				OptionC: "Karbon dioksida",
-				OptionD: "Hidrogen",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Tumbuhan mengambil karbon dioksida dari udara untuk fotosintesis!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Kapan waktu terbaik tumbuhan melakukan fotosintesis?",
-			Options: models.Options{
-				OptionA: "Malam hari",
-				OptionB: "Saat hujan",
-				OptionC: "Saat ada sinar matahari",
-				OptionD: "Saat angin kencang",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Fotosintesis membutuhkan sinar matahari sebagai sumber energi!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
 			Question:      "Mengapa daun berwarna hijau?",
 			Options: models.Options{
 				OptionA: "Karena dicat",
@@ -394,30 +256,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 			},
 			CorrectAnswer: "B",
 			Explanation:   "Klorofil adalah zat hijau yang membantu tumbuhan menangkap sinar matahari!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Apa yang terjadi jika tumbuhan tidak mendapat air?",
-			Options: models.Options{
-				OptionA: "Tumbuh lebih tinggi",
-				OptionB: "Berbunga lebih banyak",
-				OptionC: "Layu dan mati",
-				OptionD: "Berubah warna menjadi biru",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Air sangat penting untuk tumbuhan, tanpa air mereka akan layu dan mati!",
-		},
-		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Selain oksigen, apa lagi yang dihasilkan fotosintesis?",
-			Options: models.Options{
-				OptionA: "Air",
-				OptionB: "Glukosa (gula)",
-				OptionC: "Tanah",
-				OptionD: "Batu",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Fotosintesis menghasilkan glukosa (gula) sebagai makanan tumbuhan dan oksigen!",
 		},
 	}
 
@@ -487,20 +325,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 		return
 	}
 
-	// Prequizzes untuk SubMaterial 3 (AR Lab - minimal 10)
+	// Prequizzes untuk SubMaterial 3 (AR Lab - hanya 3)
 	prequizzes3 := []models.Prequiz{
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Pernahkah kamu menggunakan teknologi AR (Augmented Reality)?",
-			Options: models.Options{
-				OptionA: "Sering sekali",
-				OptionB: "Pernah beberapa kali",
-				OptionC: "Jarang sekali",
-				OptionD: "Belum pernah",
-			},
-			CorrectAnswer: "A",
-			Explanation:   "AR akan membantu kita melihat fotosintesis secara virtual dan interaktif!",
-		},
 		{
 			SubMaterialID: subMaterial3.ID,
 			Question:      "Apa yang ingin kamu lihat di dalam daun?",
@@ -512,30 +338,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 			},
 			CorrectAnswer: "B",
 			Explanation:   "Dengan AR, kita bisa melihat bagaimana fotosintesis terjadi di dalam daun!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Bagaimana menurutmu cara terbaik memahami sains?",
-			Options: models.Options{
-				OptionA: "Membaca buku saja",
-				OptionB: "Melihat langsung dengan teknologi",
-				OptionC: "Mendengar penjelasan",
-				OptionD: "Menghapal rumus",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Teknologi AR membantu kita melihat dan memahami proses yang tidak bisa dilihat mata!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Apa yang paling kamu ingin ketahui tentang fotosintesis?",
-			Options: models.Options{
-				OptionA: "Bagaimana prosesnya terjadi",
-				OptionB: "Kenapa daun berwarna hijau",
-				OptionC: "Apa yang dihasilkan",
-				OptionD: "Semua hal di atas",
-			},
-			CorrectAnswer: "D",
-			Explanation:   "AR Lab akan menunjukkan semua aspek fotosintesis secara visual dan interaktif!",
 		},
 		{
 			SubMaterialID: subMaterial3.ID,
@@ -560,54 +362,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 			},
 			CorrectAnswer: "B",
 			Explanation:   "Kloroplas adalah tempat fotosintesis terjadi, kita akan melihatnya di AR!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Bagaimana menurutmu sinar matahari masuk ke daun?",
-			Options: models.Options{
-				OptionA: "Langsung masuk ke dalam",
-				OptionB: "Ditangkap oleh klorofil",
-				OptionC: "Dipantulkan kembali",
-				OptionD: "Tidak bisa masuk",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Klorofil menangkap sinar matahari untuk digunakan dalam fotosintesis!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Apa yang terjadi dengan karbon dioksida di dalam daun?",
-			Options: models.Options{
-				OptionA: "Dikeluarkan kembali",
-				OptionB: "Disimpan saja",
-				OptionC: "Diubah menjadi gula",
-				OptionD: "Dibiarkan mengapung",
-			},
-			CorrectAnswer: "C",
-			Explanation:   "Karbon dioksida diubah menjadi gula (glukosa) dalam proses fotosintesis!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Menurutmu, berapa lama proses fotosintesis berlangsung?",
-			Options: models.Options{
-				OptionA: "Hanya sebentar",
-				OptionB: "Sepanjang ada sinar matahari",
-				OptionC: "Hanya saat pagi",
-				OptionD: "Hanya saat siang",
-			},
-			CorrectAnswer: "B",
-			Explanation:   "Fotosintesis berlangsung terus menerus selama ada sinar matahari!",
-		},
-		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Apa yang paling kamu harapkan dari pengalaman AR ini?",
-			Options: models.Options{
-				OptionA: "Memahami fotosintesis lebih baik",
-				OptionB: "Melihat teknologi canggih",
-				OptionC: "Bermain-main saja",
-				OptionD: "Semua hal di atas",
-			},
-			CorrectAnswer: "A",
-			Explanation:   "Tujuan utama AR Lab adalah membantu memahami fotosintesis dengan cara yang menyenangkan!",
 		},
 	}
 

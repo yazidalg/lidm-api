@@ -7,3 +7,8 @@ type PrequizRequest struct {
 	CorrectAnswer string          `json:"correct_answer" binding:"required"`
 	Explanation   string          `json:"explanation" binding:"required"`
 }
+
+type PrequizAnswerRequest struct {
+	PrequizID      uint   `json:"prequiz_id" binding:"required"`
+	SelectedAnswer string `json:"selected_answer" binding:"required"`
+}

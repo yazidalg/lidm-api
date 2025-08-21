@@ -52,7 +52,7 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
 		Preload("SubMaterials.ARExperiment").                                    // AR experiments
-		Preload("SubMaterials.Prequizzes").                                      // Prequizzes (minimal 10)
+		// Preload("SubMaterials.Prequizzes").                                      // Prequizzes - DISABLED temporarily
 		First(&module, id).Error
 
 	if err != nil {
@@ -76,7 +76,7 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
 		Preload("SubMaterials.ARExperiment").                                    // AR experiments
-		Preload("SubMaterials.Prequizzes").                                      // Prequizzes (minimal 10)
+		// Preload("SubMaterials.Prequizzes").                                      // Prequizzes - Disabled again to debug
 		Order("created_at ASC").                                                 // Order modules by creation
 		Find(&modules).Error
 

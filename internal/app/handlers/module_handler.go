@@ -177,16 +177,54 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 
 func (h *ModuleHandler) GetAllModules(c *gin.Context) {
 	results, err := h.moduleService.GetAllModules()
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   err.Error(),
 			"message": "Failed to retrieve modules",
+			"error":   err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Modules retrieved successfully",
+		"data":    results,
+	})
+}
+
+func (h *ModuleHandler) GetAllModulesWithProgress(c *gin.Context) {
+	// Extract user ID from auth middleware
+	userIDVal, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+		return
+	}
+
+	var userID uint
+	switch v := userIDVal.(type) {
+	case float64:
+		userID = uint(v)
+	case uint:
+		userID = v
+	case int:
+		userID = uint(v)
+	default:
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid user context"})
+		return
+	}
+
+	results, err := h.moduleService.GetAllModulesWithProgress(userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to retrieve modules with progress",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ENHANCED MODULES retrieved successfully", // Changed message to verify
 		"data":    results,
 	})
 }
