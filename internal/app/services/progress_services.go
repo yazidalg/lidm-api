@@ -16,18 +16,15 @@ type ProgressServiceInterface interface {
 type progressService struct {
 	progressRepo repositories.ProgressRepositoryInterface
 	userRepo     repositories.UserRepositoryInterface
-	lessonRepo   repositories.LessonRepositoryInterface
 }
 
 func NewProgressService(
 	progressRepo repositories.ProgressRepositoryInterface,
 	userRepo repositories.UserRepositoryInterface,
-	lessonRepo repositories.LessonRepositoryInterface,
 ) *progressService {
 	return &progressService{
 		progressRepo: progressRepo,
 		userRepo:     userRepo,
-		lessonRepo:   lessonRepo,
 	}
 }
 

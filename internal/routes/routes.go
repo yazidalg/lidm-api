@@ -18,7 +18,6 @@ func NewRoute(
 	quizSessionHandler *handlers.QuizSessionHandler,
 	socketHandler *handlers.SocketHandler,
 	moduleHandler *handlers.ModuleHandler,
-	lessonHandler *handlers.LessonHandler,
 	progressHandler *handlers.ProgressHandler,
 	prequizHandler *handlers.PrequizHandler,
 	videoQuizHandler *handlers.VideoQuizHandler,
@@ -196,6 +195,7 @@ func NewRoute(
 		moduleAdminGroup.Use(authMiddleware.RequireAdmin)
 		{
 			moduleAdminGroup.POST("/create", moduleHandler.CreateModule)
+			moduleAdminGroup.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
 			moduleAdminGroup.PUT("/:id", moduleHandler.UpdateModule)
 			moduleAdminGroup.DELETE("/:id", moduleHandler.DeleteModule)
 			moduleAdminGroup.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
@@ -207,25 +207,6 @@ func NewRoute(
 		moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
 		// Use progress-aware endpoint for authenticated users
 		moduleGroupHandler.GET("/all", moduleHandler.GetAllModulesWithProgress)
-	}
-
-	// Lesson routes - Admin only untuk CUD, User bisa Read
-	lessonGroupHandler := router.Group("lesson")
-	lessonGroupHandler.Use(authMiddleware.RequireAuth)
-	lessonGroupHandler.Use(activityMiddleware.TrackActivity()) // Track lesson activities
-	{
-		// Admin only routes
-		lessonAdminGroup := lessonGroupHandler.Group("")
-		lessonAdminGroup.Use(authMiddleware.RequireAdmin)
-		{
-			lessonAdminGroup.POST("/create", lessonHandler.CreateLesson)
-			lessonAdminGroup.PUT("/:id", lessonHandler.UpdateLesson)
-			lessonAdminGroup.DELETE("/:id", lessonHandler.DeleteLesson)
-		}
-
-		// User accessible routes
-		lessonGroupHandler.GET("/:id", lessonHandler.GetLessonByID)
-		lessonGroupHandler.GET("/all", lessonHandler.GetAllLessons)
 	}
 
 	// Progress routes - User untuk data sendiri, Admin untuk semua
@@ -261,7 +242,7 @@ func NewRoute(
 		// User accessible routes
 		prequizGroupHandler.GET("/:id", prequizHandler.GetPrequizByID)
 		prequizGroupHandler.GET("/all", prequizHandler.GetAllPrequizzes)
-		prequizGroupHandler.GET("/submaterial/:sub_material_id", prequizHandler.GetPrequizzesBySubMaterial)
+		prequizGroupHandler.GET("/module/:module_id", prequizHandler.GetPrequizzesByModule)
 		prequizGroupHandler.GET("/user-answers", prequizHandler.GetUserPrequizAnswers)
 		prequizGroupHandler.POST("/submit", prequizHandler.SubmitPrequizAnswer)
 	}

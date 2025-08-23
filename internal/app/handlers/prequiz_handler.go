@@ -37,10 +37,10 @@ func (h *PrequizHandler) CreatePrequiz(c *gin.Context) {
 		return
 	}
 
-	// Validate SubMaterialID exists (simple validation)
-	if request.SubMaterialID == 0 {
+	// Validate ModuleID exists (simple validation)
+	if request.ModuleID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "SubMaterial ID is required",
+			"message": "Module ID is required",
 			"error":   "Failed to create prequiz",
 		})
 		return
@@ -111,10 +111,10 @@ func (h *PrequizHandler) UpdatePrequiz(c *gin.Context) {
 		return
 	}
 
-	// Validate SubMaterialID exists (simple validation)
-	if request.SubMaterialID == 0 {
+	// Validate ModuleID exists (simple validation)
+	if request.ModuleID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "SubMaterial ID is required",
+			"message": "Module ID is required",
 			"error":   "Failed to update prequiz",
 		})
 		return
@@ -237,14 +237,14 @@ func (h *PrequizHandler) SubmitPrequizAnswer(c *gin.Context) {
 	})
 }
 
-// GetPrequizzesBySubMaterial retrieves all prequizzes for a specific sub material
-func (h *PrequizHandler) GetPrequizzesBySubMaterial(c *gin.Context) {
-	subMaterialIDParam := c.Param("sub_material_id")
-	
-	subMaterialID, err := strconv.Atoi(subMaterialIDParam)
+// GetPrequizzesByModule retrieves all prequizzes for a specific module
+func (h *PrequizHandler) GetPrequizzesByModule(c *gin.Context) {
+	moduleIDParam := c.Param("module_id")
+
+	moduleID, err := strconv.Atoi(moduleIDParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid sub material ID",
+			"message": "Invalid module ID",
 			"error":   err.Error(),
 		})
 		return
@@ -269,7 +269,7 @@ func (h *PrequizHandler) GetPrequizzesBySubMaterial(c *gin.Context) {
 	}
 	userID := uint(userIDFloat)
 
-	prequizzes, err := h.prequizService.GetPrequizzesBySubMaterial(uint(subMaterialID))
+	prequizzes, err := h.prequizService.GetPrequizzesByModule(uint(moduleID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Failed to retrieve prequizzes",
@@ -294,19 +294,19 @@ func (h *PrequizHandler) GetPrequizzesBySubMaterial(c *gin.Context) {
 	// Convert prequizzes to response format with status
 	prequizzesWithStatus := make([]response.PrequizWithStatus, len(prequizzes))
 	answeredCount := 0
-	
+
 	for i, prequiz := range prequizzes {
 		isAnswered := answeredMap[prequiz.ID]
 		if isAnswered {
 			answeredCount++
 		}
-		
+
 		prequizzesWithStatus[i] = response.PrequizWithStatus{
 			ID:                prequiz.ID,
 			CreatedAt:         prequiz.CreatedAt,
 			UpdatedAt:         prequiz.UpdatedAt,
 			DeletedAt:         prequiz.DeletedAt,
-			SubMaterialID:     prequiz.SubMaterialID,
+			ModuleID:          prequiz.ModuleID,
 			Question:          prequiz.Question,
 			Options:           prequiz.Options,
 			CorrectAnswer:     prequiz.CorrectAnswer,
@@ -319,7 +319,7 @@ func (h *PrequizHandler) GetPrequizzesBySubMaterial(c *gin.Context) {
 	totalPrequizzes := len(prequizzes)
 	isCompleted := answeredCount == totalPrequizzes && totalPrequizzes > 0
 
-	responseData := response.PrequizzesBySubMaterialResponse{
+	responseData := response.PrequizzesByModuleResponse{
 		Success: true,
 		Message: "Prequizzes retrieved successfully",
 		PrequizStatus: response.PrequizStatus{

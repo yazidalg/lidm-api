@@ -69,10 +69,6 @@ func determineActivityType(method, path string) string {
 		return models.ActivityTypeQuizComplete
 	case method == "POST" && path == "/quiz/answer":
 		return models.ActivityTypeQuizAnswer
-	case method == "GET" && path == "/lesson/:id":
-		return models.ActivityTypeLessonView
-	case method == "POST" && path == "/progress":
-		return models.ActivityTypeLessonComplete
 	case method == "GET" && path == "/module/:id":
 		return models.ActivityTypeModuleView
 	case method == "PUT" && path == "/user/profile":

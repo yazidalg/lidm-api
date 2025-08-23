@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 	"time"
-	
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
@@ -16,7 +16,7 @@ type PrequizServiceInterface interface {
 	UpdatePrequiz(id uint, prequiz request.PrequizRequest) (*models.Prequiz, error)
 	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
 	SubmitPrequizAnswer(userID uint, answer request.PrequizAnswerRequest) (*models.PrequizUserAnswer, error)
-	GetPrequizzesBySubMaterial(subMaterialID uint) ([]models.Prequiz, error)
+	GetPrequizzesByModule(moduleID uint) ([]models.Prequiz, error)
 }
 
 type prequizService struct {
@@ -37,7 +37,7 @@ func NewPrequizService(
 func (s *prequizService) CreatePrequiz(prequiz request.PrequizRequest) (*models.Prequiz, error) {
 
 	prequizModel := models.Prequiz{
-		SubMaterialID: prequiz.SubMaterialID,
+		ModuleID:      prequiz.ModuleID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,
@@ -58,7 +58,7 @@ func (s *prequizService) GetAllPrequizzes() ([]models.Prequiz, error) {
 func (s *prequizService) UpdatePrequiz(id uint, prequiz request.PrequizRequest) (*models.Prequiz, error) {
 
 	prequizModel := models.Prequiz{
-		SubMaterialID: prequiz.SubMaterialID,
+		ModuleID:      prequiz.ModuleID,
 		Question:      prequiz.Question,
 		CorrectAnswer: prequiz.CorrectAnswer,
 		Explanation:   prequiz.Explanation,
@@ -78,7 +78,7 @@ func (s *prequizService) SubmitPrequizAnswer(userID uint, answer request.Prequiz
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if hasAnswered {
 		return nil, errors.New("user has already answered this prequiz")
 	}
@@ -103,6 +103,6 @@ func (s *prequizService) SubmitPrequizAnswer(userID uint, answer request.Prequiz
 	return s.prequizRepo.SubmitPrequizAnswer(&userAnswer)
 }
 
-func (s *prequizService) GetPrequizzesBySubMaterial(subMaterialID uint) ([]models.Prequiz, error) {
-	return s.prequizRepo.GetPrequizzesBySubMaterial(subMaterialID, 0) // 0 means no limit
+func (s *prequizService) GetPrequizzesByModule(moduleID uint) ([]models.Prequiz, error) {
+	return s.prequizRepo.GetPrequizzesByModule(moduleID, 0) // 0 means no limit
 }

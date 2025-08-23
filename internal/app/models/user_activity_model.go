@@ -9,7 +9,7 @@ import (
 type UserActivity struct {
 	gorm.Model
 	UserID       uint   `gorm:"not null;index"`
-	ActivityType string `gorm:"not null;index"` // login, quiz_join, quiz_complete, lesson_view, lesson_complete
+	ActivityType string `gorm:"not null;index"` // login, quiz_join, quiz_complete, module_view, module_complete
 	Description  string // Human readable description
 	MetaData     string `gorm:"type:json"` // JSON data for additional context
 	IPAddress    string
@@ -22,13 +22,12 @@ type UserActivity struct {
 
 // Activity type constants
 const (
-	ActivityTypeLogin          = "masuk"
-	ActivityTypeLogout         = "keluar"
-	ActivityTypeQuizJoin       = "gabung_kuis"
-	ActivityTypeQuizComplete   = "selesai_kuis"
-	ActivityTypeQuizAnswer     = "jawab_kuis"
-	ActivityTypeLessonView     = "lihat_pelajaran"
-	ActivityTypeLessonComplete = "selesai_pelajaran"
+	ActivityTypeLogin        = "masuk"
+	ActivityTypeLogout       = "keluar"
+	ActivityTypeQuizJoin     = "gabung_kuis"
+	ActivityTypeQuizComplete = "selesai_kuis"
+	ActivityTypeQuizAnswer   = "jawab_kuis"
+
 	ActivityTypeModuleView     = "lihat_modul"
 	ActivityTypeModuleComplete = "selesai_modul"
 	ActivityTypeProfileUpdate  = "update_profil"
@@ -47,10 +46,7 @@ func (ua *UserActivity) GetFormattedDescription() string {
 		return "Menyelesaikan kuis"
 	case ActivityTypeQuizAnswer:
 		return "Menjawab pertanyaan kuis"
-	case ActivityTypeLessonView:
-		return "Melihat pelajaran"
-	case ActivityTypeLessonComplete:
-		return "Menyelesaikan pelajaran"
+
 	case ActivityTypeModuleView:
 		return "Melihat modul"
 	case ActivityTypeModuleComplete:

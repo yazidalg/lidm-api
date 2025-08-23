@@ -15,7 +15,6 @@ func SeedFotosintesisData(db *gorm.DB) {
 	// Auto migrate all models first
 	err := db.AutoMigrate(
 		&models.Module{},
-		&models.SubMaterial{},
 		&models.VideoMaterial{},
 		&models.VideoQuiz{},
 		&models.VideoQuizUserAnswer{},
@@ -86,26 +85,11 @@ func SeedFotosintesisData(db *gorm.DB) {
 
 	log.Printf("Created AR experiment: %s (ID: %d)", arExperiment.Title, arExperiment.ID)
 
-	// SubMaterial 1: Video Pengenalan (Offset 120, 50)
-	subMaterial1 := models.SubMaterial{
-		ModuleID:    module.ID,
-		Title:       "Apa itu Fotosintesis?",
-		Description: "Video pengenalan tentang fotosintesis untuk anak-anak. Mari mengenal bagaimana tumbuhan bisa hidup!",
-		Order:       1,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := db.Create(&subMaterial1).Error; err != nil {
-		log.Printf("Error creating sub material 1: %v", err)
-		return
-	}
-
 	// Prequizzes untuk SubMaterial 1 (hanya 3)
 	prequizzes1 := []models.Prequiz{
 		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Menurutmu, bagaimana tumbuhan mendapatkan makanan?",
+			ModuleID: module.ID,
+			Question: "Menurutmu, bagaimana tumbuhan mendapatkan makanan?",
 			Options: models.Options{
 				OptionA: "Membeli di toko",
 				OptionB: "Meminta dari tumbuhan lain",
@@ -116,8 +100,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Benar! Tumbuhan bisa membuat makanan sendiri. Mari kita pelajari caranya!",
 		},
 		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Apa warna daun yang paling sering kamu lihat?",
+			ModuleID: module.ID,
+			Question: "Apa warna daun yang paling sering kamu lihat?",
 			Options: models.Options{
 				OptionA: "Hijau",
 				OptionB: "Merah",
@@ -128,8 +112,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Ya! Daun biasanya berwarna hijau. Warna hijau ini sangat penting untuk fotosintesis!",
 		},
 		{
-			SubMaterialID: subMaterial1.ID,
-			Question:      "Menurutmu, apakah matahari penting untuk tumbuhan?",
+			ModuleID: module.ID,
+			Question: "Menurutmu, apakah matahari penting untuk tumbuhan?",
 			Options: models.Options{
 				OptionA: "Ya, sangat penting",
 				OptionB: "Tidak penting",
@@ -150,12 +134,12 @@ func SeedFotosintesisData(db *gorm.DB) {
 
 	// Video Material untuk SubMaterial 1
 	videoMaterial1 := models.VideoMaterial{
-		SubMaterialID: subMaterial1.ID,
-		Title:         "Video Pengenalan Fotosintesis",
-		YoutubeLink:   "https://www.youtube.com/watch?v=example-fotosintesis-intro",
-		Duration:      180, // 3 menit
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		ModuleID:    module.ID,
+		Title:       "Video Pengenalan Fotosintesis",
+		YoutubeLink: "https://www.youtube.com/watch?v=example-fotosintesis-intro",
+		Duration:    180, // 3 menit
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	if err := db.Create(&videoMaterial1).Error; err != nil {
@@ -168,8 +152,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 		{
 			VideoMaterialID: videoMaterial1.ID,
 			Question:        "Berdasarkan video, apa yang membuat daun berwarna hijau?",
-			TimestampStart:  60,  // Muncul di detik ke-60 (1 menit)
-			TimestampEnd:    75,  // Berakhir di detik ke-75
+			TimestampStart:  60, // Muncul di detik ke-60 (1 menit)
+			TimestampEnd:    75, // Berakhir di detik ke-75
 			Options: models.Options{
 				OptionA: "Cat hijau",
 				OptionB: "Klorofil",
@@ -205,25 +189,12 @@ func SeedFotosintesisData(db *gorm.DB) {
 	}
 
 	// SubMaterial 2: Quiz Pengetahuan Dasar (Offset 200, 180)
-	subMaterial2 := models.SubMaterial{
-		ModuleID:    module.ID,
-		Title:       "Kuis: Apa yang Kamu Tahu?",
-		Description: "Ayo uji pengetahuan dasar kamu tentang tumbuhan dan fotosintesis!",
-		Order:       2,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := db.Create(&subMaterial2).Error; err != nil {
-		log.Printf("Error creating sub material 2: %v", err)
-		return
-	}
 
 	// Prequizzes untuk SubMaterial 2 (hanya 3)
 	prequizzes2 := []models.Prequiz{
 		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Apa yang dihasilkan tumbuhan yang berguna untuk kita?",
+			ModuleID: module.ID,
+			Question: "Apa yang dihasilkan tumbuhan yang berguna untuk kita?",
 			Options: models.Options{
 				OptionA: "Karbon dioksida",
 				OptionB: "Oksigen",
@@ -234,8 +205,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Tumbuhan menghasilkan oksigen yang kita butuhkan untuk bernapas!",
 		},
 		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Apa nama proses tumbuhan membuat makanan?",
+			ModuleID: module.ID,
+			Question: "Apa nama proses tumbuhan membuat makanan?",
 			Options: models.Options{
 				OptionA: "Fotosintesis",
 				OptionB: "Bernapas",
@@ -246,8 +217,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Fotosintesis adalah proses tumbuhan membuat makanan menggunakan sinar matahari!",
 		},
 		{
-			SubMaterialID: subMaterial2.ID,
-			Question:      "Mengapa daun berwarna hijau?",
+			ModuleID: module.ID,
+			Question: "Mengapa daun berwarna hijau?",
 			Options: models.Options{
 				OptionA: "Karena dicat",
 				OptionB: "Karena klorofil",
@@ -269,10 +240,10 @@ func SeedFotosintesisData(db *gorm.DB) {
 	// Quiz Questions untuk SubMaterial 2 (sebagai Questions dengan ModuleID)
 	quizQuestions2 := []models.Question{
 		{
-			ModuleID:      &module.ID,
-			Question:      "Apa warna daun yang bisa membuat makanan sendiri?",
-			AnswerTime:    30,
-			ReadTime:      15,
+			ModuleID:   &module.ID,
+			Question:   "Apa warna daun yang bisa membuat makanan sendiri?",
+			AnswerTime: 30,
+			ReadTime:   15,
 			Options: models.Options{
 				OptionA: "Merah",
 				OptionB: "Hijau",
@@ -285,10 +256,10 @@ func SeedFotosintesisData(db *gorm.DB) {
 			UpdatedAt:     time.Now(),
 		},
 		{
-			ModuleID:      &module.ID,
-			Question:      "Apa yang dibutuhkan tumbuhan untuk hidup?",
-			AnswerTime:    45,
-			ReadTime:      20,
+			ModuleID:   &module.ID,
+			Question:   "Apa yang dibutuhkan tumbuhan untuk hidup?",
+			AnswerTime: 45,
+			ReadTime:   20,
 			Options: models.Options{
 				OptionA: "Air saja",
 				OptionB: "Sinar matahari saja",
@@ -309,27 +280,11 @@ func SeedFotosintesisData(db *gorm.DB) {
 		}
 	}
 
-	// SubMaterial 3: AR Experience (Offset 120, 310)
-	subMaterial3 := models.SubMaterial{
-		ModuleID:       module.ID,
-		Title:          "Laboratorium Virtual AR",
-		Description:    "Masuk ke dunia AR dan lihat langsung bagaimana fotosintesis terjadi di dalam daun!",
-		Order:          3,
-		ARExperimentID: &arExperiment.ID,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-	}
-
-	if err := db.Create(&subMaterial3).Error; err != nil {
-		log.Printf("Error creating sub material 3: %v", err)
-		return
-	}
-
 	// Prequizzes untuk SubMaterial 3 (AR Lab - hanya 3)
 	prequizzes3 := []models.Prequiz{
 		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Apa yang ingin kamu lihat di dalam daun?",
+			ModuleID: module.ID,
+			Question: "Apa yang ingin kamu lihat di dalam daun?",
 			Options: models.Options{
 				OptionA: "Warna hijau saja",
 				OptionB: "Proses fotosintesis",
@@ -340,8 +295,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Dengan AR, kita bisa melihat bagaimana fotosintesis terjadi di dalam daun!",
 		},
 		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Menurutmu, di bagian mana fotosintesis terjadi?",
+			ModuleID: module.ID,
+			Question: "Menurutmu, di bagian mana fotosintesis terjadi?",
 			Options: models.Options{
 				OptionA: "Di seluruh tumbuhan",
 				OptionB: "Hanya di daun",
@@ -352,8 +307,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 			Explanation:   "Fotosintesis terutama terjadi di daun, mari kita lihat di AR Lab!",
 		},
 		{
-			SubMaterialID: subMaterial3.ID,
-			Question:      "Apa yang kamu bayangkan ada di dalam sel daun?",
+			ModuleID: module.ID,
+			Question: "Apa yang kamu bayangkan ada di dalam sel daun?",
 			Options: models.Options{
 				OptionA: "Ruang kosong",
 				OptionB: "Kloroplas hijau",
@@ -372,29 +327,14 @@ func SeedFotosintesisData(db *gorm.DB) {
 		}
 	}
 
-	// SubMaterial 4: Video Proses Fotosintesis (Offset 200, 440)
-	subMaterial4 := models.SubMaterial{
-		ModuleID:    module.ID,
-		Title:       "Bagaimana Fotosintesis Terjadi?",
-		Description: "Mari pelajari langkah-langkah fotosintesis dengan animasi yang mudah dipahami!",
-		Order:       4,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := db.Create(&subMaterial4).Error; err != nil {
-		log.Printf("Error creating sub material 4: %v", err)
-		return
-	}
-
 	// Video Material untuk SubMaterial 4
 	videoMaterial4 := models.VideoMaterial{
-		SubMaterialID: subMaterial4.ID,
-		Title:         "Video Proses Fotosintesis",
-		YoutubeLink:   "https://www.youtube.com/watch?v=example-fotosintesis-proses",
-		Duration:      240, // 4 menit
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		ModuleID:    module.ID,
+		Title:       "Video Proses Fotosintesis",
+		YoutubeLink: "https://www.youtube.com/watch?v=example-fotosintesis-proses",
+		Duration:    240, // 4 menit
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	if err := db.Create(&videoMaterial4).Error; err != nil {
@@ -407,8 +347,8 @@ func SeedFotosintesisData(db *gorm.DB) {
 		{
 			VideoMaterialID: videoMaterial4.ID,
 			Question:        "Berdasarkan video, di bagian mana fotosintesis terjadi?",
-			TimestampStart:  45,  // Muncul di detik ke-45
-			TimestampEnd:    60,  // Berakhir di detik ke-60
+			TimestampStart:  45, // Muncul di detik ke-45
+			TimestampEnd:    60, // Berakhir di detik ke-60
 			Options: models.Options{
 				OptionA: "Di akar",
 				OptionB: "Di batang",
@@ -458,70 +398,55 @@ func SeedFotosintesisData(db *gorm.DB) {
 		}
 	}
 
-	// SubMaterial 5: Flashcards & Quiz Final (Offset 120, 570)
-	subMaterial5 := models.SubMaterial{
-		ModuleID:    module.ID,
-		Title:       "Kartu Belajar & Kuis Akhir",
-		Description: "Hafal kata-kata penting dan uji semua yang sudah kamu pelajari!",
-		Order:       5,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-
-	if err := db.Create(&subMaterial5).Error; err != nil {
-		log.Printf("Error creating sub material 5: %v", err)
-		return
-	}
-
 	// Flashcards untuk SubMaterial 5
 	flashcards := []models.Flashcard{
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Fotosintesis",
-			BackText:      "Proses tumbuhan membuat makanan menggunakan sinar matahari, air, dan udara",
-			Order:         1,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Fotosintesis",
+			BackText:  "Proses tumbuhan membuat makanan menggunakan sinar matahari, air, dan udara",
+			Order:     1,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Klorofil",
-			BackText:      "Zat hijau di dalam daun yang menangkap sinar matahari",
-			Order:         2,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Klorofil",
+			BackText:  "Zat hijau di dalam daun yang menangkap sinar matahari",
+			Order:     2,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Karbon Dioksida",
-			BackText:      "Gas dari udara yang dibutuhkan tumbuhan untuk fotosintesis",
-			Order:         3,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Karbon Dioksida",
+			BackText:  "Gas dari udara yang dibutuhkan tumbuhan untuk fotosintesis",
+			Order:     3,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Oksigen",
-			BackText:      "Gas yang dihasilkan tumbuhan saat fotosintesis, berguna untuk kita bernapas",
-			Order:         4,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Oksigen",
+			BackText:  "Gas yang dihasilkan tumbuhan saat fotosintesis, berguna untuk kita bernapas",
+			Order:     4,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Stomata",
-			BackText:      "Lubang kecil di daun tempat keluar masuknya gas",
-			Order:         5,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Stomata",
+			BackText:  "Lubang kecil di daun tempat keluar masuknya gas",
+			Order:     5,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 		{
-			SubMaterialID: subMaterial5.ID,
-			FrontText:     "Glukosa",
-			BackText:      "Gula yang dibuat tumbuhan sebagai makanannya",
-			Order:         6,
-			CreatedAt:     time.Now(),
-			UpdatedAt:     time.Now(),
+			ModuleID:  module.ID,
+			FrontText: "Glukosa",
+			BackText:  "Gula yang dibuat tumbuhan sebagai makanannya",
+			Order:     6,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
 	}
 
@@ -656,38 +581,38 @@ func createDummyUsersAndAnswers(db *gorm.DB) error {
 	// Create dummy users
 	dummyUsers := []models.User{
 		{
-			Name:      "Andi Pratama",
-			Email:     "andi.pratama@student.com",
-			Password:  "$2a$14$hashedpassword1", // This would be properly hashed in real implementation
-			RoleID:    userRole.ID,
+			Name:       "Andi Pratama",
+			Email:      "andi.pratama@student.com",
+			Password:   "$2a$14$hashedpassword1", // This would be properly hashed in real implementation
+			RoleID:     userRole.ID,
 			IsVerified: true,
 		},
 		{
-			Name:      "Sari Dewi",
-			Email:     "sari.dewi@student.com",
-			Password:  "$2a$14$hashedpassword2",
-			RoleID:    userRole.ID,
+			Name:       "Sari Dewi",
+			Email:      "sari.dewi@student.com",
+			Password:   "$2a$14$hashedpassword2",
+			RoleID:     userRole.ID,
 			IsVerified: true,
 		},
 		{
-			Name:      "Budi Santoso",
-			Email:     "budi.santoso@student.com",
-			Password:  "$2a$14$hashedpassword3",
-			RoleID:    userRole.ID,
+			Name:       "Budi Santoso",
+			Email:      "budi.santoso@student.com",
+			Password:   "$2a$14$hashedpassword3",
+			RoleID:     userRole.ID,
 			IsVerified: true,
 		},
 		{
-			Name:      "Maya Putri",
-			Email:     "maya.putri@student.com",
-			Password:  "$2a$14$hashedpassword4",
-			RoleID:    userRole.ID,
+			Name:       "Maya Putri",
+			Email:      "maya.putri@student.com",
+			Password:   "$2a$14$hashedpassword4",
+			RoleID:     userRole.ID,
 			IsVerified: true,
 		},
 		{
-			Name:      "Riko Firmansyah",
-			Email:     "riko.firmansyah@student.com",
-			Password:  "$2a$14$hashedpassword5",
-			RoleID:    userRole.ID,
+			Name:       "Riko Firmansyah",
+			Email:      "riko.firmansyah@student.com",
+			Password:   "$2a$14$hashedpassword5",
+			RoleID:     userRole.ID,
 			IsVerified: true,
 		},
 	}
@@ -723,11 +648,11 @@ func createDummyUsersAndAnswers(db *gorm.DB) error {
 	for _, user := range dummyUsers {
 		// Each user answers 70-90% of prequizzes correctly
 		correctAnswerRate := 0.7 + (float64(user.ID%3) * 0.1) // 70%, 80%, or 90%
-		
+
 		for i, prequiz := range prequizzes {
 			// Simulate whether this user answers correctly based on their rate
 			isCorrect := float64(i%10) < (correctAnswerRate * 10)
-			
+
 			selectedAnswer := prequiz.CorrectAnswer
 			if !isCorrect {
 				// Pick a random wrong answer
@@ -762,11 +687,11 @@ func createDummyUsersAndAnswers(db *gorm.DB) error {
 	for _, user := range dummyUsers {
 		// Each user answers 60-85% of video quizzes correctly (slightly harder)
 		correctAnswerRate := 0.6 + (float64(user.ID%4) * 0.0625) // 60%, 66.25%, 72.5%, 78.75%, 85%
-		
+
 		for i, videoQuiz := range videoQuizzes {
 			// Simulate whether this user answers correctly
 			isCorrect := float64(i%8) < (correctAnswerRate * 8)
-			
+
 			selectedAnswer := videoQuiz.CorrectAnswer
 			if !isCorrect {
 				// Pick a random wrong answer
@@ -782,12 +707,12 @@ func createDummyUsersAndAnswers(db *gorm.DB) error {
 
 			// Create video quiz user answer
 			videoQuizAnswer := models.VideoQuizUserAnswer{
-				UserID:        user.ID,
-				VideoQuizID:   videoQuiz.ID,
+				UserID:         user.ID,
+				VideoQuizID:    videoQuiz.ID,
 				SelectedAnswer: selectedAnswer,
-				IsCorrect:     isCorrect,
-				AnsweredAt:    time.Now().Add(-time.Duration(len(videoQuizzes)-i) * time.Hour * 2).Unix(),
-				ResponseTime:  5 + int(user.ID%10), // Simulate 5-15 second response time
+				IsCorrect:      isCorrect,
+				AnsweredAt:     time.Now().Add(-time.Duration(len(videoQuizzes)-i) * time.Hour * 2).Unix(),
+				ResponseTime:   5 + int(user.ID%10), // Simulate 5-15 second response time
 			}
 
 			if err := db.Create(&videoQuizAnswer).Error; err != nil {

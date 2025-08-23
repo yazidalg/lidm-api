@@ -133,18 +133,6 @@ func NewBuildModule(db *gorm.DB) *handlers.ModuleHandler {
 	return moduleHandler
 }
 
-func NewBuildLesson(db *gorm.DB) *handlers.LessonHandler {
-	moduleRepository := repositories.NewModuleRepository(db)
-	progressRepository := repositories.NewProgressRepository(db)
-	videoQuizRepository := repositories.NewVideoQuizRepository(db)
-	prequizRepository := repositories.NewPrequizRepository(db)
-	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
-	lessonRepository := repositories.NewLessonRepository(db)
-	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
-	lessonHandler := handlers.NewLessonHandler(lessonService, moduleService)
-	return lessonHandler
-}
-
 func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	moduleRepository := repositories.NewModuleRepository(db)
 
@@ -152,9 +140,6 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
 	userService := services.NewUserService(userRepository, roleService)
-
-	lessonRepository := repositories.NewLessonRepository(db)
-	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 
 	// Extra repos/services needed for aggregation
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
@@ -166,8 +151,8 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	progressRepository := repositories.NewProgressRepository(db)
 	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
 
-	progressService := services.NewProgressService(progressRepository, userRepository, lessonRepository)
-	progressHandler := handlers.NewProgressHandler(progressService, userService, lessonService, moduleService, videoQuizService, prequizService)
+	progressService := services.NewProgressService(progressRepository, userRepository)                                            // Removed lessonRepository
+	progressHandler := handlers.NewProgressHandler(progressService, userService, moduleService, videoQuizService, prequizService) // Removed lessonService
 
 	return progressHandler
 }
@@ -210,16 +195,14 @@ func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.
 	userRepository := repositories.NewUserRepository(db)
 	activityService := services.NewUserActivityService(activityRepository, userRepository)
 
-	// Add lesson and module service for enhanced RAG data
-	lessonRepository := repositories.NewLessonRepository(db)
+	// Add module service for enhanced RAG data
 	moduleRepository := repositories.NewModuleRepository(db)
-	lessonService := services.NewLessonService(lessonRepository, moduleRepository)
 	progressRepository := repositories.NewProgressRepository(db)
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
 	prequizRepository := repositories.NewPrequizRepository(db)
 	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
 
-	activityHandler := handlers.NewUserActivityHandler(activityService, lessonService, moduleService)
+	activityHandler := handlers.NewUserActivityHandler(activityService, moduleService) // Removed lessonService
 	return activityHandler, activityService
 }
 

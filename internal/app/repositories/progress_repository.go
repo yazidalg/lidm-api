@@ -70,7 +70,6 @@ func (r *progressRepository) UpdateProgress(id uint, progress *models.Progress) 
 	}
 
 	existingProgress.UserID = progress.UserID
-	existingProgress.LessonID = progress.LessonID
 	existingProgress.Completed = true
 	existingProgress.CompletedAt = &now
 

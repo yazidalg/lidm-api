@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Prequiz struct {
 	gorm.Model
-	SubMaterialID uint    `gorm:"not null;index"` // Foreign key to SubMaterial
+	ModuleID      uint    `gorm:"not null;index"` // Foreign key to Module
 	Question      string  `gorm:"not null"`       // Quiz question
 	Options       Options `gorm:"embedded;"`
 	CorrectAnswer string  `gorm:"not null"`  // Correct answer for the quiz
@@ -17,8 +17,8 @@ type Prequiz struct {
 // Model untuk menyimpan jawaban user pada prequiz
 type PrequizUserAnswer struct {
 	gorm.Model
-	PrequizID  uint   `gorm:"not null;index" json:"prequiz_id"`  // Foreign key ke Prequiz
-	UserID     uint   `gorm:"not null;index" json:"user_id"`     // Foreign key ke User
+	PrequizID  uint   `gorm:"not null;index" json:"prequiz_id"` // Foreign key ke Prequiz
+	UserID     uint   `gorm:"not null;index" json:"user_id"`    // Foreign key ke User
 	Answer     string `gorm:"not null" json:"answer"`           // Jawaban yang dipilih user (A/B/C/D)
 	IsCorrect  bool   `gorm:"not null" json:"is_correct"`       // Apakah jawaban benar
 	AnsweredAt int64  `gorm:"not null" json:"answered_at"`      // Timestamp kapan dijawab (Unix timestamp)

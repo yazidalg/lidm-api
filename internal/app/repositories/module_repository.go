@@ -25,9 +25,24 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 	// Use a transaction to ensure data integrity
 	tx := r.db.Begin()
 
+	// Create the module first
 	if err := tx.Create(module).Error; err != nil {
 		tx.Rollback()
 		return nil, err
+	}
+
+	// Handle VideoMaterial creation if provided
+	if len(module.VideoMaterial) > 0 {
+		for i := range module.VideoMaterial {
+			// Set the ModuleID
+			module.VideoMaterial[i].ModuleID = module.ID
+
+			// Create the video material
+			if err := tx.Create(&module.VideoMaterial[i]).Error; err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
 	}
 
 	// Commit the transaction
@@ -41,18 +56,14 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
-	// Preload SubMaterials dengan komponen utama: Video, AR, dan Prequizzes (tanpa Module relationship)
+	// Preload komponen utama: Video, AR, dan Prequizzes
 	err := r.db.
-		Preload("Lessons").                                                      // Legacy support
-		Preload("SubMaterials", func(db *gorm.DB) *gorm.DB {                     // SubMaterials ordered by order field
-			return db.Order("sub_materials.order ASC")
-		}).
-		Preload("SubMaterials.VideoMaterial").                                   // Video content
-		Preload("SubMaterials.VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
+		Preload("VideoMaterial").                                          // Video content
+		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("SubMaterials.ARExperiment").                                    // AR experiments
-		// Preload("SubMaterials.Prequizzes").                                      // Prequizzes - DISABLED temporarily
+		Preload("ARExperiment"). // AR experiments
+		// Preload("Prequizzes").                                      // Prequizzes - DISABLED temporarily
 		First(&module, id).Error
 
 	if err != nil {
@@ -65,19 +76,15 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 	var modules []models.Module
 
-	// Preload SubMaterials dengan komponen utama: Video, AR, dan Prequizzes (tanpa Module relationship)
+	// Preload komponen utama: Video, AR, dan Prequizzes
 	err := r.db.
-		Preload("Lessons").                                                      // Legacy support
-		Preload("SubMaterials", func(db *gorm.DB) *gorm.DB {                     // SubMaterials ordered by order field
-			return db.Order("sub_materials.order ASC")
-		}).
-		Preload("SubMaterials.VideoMaterial").                                   // Video content
-		Preload("SubMaterials.VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
+		Preload("VideoMaterial").                                          // Video content
+		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("SubMaterials.ARExperiment").                                    // AR experiments
-		// Preload("SubMaterials.Prequizzes").                                      // Prequizzes - Disabled again to debug
-		Order("created_at ASC").                                                 // Order modules by creation
+		Preload("ARExperiment"). // AR experiments
+		// Preload("Prequizzes").                                      // Prequizzes - Disabled again to debug
+		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
 
 	if err != nil {
@@ -97,13 +104,32 @@ func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*mode
 	// Update the module fields
 	existingModule.Title = module.Title
 	existingModule.Description = module.Description
+	existingModule.OffsetX = module.OffsetX
+	existingModule.OffsetY = module.OffsetY
+	existingModule.Icon = module.Icon
+	existingModule.Thumbnail = module.Thumbnail
 
 	// Use a transaction to ensure data integrity
 	tx := r.db.Begin()
 
+	// Update the module
 	if err := tx.Save(&existingModule).Error; err != nil {
 		tx.Rollback()
 		return nil, err
+	}
+
+	// Handle VideoMaterial creation if provided
+	if len(module.VideoMaterial) > 0 {
+		for _, videoMat := range module.VideoMaterial {
+			// Set the ModuleID
+			videoMat.ModuleID = uint(id)
+
+			// Create the video material
+			if err := tx.Create(&videoMat).Error; err != nil {
+				tx.Rollback()
+				return nil, err
+			}
+		}
 	}
 
 	// Commit the transaction
@@ -111,7 +137,8 @@ func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*mode
 		return nil, err
 	}
 
-	return existingModule, nil
+	// Return the updated module with preloaded relationships
+	return r.GetModuleByID(id)
 }
 
 func (r *moduleRepository) DeleteModule(id uint32) error {

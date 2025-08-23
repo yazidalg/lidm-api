@@ -32,6 +32,29 @@ func (h *ModuleHandler) CreateModule(c *gin.Context) {
 	}
 }
 
+func (h *ModuleHandler) CreateModuleWithVideo(c *gin.Context) {
+	var request request.CreateModuleWithVideoRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	result, err := h.moduleService.CreateModuleWithVideo(request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   err.Error(),
+			"message": "Failed to create module with video material",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Module with video material created successfully",
+		"data":    result,
+	})
+}
+
 func (h *ModuleHandler) createModuleJSON(c *gin.Context) {
 	var moduleRequest request.ModuleRequest
 
@@ -115,7 +138,7 @@ func (h *ModuleHandler) createModuleWithIcon(c *gin.Context) {
 		// Update module with icon path
 		offsetXFloat := float64(result.OffsetX)
 		offsetYFloat := float64(result.OffsetY)
-		updateRequest := request.ModuleRequest{
+		updateRequest := request.UpdateModuleRequest{
 			Title:       result.Title,
 			Description: result.Description,
 			OffsetX:     &offsetXFloat,
@@ -238,7 +261,7 @@ func (h *ModuleHandler) UpdateModule(c *gin.Context) {
 		return
 	}
 
-	var request request.ModuleRequest
+	var request request.UpdateModuleRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -344,7 +367,7 @@ func (h *ModuleHandler) UploadModuleIcon(c *gin.Context) {
 	// Update module with new icon path
 	offsetXFloat := float64(module.OffsetX)
 	offsetYFloat := float64(module.OffsetY)
-	updateRequest := request.ModuleRequest{
+	updateRequest := request.UpdateModuleRequest{
 		Title:       module.Title,
 		Description: module.Description,
 		OffsetX:     &offsetXFloat,
@@ -408,7 +431,7 @@ func (h *ModuleHandler) DeleteModuleIcon(c *gin.Context) {
 	// Update module to remove icon reference
 	offsetXFloat := float64(module.OffsetX)
 	offsetYFloat := float64(module.OffsetY)
-	updateRequest := request.ModuleRequest{
+	updateRequest := request.UpdateModuleRequest{
 		Title:       module.Title,
 		Description: module.Description,
 		OffsetX:     &offsetXFloat,

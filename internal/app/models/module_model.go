@@ -18,7 +18,7 @@ type Module struct {
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 
 	// Relationships
-	Lessons      []Lesson      `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"lessons,omitempty"` // Legacy relationship
-	SubMaterials []SubMaterial `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"sub_materials,omitempty"`
-	Quizzes      []Quiz        `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"quizzes,omitempty"` // Quiz yang terkait dengan module ini
+	Quizzes       []Quiz          `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"quizzes,omitempty"`        // Quiz yang terkait dengan module ini
+	VideoMaterial []VideoMaterial `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"video_material,omitempty"` // Video material yang terkait dengan module ini
+	ARExperiment  *ARExperiment   `gorm:"foreignKey:ModuleID;constraint:OnUpdate:CASCADE" json:"ar_experiment,omitempty"`  // AR experiment yang terkait dengan module ini
 }

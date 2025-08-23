@@ -18,6 +18,7 @@ type AuthServiceInterface interface {
 	GetByVerificationToken(token string) (models.User, error)
 	VerifyUser(user models.User) (models.User, error)
 	GetVerifiedUser(email string) (models.User, error)
+	GetAllRoles() ([]models.Role, error)
 }
 
 type authService struct {
@@ -38,6 +39,7 @@ func (s *authService) RegisterUser(user request.UserRegisterRequest) (models.Use
 		roleName = models.RoleUserName
 	}
 
+	// Debug log untuk memastikan role yang dipilih
 	role, err := s.roleService.GetRoleByName(roleName)
 	if err != nil {
 		// If role not found, use default user role
@@ -92,6 +94,10 @@ func (s *authService) GetVerifiedUser(email string) (models.User, error) {
 
 func (s *authService) GetUserByEmail(email string) (models.User, error) {
 	return s.authRepository.GetByEmail(email)
+}
+
+func (s *authService) GetAllRoles() ([]models.Role, error) {
+	return s.roleService.GetAllRoles()
 }
 
 func (s *authService) RegisterUserWithGoogle(user request.UserRegisterRequest, picture string) (models.User, error) {

@@ -86,9 +86,7 @@ func (m *ActivityTrackingMiddleware) TrackActivity() gin.HandlerFunc {
 			)
 
 			// Update streak for learning activities
-			isLearningActivity := activityType == models.ActivityTypeLessonView ||
-				activityType == models.ActivityTypeLessonComplete ||
-				activityType == models.ActivityTypeModuleView ||
+			isLearningActivity := activityType == models.ActivityTypeModuleView ||
 				activityType == models.ActivityTypeModuleComplete ||
 				activityType == models.ActivityTypeQuizJoin ||
 				activityType == models.ActivityTypeQuizComplete ||
@@ -134,63 +132,17 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		activityType = models.ActivityTypeLogout
 		description = "Pengguna keluar"
 
-	// Enhanced Lesson activities with more metadata for RAG
-	case strings.Contains(path, "/lesson") && method == "GET":
-		activityType = models.ActivityTypeLessonView
-		
-		if strings.Contains(path, "/lesson/all") {
-			description = "Melihat daftar semua pelajaran"
-			metadata["action"] = "view_all_lessons"
-			metadata["content_type"] = "lesson_list"
-			metadata["learning_activity"] = true
-			metadata["knowledge_area"] = "lessons"
-			
-			// For RAG: Add context about browsing lessons
-			metadata["user_intent"] = "browse_available_lessons"
-			metadata["session_context"] = "lesson_discovery"
-		} else if lessonID := c.Param("lesson_id"); lessonID != "" {
-			description = "Melihat pelajaran spesifik"
-			metadata["lesson_id"] = lessonID
-			metadata["action"] = "view_specific_lesson"
-			metadata["content_type"] = "lesson_detail"
-			metadata["learning_activity"] = true
-			metadata["knowledge_area"] = "lesson_content"
-			
-			// For RAG: Add learning context
-			metadata["user_intent"] = "study_lesson"
-			metadata["session_context"] = "active_learning"
-			metadata["engagement_type"] = "content_consumption"
-		}
-
-	case strings.Contains(path, "/lesson") && strings.Contains(path, "/complete") && method == "POST":
-		activityType = models.ActivityTypeLessonComplete
-		description = "Menyelesaikan pelajaran"
-		if lessonID := c.Param("lesson_id"); lessonID != "" {
-			metadata["lesson_id"] = lessonID
-		}
-		metadata["action"] = "complete_lesson"
-		metadata["content_type"] = "lesson_completion"
-		metadata["learning_activity"] = true
-		metadata["achievement"] = true
-		metadata["completion_timestamp"] = time.Now().Format(time.RFC3339)
-		
-		// For RAG: Add completion context
-		metadata["user_intent"] = "complete_learning_objective"
-		metadata["session_context"] = "lesson_completion"
-		metadata["engagement_type"] = "achievement"
-		metadata["learning_milestone"] = true
-
 	// Enhanced Module activities with more metadata for RAG
 	case strings.Contains(path, "/module") && method == "GET" && !strings.Contains(path, "/modules"):
 		activityType = models.ActivityTypeModuleView
-		
+
 		if strings.Contains(path, "/module/all") {
 			description = "Melihat daftar semua modul"
 			metadata["action"] = "view_all_modules"
 			metadata["content_type"] = "module_list"
 			metadata["learning_activity"] = true
 			metadata["knowledge_area"] = "modules"
-			
+
 			// For RAG: Add context about browsing modules
 			metadata["user_intent"] = "explore_learning_paths"
 			metadata["session_context"] = "module_discovery"
@@ -203,7 +155,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 			metadata["content_type"] = "module_detail"
 			metadata["learning_activity"] = true
 			metadata["knowledge_area"] = "module_content"
-			
+
 			// For RAG: Add learning path context
 			metadata["user_intent"] = "study_module"
 			metadata["session_context"] = "structured_learning"
@@ -223,7 +175,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		metadata["learning_activity"] = true
 		metadata["achievement"] = true
 		metadata["completion_timestamp"] = time.Now().Format(time.RFC3339)
-		
+
 		// For RAG: Add major completion context
 		metadata["user_intent"] = "complete_learning_module"
 		metadata["session_context"] = "module_completion"
@@ -242,7 +194,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		metadata["content_type"] = "quiz_participation"
 		metadata["learning_activity"] = true
 		metadata["assessment"] = true
-		
+
 		// For RAG: Add assessment context
 		metadata["user_intent"] = "test_knowledge"
 		metadata["session_context"] = "assessment"
@@ -260,7 +212,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		metadata["assessment"] = true
 		metadata["achievement"] = true
 		metadata["completion_timestamp"] = time.Now().Format(time.RFC3339)
-		
+
 		// For RAG: Add quiz completion context
 		metadata["user_intent"] = "complete_assessment"
 		metadata["session_context"] = "quiz_completion"
@@ -280,7 +232,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		metadata["content_type"] = "quiz_interaction"
 		metadata["learning_activity"] = true
 		metadata["assessment"] = true
-		
+
 		// For RAG: Add question answering context
 		metadata["user_intent"] = "answer_assessment_question"
 		metadata["session_context"] = "active_assessment"
@@ -292,7 +244,7 @@ func (m *ActivityTrackingMiddleware) determineActivityType(c *gin.Context) (stri
 		description = "Memperbarui informasi profil"
 		metadata["action"] = "update_profile"
 		metadata["content_type"] = "profile_management"
-		
+
 		// For RAG: Add profile context
 		metadata["user_intent"] = "manage_profile"
 		metadata["session_context"] = "profile_update"

@@ -8,7 +8,7 @@ import (
 
 type QuizQuestion struct {
 	gorm.Model
-	SubMaterialID uint      `gorm:"not null;index" json:"sub_material_id"`
+	ModuleID      uint      `gorm:"not null;index" json:"module_id"`
 	Question      string    `gorm:"type:text;not null" json:"question"`
 	OptionA       string    `gorm:"not null" json:"option_a"`
 	OptionB       string    `gorm:"not null" json:"option_b"`
@@ -20,6 +20,6 @@ type QuizQuestion struct {
 	CreatedAt     time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
-	// Note: Removed SubMaterial relationship to avoid circular import
-	// Use SubMaterialID to reference the parent
+	// Note: Direct relationship to Module
+	// Use ModuleID to reference the parent
 }

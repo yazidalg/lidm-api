@@ -14,18 +14,15 @@ import (
 
 type UserActivityHandler struct {
 	activityService services.UserActivityServiceInterface
-	lessonService   services.LessonServiceInterface
 	moduleService   services.ModuleServiceInterface
 }
 
 func NewUserActivityHandler(
 	activityService services.UserActivityServiceInterface,
-	lessonService services.LessonServiceInterface,
 	moduleService services.ModuleServiceInterface,
 ) *UserActivityHandler {
 	return &UserActivityHandler{
 		activityService: activityService,
-		lessonService:   lessonService,
 		moduleService:   moduleService,
 	}
 }
@@ -180,8 +177,6 @@ func (h *UserActivityHandler) GetMostActiveUsersDetailed(c *gin.Context) {
 
 			// Estimate learning time based on activity type
 			switch activity.ActivityType {
-			case models.ActivityTypeLessonView, models.ActivityTypeLessonComplete:
-				totalMinutes += 5 // 5 minutes per lesson activity
 			case models.ActivityTypeModuleView, models.ActivityTypeModuleComplete:
 				totalMinutes += 10 // 10 minutes per module activity
 			case models.ActivityTypeQuizJoin, models.ActivityTypeQuizComplete:
@@ -491,7 +486,7 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 
 	// Enrich activities data for RAG
 	enrichedActivities := make([]gin.H, 0, len(activities))
-	
+
 	for _, activity := range activities {
 		// Parse metadata
 		var metadata map[string]interface{}
@@ -501,33 +496,33 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 
 		// Create enriched activity object for RAG
 		enrichedActivity := gin.H{
-			"id":           activity.ID,
-			"user_id":      activity.UserID,
+			"id":            activity.ID,
+			"user_id":       activity.UserID,
 			"activity_type": activity.ActivityType,
-			"description":  activity.Description,
-			"timestamp":    activity.CreatedAt.Format(time.RFC3339),
-			"date":         activity.CreatedAt.Format("2006-01-02"),
-			"time":         activity.CreatedAt.Format("15:04:05"),
-			"metadata":     metadata,
+			"description":   activity.Description,
+			"timestamp":     activity.CreatedAt.Format(time.RFC3339),
+			"date":          activity.CreatedAt.Format("2006-01-02"),
+			"time":          activity.CreatedAt.Format("15:04:05"),
+			"metadata":      metadata,
 		}
 
 		// Add learning context for RAG
 		if isLearningActivity, _ := metadata["learning_activity"].(bool); isLearningActivity {
 			enrichedActivity["is_learning_activity"] = true
-			
+
 			// Extract learning insights
 			if contentType, ok := metadata["content_type"].(string); ok {
 				enrichedActivity["content_type"] = contentType
 			}
-			
+
 			if userIntent, ok := metadata["user_intent"].(string); ok {
 				enrichedActivity["user_intent"] = userIntent
 			}
-			
+
 			if sessionContext, ok := metadata["session_context"].(string); ok {
 				enrichedActivity["session_context"] = sessionContext
 			}
-			
+
 			if engagementType, ok := metadata["engagement_type"].(string); ok {
 				enrichedActivity["engagement_type"] = engagementType
 			}
@@ -537,12 +532,6 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 
 			// Learning categorization for RAG
 			switch activity.ActivityType {
-			case models.ActivityTypeLessonView:
-				enrichedActivity["learning_category"] = "content_consumption"
-				enrichedActivity["knowledge_acquisition"] = true
-			case models.ActivityTypeLessonComplete:
-				enrichedActivity["learning_category"] = "content_completion"
-				enrichedActivity["achievement"] = true
 			case models.ActivityTypeModuleView:
 				enrichedActivity["learning_category"] = "curriculum_exploration"
 				enrichedActivity["structured_learning"] = true
@@ -597,10 +586,10 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 	// Activity type breakdown for RAG insights
 	activityBreakdown := make(map[string]int)
 	learningActivityCount := 0
-	
+
 	for _, activity := range activities {
 		activityBreakdown[activity.ActivityType]++
-		
+
 		// Check if it's a learning activity
 		var metadata map[string]interface{}
 		if activity.MetaData != "" {
@@ -626,9 +615,9 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 			"activities": enrichedActivities,
 			"statistics": stats,
 			"rag_context": gin.H{
-				"purpose": "learning_behavior_analysis",
-				"data_enrichment": "enhanced_metadata_for_ai",
-				"temporal_analysis": true,
+				"purpose":                    "learning_behavior_analysis",
+				"data_enrichment":            "enhanced_metadata_for_ai",
+				"temporal_analysis":          true,
 				"learning_pattern_detection": true,
 			},
 		},
@@ -638,64 +627,18 @@ func (h *UserActivityHandler) GetActivitiesForRAG(c *gin.Context) {
 // addContentDetails adds detailed content information for RAG based on activity type and metadata
 func (h *UserActivityHandler) addContentDetails(enrichedActivity gin.H, metadata map[string]interface{}, activityType string) {
 	switch activityType {
-	case models.ActivityTypeLessonView, models.ActivityTypeLessonComplete:
-		// Try to get lesson details
-		if lessonIDStr, ok := metadata["lesson_id"].(string); ok {
-			if lessonID, err := strconv.ParseUint(lessonIDStr, 10, 32); err == nil {
-				if lesson, err := h.lessonService.GetLessonByID(uint32(lessonID)); err == nil {
-					enrichedActivity["lesson_details"] = gin.H{
-						"id":       lesson.ID,
-						"title":    lesson.Title,
-						"content":  lesson.Content,
-						"module": gin.H{
-							"id":          lesson.Module.ID,
-							"title":       lesson.Module.Title,
-							"description": lesson.Module.Description,
-						},
-					}
-				}
-			}
-		} else if activityType == models.ActivityTypeLessonView && metadata["content_type"] == "lesson_list" {
-			// For /lesson/all endpoint, add summary of all lessons
-			if lessons, err := h.lessonService.GetAllLessons(); err == nil {
-				lessonSummaries := make([]gin.H, 0, len(lessons))
-				for _, lesson := range lessons {
-					lessonSummaries = append(lessonSummaries, gin.H{
-						"id":     lesson.ID,
-						"title":  lesson.Title,
-						"module": lesson.Module.Title,
-					})
-				}
-				enrichedActivity["available_lessons"] = lessonSummaries
-				enrichedActivity["total_lessons_available"] = len(lessons)
-			}
-		}
-		
+
 	case models.ActivityTypeModuleView, models.ActivityTypeModuleComplete:
 		// Try to get module details
 		if moduleIDStr, ok := metadata["module_id"].(string); ok {
 			if moduleID, err := strconv.ParseUint(moduleIDStr, 10, 32); err == nil {
 				if module, err := h.moduleService.GetModuleByID(uint32(moduleID)); err == nil {
 					enrichedActivity["module_details"] = gin.H{
-						"id":               module.ID,
-						"title":            module.Title,
-						"description":      module.Description,
-						"icon":             module.Icon,
-						"thumbnail":        module.Thumbnail,
-						"lessons_count":    len(module.Lessons),
-						"sub_materials_count": len(module.SubMaterials),
-						"sub_materials":    func() []gin.H {
-							subMaterials := make([]gin.H, 0, len(module.SubMaterials))
-							for _, subMat := range module.SubMaterials {
-								subMaterials = append(subMaterials, gin.H{
-									"id":          subMat.ID,
-									"title":       subMat.Title,
-									"description": subMat.Description,
-									"order":       subMat.Order,
-								})
-							}
-							return subMaterials
-						}(),
+						"id":          module.ID,
+						"title":       module.Title,
+						"description": module.Description,
+						"icon":        module.Icon,
+						"thumbnail":   module.Thumbnail,
 					}
 				}
 			}
@@ -705,12 +648,9 @@ func (h *UserActivityHandler) addContentDetails(enrichedActivity gin.H, metadata
 				moduleSummaries := make([]gin.H, 0, len(modules))
 				for _, module := range modules {
 					moduleSummaries = append(moduleSummaries, gin.H{
-						"id":                    module.ID,
-						"title":                 module.Title,
-						"description":           module.Description,
-						"lessons_count":         len(module.Lessons),
-						"sub_materials_count":   len(module.SubMaterials),
-						"total_content_items":   len(module.Lessons) + len(module.SubMaterials),
+						"id":          module.ID,
+						"title":       module.Title,
+						"description": module.Description,
 					})
 				}
 				enrichedActivity["available_modules"] = moduleSummaries

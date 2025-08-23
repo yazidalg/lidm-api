@@ -39,7 +39,7 @@ func main() {
 	quizHandler, quizService := helpers.NewBuildQuiz(db)
 	quizSessionHandler, quizSessionService := helpers.NewBuildQuizSession(db)
 	moduleHandler := helpers.NewBuildModule(db)
-	lessonHandler := helpers.NewBuildLesson(db)
+
 	progressHandler := helpers.NewBuildProgress(db)
 	prequizHandler, prequizService := helpers.NewBuildPrequiz(db)
 	videoQuizHandler, videoQuizService := helpers.NewBuildVideoQuiz(db)
@@ -63,7 +63,6 @@ func main() {
 		quizSessionHandler,
 		socketHandler,
 		moduleHandler,
-		lessonHandler,
 		progressHandler,
 		prequizHandler,
 		videoQuizHandler,

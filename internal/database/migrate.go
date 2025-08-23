@@ -20,7 +20,6 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(
 		&models.User{},
 		&models.Module{},
-		&models.SubMaterial{},
 		&models.VideoMaterial{},
 		&models.VideoQuiz{},
 		&models.VideoQuizUserAnswer{},
@@ -33,14 +32,12 @@ func Migrate(db *gorm.DB) error {
 		&models.Question{},
 		&models.Answer{},
 		&models.Leaderboard{},
-		&models.Lesson{},
 		&models.Resource{},
 		&models.Progress{},
 		&models.Prequiz{},
 		&models.PrequizUserAnswer{},
 		&models.QuizSession{},
 		&models.UserActivity{},
-		&models.SubMaterialProgress{}, // Add new progress tracking model
 	); err != nil {
 		return err
 	}

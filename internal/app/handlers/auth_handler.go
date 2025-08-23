@@ -23,13 +23,7 @@ func NewAuthHandler(authServiceInterface services.AuthServiceInterface) *AuthHan
 }
 
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
-	var body struct {
-		Name     string
-		Email    string
-		Password string
-		Class    string
-		Role     string `json:"role,omitempty"`
-	}
+	var body request.UserRegisterRequest
 
 	if c.Bind(&body) != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -39,7 +33,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	}
 
 	// Validasi role
-	if body.Role != "" && body.Role != "user" && body.Role != "admin" {
+	if body.RoleName != "" && body.RoleName != "user" && body.RoleName != "admin" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid role. Must be 'user' or 'admin'",
 		})
@@ -47,7 +41,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	}
 
 	// Validasi class - hanya wajib untuk user biasa, admin boleh kosong
-	if body.Role != "admin" && body.Class == "" {
+	if body.RoleName != "admin" && body.Class == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Class is required for user role",
 		})
@@ -63,12 +57,17 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	// Set default role jika tidak ada
+	if body.RoleName == "" {
+		body.RoleName = "user"
+	}
+
 	user := request.UserRegisterRequest{
 		Name:     body.Name,
 		Email:    body.Email,
 		Password: string(hash),
 		Class:    body.Class,
-		RoleName: body.Role, // Pass role ke request
+		RoleName: body.RoleName,
 	}
 
 	result, err := h.authService.RegisterUser(user)

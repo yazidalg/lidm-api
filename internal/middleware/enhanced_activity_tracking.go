@@ -14,47 +14,31 @@ import (
 
 // ContentEnricher interface untuk mengambil data detail dari content
 type ContentEnricher interface {
-	GetLessonDetails(lessonID uint) (*LessonContent, error)
 	GetModuleDetails(moduleID uint) (*ModuleContent, error)
 	GetQuizDetails(quizID uint) (*QuizContent, error)
 }
 
-// Content structures untuk RAG
-type LessonContent struct {
-	ID          uint   `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Content     string `json:"content"`
-	ModuleID    uint   `json:"module_id"`
-	ModuleName  string `json:"module_name"`
-	Difficulty  string `json:"difficulty"`
-	Duration    int    `json:"duration_minutes"`
-	Tags        []string `json:"tags"`
-	LearningObjectives []string `json:"learning_objectives"`
-}
-
 type ModuleContent struct {
-	ID          uint   `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
-	Difficulty  string `json:"difficulty"`
-	TotalLessons int   `json:"total_lessons"`
-	TotalDuration int  `json:"total_duration_minutes"`
-	Tags        []string `json:"tags"`
-	LearningPath string `json:"learning_path"`
+	ID            uint     `json:"id"`
+	Title         string   `json:"title"`
+	Description   string   `json:"description"`
+	Category      string   `json:"category"`
+	Difficulty    string   `json:"difficulty"`
+	TotalDuration int      `json:"total_duration_minutes"`
+	Tags          []string `json:"tags"`
+	LearningPath  string   `json:"learning_path"`
 }
 
 type QuizContent struct {
-	ID          uint   `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	ModuleID    uint   `json:"module_id"`
-	ModuleName  string `json:"module_name"`
-	QuestionCount int  `json:"question_count"`
-	Duration    int    `json:"duration_minutes"`
-	Difficulty  string `json:"difficulty"`
-	Topics      []string `json:"topics"`
+	ID            uint     `json:"id"`
+	Title         string   `json:"title"`
+	Description   string   `json:"description"`
+	ModuleID      uint     `json:"module_id"`
+	ModuleName    string   `json:"module_name"`
+	QuestionCount int      `json:"question_count"`
+	Duration      int      `json:"duration_minutes"`
+	Difficulty    string   `json:"difficulty"`
+	Topics        []string `json:"topics"`
 }
 
 type EnhancedActivityTrackingMiddleware struct {
@@ -134,9 +118,7 @@ func (m *EnhancedActivityTrackingMiddleware) TrackActivityWithEnhancedMetadata()
 			)
 
 			// Update streak for learning activities
-			isLearningActivity := activityType == models.ActivityTypeLessonView ||
-				activityType == models.ActivityTypeLessonComplete ||
-				activityType == models.ActivityTypeModuleView ||
+			isLearningActivity := activityType == models.ActivityTypeModuleView ||
 				activityType == models.ActivityTypeModuleComplete ||
 				activityType == models.ActivityTypeQuizJoin ||
 				activityType == models.ActivityTypeQuizComplete ||
@@ -183,48 +165,10 @@ func (m *EnhancedActivityTrackingMiddleware) determineActivityWithContent(c *gin
 		activityType = models.ActivityTypeLogout
 		description = "Pengguna keluar"
 
-	// Enhanced Lesson activities with content details
-	case strings.Contains(path, "/lesson") && method == "GET":
-		activityType = models.ActivityTypeLessonView
-		
-		if strings.Contains(path, "/lesson/all") {
-			description = "Melihat daftar semua pelajaran"
-			metadata["action"] = "view_all_lessons"
-			
-			// Get response body for lesson list if available
-			if responseData := c.GetHeader("X-Response-Data"); responseData != "" {
-				metadata["lessons_data"] = responseData
-			}
-		} else if lessonID := c.Param("lesson_id"); lessonID != "" {
-			// Get specific lesson details
-			if id, err := strconv.ParseUint(lessonID, 10, 32); err == nil {
-				if lessonContent, err := m.contentEnricher.GetLessonDetails(uint(id)); err == nil {
-					description = fmt.Sprintf("Melihat pelajaran: %s", lessonContent.Title)
-					metadata["lesson_id"] = lessonID
-					metadata["lesson_content"] = lessonContent
-					metadata["action"] = "view_specific_lesson"
-				}
-			}
-		}
-
-	case strings.Contains(path, "/lesson") && strings.Contains(path, "/complete") && method == "POST":
-		activityType = models.ActivityTypeLessonComplete
-		if lessonID := c.Param("lesson_id"); lessonID != "" {
-			if id, err := strconv.ParseUint(lessonID, 10, 32); err == nil {
-				if lessonContent, err := m.contentEnricher.GetLessonDetails(uint(id)); err == nil {
-					description = fmt.Sprintf("Menyelesaikan pelajaran: %s", lessonContent.Title)
-					metadata["lesson_id"] = lessonID
-					metadata["lesson_content"] = lessonContent
-					metadata["action"] = "complete_lesson"
-					metadata["completion_timestamp"] = time.Now().Format(time.RFC3339)
-				}
-			}
-		}
-
 	// Enhanced Module activities with content details
 	case strings.Contains(path, "/module") && method == "GET" && !strings.Contains(path, "/modules"):
 		activityType = models.ActivityTypeModuleView
-		
+
 		if strings.Contains(path, "/module/all") {
 			description = "Melihat daftar semua modul"
 			metadata["action"] = "view_all_modules"

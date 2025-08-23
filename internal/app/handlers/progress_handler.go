@@ -13,10 +13,9 @@ import (
 )
 
 type ProgressHandler struct {
-	userService     services.UserServiceInterface
-	lessonService   services.LessonServiceInterface
-	progressService services.ProgressServiceInterface
-	moduleService   services.ModuleServiceInterface
+	userService      services.UserServiceInterface
+	progressService  services.ProgressServiceInterface
+	moduleService    services.ModuleServiceInterface
 	videoQuizService services.VideoQuizServiceInterface
 	prequizService   services.PrequizServiceInterface
 }
@@ -24,16 +23,14 @@ type ProgressHandler struct {
 func NewProgressHandler(
 	progressService services.ProgressServiceInterface,
 	userService services.UserServiceInterface,
-	lessonService services.LessonServiceInterface,
 	moduleService services.ModuleServiceInterface,
 	videoQuizService services.VideoQuizServiceInterface,
 	prequizService services.PrequizServiceInterface,
 ) *ProgressHandler {
 	return &ProgressHandler{
-		progressService: progressService,
-		userService:     userService,
-		lessonService:   lessonService,
-		moduleService:   moduleService,
+		progressService:  progressService,
+		userService:      userService,
+		moduleService:    moduleService,
 		videoQuizService: videoQuizService,
 		prequizService:   prequizService,
 	}
@@ -48,9 +45,8 @@ func (h *ProgressHandler) CreateProgress(c *gin.Context) {
 	}
 
 	userResult, userErr := h.userService.GetUserById(int(request.UserID))
-	lessonResult, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
 
-	if userResult.ID == 0 || lessonResult == nil || userErr != nil || lessonErr != nil {
+	if userResult.ID == 0 || userErr != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   "User or lesson not found",
 			"message": "Failed to create progress",
@@ -60,7 +56,6 @@ func (h *ProgressHandler) CreateProgress(c *gin.Context) {
 
 	progressData := models.Progress{
 		UserID:    uint(userResult.ID),
-		LessonID:  uint(lessonResult.ID),
 		Completed: false,
 	}
 
@@ -75,9 +70,8 @@ func (h *ProgressHandler) CreateProgress(c *gin.Context) {
 	}
 
 	progressResponse := &response.ProgressResponse{
-		ID:       progress.ID,
-		UserID:   progress.UserID,
-		LessonID: progress.LessonID,
+		ID:     progress.ID,
+		UserID: progress.UserID,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -104,11 +98,10 @@ func (h *ProgressHandler) UpdateProgress(c *gin.Context) {
 	}
 
 	userResult, userErr := h.userService.GetUserById(int(request.UserID))
-	lessonResult, lessonErr := h.lessonService.GetLessonByID(uint32(request.LessonID))
 
-	if userResult.ID == 0 || lessonResult == nil || userErr != nil || lessonErr != nil {
+	if userErr != nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "User or lesson not found",
+			"error":   "User not found",
 			"message": "Failed to update progress",
 		})
 		return
@@ -116,7 +109,6 @@ func (h *ProgressHandler) UpdateProgress(c *gin.Context) {
 
 	progressData := models.Progress{
 		UserID:      uint(userResult.ID),
-		LessonID:    uint(lessonResult.ID),
 		Completed:   false,
 		CompletedAt: &now, // Set CompletedAt to current time
 	}
@@ -134,7 +126,6 @@ func (h *ProgressHandler) UpdateProgress(c *gin.Context) {
 	progressResponse := &response.ProgressResponse{
 		ID:          progress.ID,
 		UserID:      progress.UserID,
-		LessonID:    progress.LessonID,
 		Completed:   progress.Completed,
 		CompletedAt: progress.CompletedAt.Format(time.RFC3339),
 	}
@@ -170,7 +161,6 @@ func (h *ProgressHandler) GetAllProgress(c *gin.Context) {
 		response := response.ProgressResponse{
 			ID:          p.ID,
 			UserID:      p.UserID,
-			LessonID:    p.LessonID,
 			Completed:   p.Completed,
 			CompletedAt: completedAtStr,
 		}
@@ -186,10 +176,10 @@ func (h *ProgressHandler) GetAllProgress(c *gin.Context) {
 }
 
 // GetModuleProgress returns aggregated completion status for a module for the authenticated user
-// - module_completed: true if all lessons in the module are marked completed by the user.
-//   If the module has no lessons, it falls back to (videos_completed && prequizzes_completed).
-// - videos_completed: true if the user has answered all video quizzes across all video materials in the module.
-// - prequizzes_completed: true if the user has answered all prequizzes in the module.
+//   - module_completed: true if all lessons in the module are marked completed by the user.
+//     If the module has no lessons, it falls back to (videos_completed && prequizzes_completed).
+//   - videos_completed: true if the user has answered all video quizzes across all video materials in the module.
+//   - prequizzes_completed: true if the user has answered all prequizzes in the module.
 func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 	// Extract user ID from auth middleware
 	userIDVal, ok := c.Get("user_id")
@@ -219,7 +209,7 @@ func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 		return
 	}
 
-	// Load module with preloads (lessons, sub_materials -> video_material -> video_quizzes, prequizzes)
+	// Load module
 	module, err := h.moduleService.GetModuleByID(uint32(mid))
 	if err != nil || module == nil || module.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Module not found"})
@@ -230,14 +220,7 @@ func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 	totalVideoQuizzes := 0
 	// Build set of all video quiz IDs in this module
 	videoQuizIDs := make(map[uint]struct{})
-	for _, sm := range module.SubMaterials {
-		if sm.VideoMaterial != nil {
-			for _, vq := range sm.VideoMaterial.VideoQuizzes {
-				totalVideoQuizzes++
-				videoQuizIDs[vq.ID] = struct{}{}
-			}
-		}
-	}
+	// Note: Video quizzes are now directly related to module
 
 	answeredVideoQuizIDs := make(map[uint]struct{})
 	if totalVideoQuizzes > 0 {
@@ -257,12 +240,7 @@ func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 	// Compute prequizzes_completed
 	totalPrequizzes := 0
 	prequizIDs := make(map[uint]struct{})
-	for _, sm := range module.SubMaterials {
-		for _, pq := range sm.Prequizzes {
-			totalPrequizzes++
-			prequizIDs[pq.ID] = struct{}{}
-		}
-	}
+	// Note: Prequizzes are now directly related to module
 
 	answeredPrequizIDs := make(map[uint]struct{})
 	if totalPrequizzes > 0 {
@@ -280,20 +258,9 @@ func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 
 	// Compute module_completed from lessons progress if lessons exist
 	moduleCompleted := false
-	if len(module.Lessons) > 0 {
-		allLessonsDone := true
-		for _, lesson := range module.Lessons {
-			p, err := h.progressService.GetByUserAndLesson(userID, uint(lesson.ID))
-			if err != nil || p == nil || !p.Completed {
-				allLessonsDone = false
-				break
-			}
-		}
-		moduleCompleted = allLessonsDone
-	} else {
-		// Fallback: if no legacy lessons, consider module completed when both videos and prequizzes are completed
-		moduleCompleted = videosCompleted && prequizzesCompleted
-	}
+
+	// Fallback: if no legacy lessons, consider module completed when both videos and prequizzes are completed
+	moduleCompleted = videosCompleted && prequizzesCompleted
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Module progress retrieved successfully",
@@ -303,10 +270,10 @@ func (h *ProgressHandler) GetModuleProgress(c *gin.Context) {
 			"videos_completed":     videosCompleted,
 			"prequizzes_completed": prequizzesCompleted,
 			// Helpful counts for UI (optional)
-			"total_video_quizzes":  totalVideoQuizzes,
+			"total_video_quizzes":    totalVideoQuizzes,
 			"answered_video_quizzes": len(answeredVideoQuizIDs),
-			"total_prequizzes":     totalPrequizzes,
-			"answered_prequizzes":  len(answeredPrequizIDs),
+			"total_prequizzes":       totalPrequizzes,
+			"answered_prequizzes":    len(answeredPrequizIDs),
 		},
 	})
 }
