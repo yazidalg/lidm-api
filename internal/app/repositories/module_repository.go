@@ -32,16 +32,14 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 	}
 
 	// Handle VideoMaterial creation if provided
-	if len(module.VideoMaterial) > 0 {
-		for i := range module.VideoMaterial {
-			// Set the ModuleID
-			module.VideoMaterial[i].ModuleID = module.ID
+	if module.VideoMaterial != nil {
+		// Set the ModuleID
+		module.VideoMaterial.ModuleID = module.ID
 
-			// Create the video material
-			if err := tx.Create(&module.VideoMaterial[i]).Error; err != nil {
-				tx.Rollback()
-				return nil, err
-			}
+		// Create the video material
+		if err := tx.Create(module.VideoMaterial).Error; err != nil {
+			tx.Rollback()
+			return nil, err
 		}
 	}
 
@@ -63,7 +61,9 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
 		Preload("ARExperiment"). // AR experiments
-		// Preload("Prequizzes").                                      // Prequizzes - DISABLED temporarily
+		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Limit prequizzes to 3
+			return db.Order("prequizzes.created_at ASC").Limit(3)
+		}).
 		First(&module, id).Error
 
 	if err != nil {
@@ -83,7 +83,9 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
 		Preload("ARExperiment"). // AR experiments
-		// Preload("Prequizzes").                                      // Prequizzes - Disabled again to debug
+		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
+			return db.Order("prequizzes.created_at ASC")
+		}).
 		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
 
@@ -119,16 +121,14 @@ func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*mode
 	}
 
 	// Handle VideoMaterial creation if provided
-	if len(module.VideoMaterial) > 0 {
-		for _, videoMat := range module.VideoMaterial {
-			// Set the ModuleID
-			videoMat.ModuleID = uint(id)
+	if module.VideoMaterial != nil {
+		// Set the ModuleID
+		module.VideoMaterial.ModuleID = uint(id)
 
-			// Create the video material
-			if err := tx.Create(&videoMat).Error; err != nil {
-				tx.Rollback()
-				return nil, err
-			}
+		// Create the video material
+		if err := tx.Create(module.VideoMaterial).Error; err != nil {
+			tx.Rollback()
+			return nil, err
 		}
 	}
 

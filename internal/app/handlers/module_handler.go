@@ -453,3 +453,41 @@ func (h *ModuleHandler) DeleteModuleIcon(c *gin.Context) {
 		"data":    updatedModule,
 	})
 }
+
+// GetAllModulesWithUnlockStatus returns modules with unlock status and progress for the authenticated user
+func (h *ModuleHandler) GetAllModulesWithUnlockStatus(c *gin.Context) {
+	// Extract user ID from auth middleware
+	userIDVal, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
+		return
+	}
+
+	var userID uint
+	switch v := userIDVal.(type) {
+	case float64:
+		userID = uint(v)
+	case uint:
+		userID = v
+	case int:
+		userID = uint(v)
+	default:
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid user context"})
+		return
+	}
+
+	results, err := h.moduleService.GetAllModulesWithUnlockStatus(userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to retrieve modules with unlock status",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Modules retrieved successfully with unlock status",
+		"data":    results,
+	})
+}

@@ -128,9 +128,23 @@ func NewBuildModule(db *gorm.DB) *handlers.ModuleHandler {
 	progressRepository := repositories.NewProgressRepository(db)
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
 	prequizRepository := repositories.NewPrequizRepository(db)
-	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
+	
+	// Add module progress repository and service
+	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 	moduleHandler := handlers.NewModuleHandler(moduleService)
 	return moduleHandler
+}
+
+// NewModuleProgressServiceOnly - untuk kebutuhan internal
+func NewModuleProgressServiceOnly(db *gorm.DB) services.ModuleProgressServiceInterface {
+	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
+	userRepository := repositories.NewUserRepository(db)
+	moduleRepository := repositories.NewModuleRepository(db)
+	return services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
 }
 
 func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
@@ -149,7 +163,12 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	prequizService := services.NewPrequizService(prequizRepository, userRepository)
 
 	progressRepository := repositories.NewProgressRepository(db)
-	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
+	
+	// Add module progress dependencies for this context too
+	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 
 	progressService := services.NewProgressService(progressRepository, userRepository)                                            // Removed lessonRepository
 	progressHandler := handlers.NewProgressHandler(progressService, userService, moduleService, videoQuizService, prequizService) // Removed lessonService
@@ -166,6 +185,11 @@ func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizSer
 	userService := services.NewUserService(userRepository, roleService)
 
 	prequizService := services.NewPrequizService(prequizRepository, userRepository)
+	
+	// Set module progress service for auto-progress updates
+	moduleProgressService := NewModuleProgressServiceOnly(db)
+	prequizService.SetModuleProgressService(moduleProgressService)
+	
 	prequizHandler := handlers.NewPrequizHandler(prequizService, userService)
 
 	return prequizHandler, prequizService
@@ -200,7 +224,12 @@ func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.
 	progressRepository := repositories.NewProgressRepository(db)
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
 	prequizRepository := repositories.NewPrequizRepository(db)
-	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository)
+	
+	// Add module progress dependencies
+	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	
+	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 
 	activityHandler := handlers.NewUserActivityHandler(activityService, moduleService) // Removed lessonService
 	return activityHandler, activityService
@@ -223,6 +252,11 @@ func NewBuildVideoQuiz(db *gorm.DB) (*handlers.VideoQuizHandler, services.VideoQ
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 	videoQuizService := services.NewVideoQuizService(videoQuizRepository, userRepository)
+	
+	// Set module progress service for auto-progress updates
+	moduleProgressService := NewModuleProgressServiceOnly(db)
+	videoQuizService.SetModuleProgressService(moduleProgressService)
+	
 	videoQuizHandler := handlers.NewVideoQuizHandler(videoQuizService)
 
 	return videoQuizHandler, videoQuizService

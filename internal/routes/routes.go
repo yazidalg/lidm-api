@@ -205,8 +205,10 @@ func NewRoute(
 		// User accessible routes (register more specific pattern before generic one)
 		moduleGroupHandler.GET("/:id/progress", progressHandler.GetModuleProgress)
 		moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
-		// Use progress-aware endpoint for authenticated users
-		moduleGroupHandler.GET("/all", moduleHandler.GetAllModulesWithProgress)
+		// Use unlock-aware endpoint for authenticated users
+		moduleGroupHandler.GET("/all", moduleHandler.GetAllModulesWithUnlockStatus)
+		// Keep legacy endpoint for backward compatibility
+		moduleGroupHandler.GET("/all-legacy", moduleHandler.GetAllModulesWithProgress)
 	}
 
 	// Progress routes - User untuk data sendiri, Admin untuk semua

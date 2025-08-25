@@ -36,7 +36,7 @@ func (r *videoQuizRepository) CreateVideoQuiz(videoQuiz *models.VideoQuiz) (*mod
 
 func (r *videoQuizRepository) GetVideoQuizByID(id uint) (*models.VideoQuiz, error) {
 	var videoQuiz models.VideoQuiz
-	if err := r.db.First(&videoQuiz, id).Error; err != nil {
+	if err := r.db.Preload("VideoMaterial").First(&videoQuiz, id).Error; err != nil {
 		return nil, err
 	}
 	return &videoQuiz, nil

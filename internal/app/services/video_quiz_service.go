@@ -21,18 +21,25 @@ type VideoQuizServiceInterface interface {
 	GetUserVideoQuizAnswers(userID uint, videoMaterialID uint) ([]models.VideoQuizUserAnswer, error)
 	GetAllUserVideoQuizAnswers(userID uint) ([]models.VideoQuizUserAnswer, error)
 	HasUserAnsweredVideoQuiz(userID uint, videoQuizID uint) (bool, error)
+	SetModuleProgressService(service ModuleProgressServiceInterface) // Add this to set progress service
 }
 
 type videoQuizService struct {
-	videoQuizRepo repositories.VideoQuizRepositoryInterface
-	userRepo      repositories.UserRepositoryInterface
+	videoQuizRepo         repositories.VideoQuizRepositoryInterface
+	userRepo              repositories.UserRepositoryInterface
+	moduleProgressService ModuleProgressServiceInterface
 }
 
 func NewVideoQuizService(videoQuizRepo repositories.VideoQuizRepositoryInterface, userRepo repositories.UserRepositoryInterface) VideoQuizServiceInterface {
 	return &videoQuizService{
-		videoQuizRepo: videoQuizRepo,
-		userRepo:      userRepo,
+		videoQuizRepo:         videoQuizRepo,
+		userRepo:              userRepo,
+		moduleProgressService: nil, // Will be set later
 	}
+}
+
+func (s *videoQuizService) SetModuleProgressService(service ModuleProgressServiceInterface) {
+	s.moduleProgressService = service
 }
 
 func (s *videoQuizService) CreateVideoQuiz(videoQuiz request.VideoQuizRequest) (*models.VideoQuiz, error) {
@@ -106,7 +113,23 @@ func (s *videoQuizService) SubmitVideoQuizAnswer(userID uint, answer request.Vid
 		ResponseTime:   answer.ResponseTime,
 	}
 
-	return s.videoQuizRepo.CreateVideoQuizUserAnswer(&userAnswer)
+	result, err := s.videoQuizRepo.CreateVideoQuizUserAnswer(&userAnswer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update module progress if video quiz is answered correctly
+	if isCorrect && s.moduleProgressService != nil {
+		// VideoQuiz already has VideoMaterial preloaded from GetVideoQuizByID
+		if videoQuiz.VideoMaterial != nil {
+			// Update progress for the module
+			go func() {
+				_, _ = s.moduleProgressService.UpdateUserProgress(userID, videoQuiz.VideoMaterial.ModuleID)
+			}()
+		}
+	}
+
+	return result, nil
 }
 
 func (s *videoQuizService) GetUserVideoQuizAnswers(userID uint, videoMaterialID uint) ([]models.VideoQuizUserAnswer, error) {

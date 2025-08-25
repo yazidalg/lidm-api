@@ -38,6 +38,7 @@ func Migrate(db *gorm.DB) error {
 		&models.PrequizUserAnswer{},
 		&models.QuizSession{},
 		&models.UserActivity{},
+		&models.ModuleProgress{}, // Add new ModuleProgress model
 	); err != nil {
 		return err
 	}

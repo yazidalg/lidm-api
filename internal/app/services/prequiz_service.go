@@ -17,11 +17,13 @@ type PrequizServiceInterface interface {
 	GetUserPrequizAnswers(userID uint) ([]models.PrequizUserAnswer, error)
 	SubmitPrequizAnswer(userID uint, answer request.PrequizAnswerRequest) (*models.PrequizUserAnswer, error)
 	GetPrequizzesByModule(moduleID uint) ([]models.Prequiz, error)
+	SetModuleProgressService(service ModuleProgressServiceInterface) // Add this to set progress service
 }
 
 type prequizService struct {
-	prequizRepo repositories.PrequizRepositoryInterface
-	userRepo    repositories.UserRepositoryInterface
+	prequizRepo           repositories.PrequizRepositoryInterface
+	userRepo              repositories.UserRepositoryInterface
+	moduleProgressService ModuleProgressServiceInterface
 }
 
 func NewPrequizService(
@@ -29,9 +31,14 @@ func NewPrequizService(
 	userRepo repositories.UserRepositoryInterface,
 ) *prequizService {
 	return &prequizService{
-		prequizRepo: prequizRepo,
-		userRepo:    userRepo,
+		prequizRepo:           prequizRepo,
+		userRepo:              userRepo,
+		moduleProgressService: nil, // Will be set later
 	}
+}
+
+func (s *prequizService) SetModuleProgressService(service ModuleProgressServiceInterface) {
+	s.moduleProgressService = service
 }
 
 func (s *prequizService) CreatePrequiz(prequiz request.PrequizRequest) (*models.Prequiz, error) {
@@ -100,7 +107,17 @@ func (s *prequizService) SubmitPrequizAnswer(userID uint, answer request.Prequiz
 		AnsweredAt: time.Now().Unix(),
 	}
 
-	return s.prequizRepo.SubmitPrequizAnswer(&userAnswer)
+	result, err := s.prequizRepo.SubmitPrequizAnswer(&userAnswer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update module progress if service is available
+	if s.moduleProgressService != nil && prequiz.ModuleID != 0 {
+		_, _ = s.moduleProgressService.UpdateUserProgress(userID, prequiz.ModuleID)
+	}
+
+	return result, nil
 }
 
 func (s *prequizService) GetPrequizzesByModule(moduleID uint) ([]models.Prequiz, error) {

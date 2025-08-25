@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -25,12 +26,16 @@ func NewAuthHandler(authServiceInterface services.AuthServiceInterface) *AuthHan
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	var body request.UserRegisterRequest
 
-	if c.Bind(&body) != nil {
+	if err := c.Bind(&body); err != nil {
+		log.Printf("Bind error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid request",
+			"error":   err.Error(),
 		})
 		return
 	}
+
+	log.Printf("Request body: %+v", body)
 
 	// Validasi role
 	if body.RoleName != "" && body.RoleName != "user" && body.RoleName != "admin" {
