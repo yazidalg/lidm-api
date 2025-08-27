@@ -102,7 +102,8 @@ func (s *videoQuizService) SubmitVideoQuizAnswer(userID uint, answer request.Vid
 	}
 
 	// Check if answer is correct
-	isCorrect := videoQuiz.CorrectAnswer == answer.SelectedAnswer
+	// Support both letter format (A, B, C, D) and full text format
+	isCorrect := s.isAnswerCorrect(videoQuiz, answer.SelectedAnswer)
 
 	userAnswer := models.VideoQuizUserAnswer{
 		VideoQuizID:    answer.VideoQuizID,
@@ -125,6 +126,10 @@ func (s *videoQuizService) SubmitVideoQuizAnswer(userID uint, answer request.Vid
 			// Update progress for the module
 			go func() {
 				_, _ = s.moduleProgressService.UpdateUserProgress(userID, videoQuiz.VideoMaterial.ModuleID)
+				
+				// Check if this completion unlocks the next module
+				// Note: We use safe unlock to handle trigger conflicts gracefully  
+				_ = s.moduleProgressService.CheckAndUnlockNextModule(userID, videoQuiz.VideoMaterial.ModuleID)
 			}()
 		}
 	}
@@ -142,4 +147,27 @@ func (s *videoQuizService) GetAllUserVideoQuizAnswers(userID uint) ([]models.Vid
 
 func (s *videoQuizService) HasUserAnsweredVideoQuiz(userID uint, videoQuizID uint) (bool, error) {
 	return s.videoQuizRepo.HasUserAnsweredVideoQuiz(userID, videoQuizID)
+}
+
+// isAnswerCorrect checks if the selected answer is correct
+// Supports both letter format (A, B, C, D) and full option text format
+func (s *videoQuizService) isAnswerCorrect(videoQuiz *models.VideoQuiz, selectedAnswer string) bool {
+	// First, check if it's already in the correct letter format
+	if videoQuiz.CorrectAnswer == selectedAnswer {
+		return true
+	}
+
+	// If not, check against the full option text
+	switch videoQuiz.CorrectAnswer {
+	case "A":
+		return selectedAnswer == videoQuiz.Options.OptionA
+	case "B":
+		return selectedAnswer == videoQuiz.Options.OptionB
+	case "C":
+		return selectedAnswer == videoQuiz.Options.OptionC
+	case "D":
+		return selectedAnswer == videoQuiz.Options.OptionD
+	}
+
+	return false
 }

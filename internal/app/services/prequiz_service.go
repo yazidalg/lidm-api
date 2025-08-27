@@ -115,6 +115,10 @@ func (s *prequizService) SubmitPrequizAnswer(userID uint, answer request.Prequiz
 	// Update module progress if service is available
 	if s.moduleProgressService != nil && prequiz.ModuleID != 0 {
 		_, _ = s.moduleProgressService.UpdateUserProgress(userID, prequiz.ModuleID)
+		
+		// Check if this completion unlocks the next module  
+		// Note: We use safe unlock to handle trigger conflicts gracefully
+		_ = s.moduleProgressService.CheckAndUnlockNextModule(userID, prequiz.ModuleID)
 	}
 
 	return result, nil

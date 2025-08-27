@@ -183,7 +183,24 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 		return
 	}
 
-	result, err := h.moduleService.GetModuleByID(uint32(id))
+	// Get user ID from context (set by JWT middleware)
+	userIDInterface, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// JWT middleware sets userID as float64, so we need to convert it
+	userIDFloat, ok := userIDInterface.(float64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+	
+	userID := uint(userIDFloat)
+
+	// Use the new method with progress information
+	result, err := h.moduleService.GetModuleByIDWithProgress(uint32(id), userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error":   err.Error(),

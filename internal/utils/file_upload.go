@@ -24,7 +24,17 @@ func DefaultImageUploadConfig() FileUploadConfig {
 	return FileUploadConfig{
 		UploadDir:      "./uploads/icons",
 		MaxFileSize:    5 * 1024 * 1024, // 5MB
-		AllowedTypes:   []string{".jpg", ".jpeg", ".png", ".svg", ".gif"},
+		AllowedTypes:   []string{".jpg", ".jpeg", ".png", ".svg", ".gif", ".webp"},
+		GenerateUnique: true,
+	}
+}
+
+// LargeImageUploadConfig returns config for larger images (thumbnails, banners)
+func LargeImageUploadConfig() FileUploadConfig {
+	return FileUploadConfig{
+		UploadDir:      "./uploads/images",
+		MaxFileSize:    10 * 1024 * 1024, // 10MB
+		AllowedTypes:   []string{".jpg", ".jpeg", ".png", ".webp"},
 		GenerateUnique: true,
 	}
 }

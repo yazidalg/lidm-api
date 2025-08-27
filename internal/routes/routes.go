@@ -320,5 +320,22 @@ func NewRoute(
 		dashboardGroup.GET("/", dashboardHandler.GetDashboard)
 	}
 
+	// File upload routes - User perlu auth
+	uploadGroup := router.Group("upload")
+	uploadGroup.Use(authMiddleware.RequireAuth)
+	{
+		// General image upload
+		uploadGroup.POST("/image", func(c *gin.Context) {
+			fileUploadHandler := handlers.NewFileUploadHandler()
+			fileUploadHandler.UploadImage(c)
+		})
+		
+		// Multiple images upload
+		uploadGroup.POST("/images", func(c *gin.Context) {
+			fileUploadHandler := handlers.NewFileUploadHandler()
+			fileUploadHandler.UploadMultipleImages(c)
+		})
+	}
+
 	return router
 }

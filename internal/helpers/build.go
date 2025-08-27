@@ -132,7 +132,7 @@ func NewBuildModule(db *gorm.DB) *handlers.ModuleHandler {
 	// Add module progress repository and service
 	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
 	userRepository := repositories.NewUserRepository(db)
-	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository, prequizRepository, videoQuizRepository)
 	
 	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 	moduleHandler := handlers.NewModuleHandler(moduleService)
@@ -144,7 +144,9 @@ func NewModuleProgressServiceOnly(db *gorm.DB) services.ModuleProgressServiceInt
 	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
 	userRepository := repositories.NewUserRepository(db)
 	moduleRepository := repositories.NewModuleRepository(db)
-	return services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	prequizRepository := repositories.NewPrequizRepository(db)
+	videoQuizRepository := repositories.NewVideoQuizRepository(db)
+	return services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository, prequizRepository, videoQuizRepository)
 }
 
 func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
@@ -166,7 +168,7 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	
 	// Add module progress dependencies for this context too
 	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
-	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository, prequizRepository, videoQuizRepository)
 	
 	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 
@@ -227,7 +229,7 @@ func NewBuildUserActivity(db *gorm.DB) (*handlers.UserActivityHandler, services.
 	
 	// Add module progress dependencies
 	moduleProgressRepository := repositories.NewModuleProgressRepository(db)
-	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository)
+	moduleProgressService := services.NewModuleProgressService(moduleProgressRepository, userRepository, moduleRepository, prequizRepository, videoQuizRepository)
 	
 	moduleService := services.NewModuleService(moduleRepository, progressRepository, videoQuizRepository, prequizRepository, moduleProgressRepository, moduleProgressService)
 

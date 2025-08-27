@@ -27,13 +27,9 @@ func (mp *ModuleProgress) CalculateProgress(db *gorm.DB) float32 {
 		return 0
 	}
 
-	var totalItems float32 = 0
-	var completedItems float32 = 0
-
 	// Count total prequizzes in module
 	var totalPrequizzes int64
 	db.Model(&Prequiz{}).Where("module_id = ?", mp.ModuleID).Count(&totalPrequizzes)
-	totalItems += float32(totalPrequizzes)
 
 	// Count completed prequizzes by user
 	var completedPrequizzes int64
@@ -41,7 +37,9 @@ func (mp *ModuleProgress) CalculateProgress(db *gorm.DB) float32 {
 		Joins("JOIN prequizzes ON prequiz_user_answers.prequiz_id = prequizzes.id").
 		Where("prequizzes.module_id = ? AND prequiz_user_answers.user_id = ?", mp.ModuleID, mp.UserID).
 		Count(&completedPrequizzes)
-	completedItems += float32(completedPrequizzes)
+
+	// Check if all prequizzes are answered
+	allPrequizzesAnswered := int64(completedPrequizzes) == totalPrequizzes
 
 	// Count total video quizzes in module
 	var totalVideoQuizzes int64
@@ -49,27 +47,42 @@ func (mp *ModuleProgress) CalculateProgress(db *gorm.DB) float32 {
 		Joins("JOIN video_materials ON video_quizzes.video_material_id = video_materials.id").
 		Where("video_materials.module_id = ?", mp.ModuleID).
 		Count(&totalVideoQuizzes)
-	totalItems += float32(totalVideoQuizzes)
 
-	// Count completed video quizzes by user
-	var completedVideoQuizzes int64
-	db.Table("video_quiz_user_answers").
-		Joins("JOIN video_quizzes ON video_quiz_user_answers.video_quiz_id = video_quizzes.id").
-		Joins("JOIN video_materials ON video_quizzes.video_material_id = video_materials.id").
-		Where("video_materials.module_id = ? AND video_quiz_user_answers.user_id = ?", mp.ModuleID, mp.UserID).
-		Count(&completedVideoQuizzes)
-	completedItems += float32(completedVideoQuizzes)
+	if totalVideoQuizzes > 0 {
+		// There are video quizzes - check if they're all answered
+		var completedVideoQuizzes int64
+		db.Table("video_quiz_user_answers").
+			Joins("JOIN video_quizzes ON video_quiz_user_answers.video_quiz_id = video_quizzes.id").
+			Joins("JOIN video_materials ON video_quizzes.video_material_id = video_materials.id").
+			Where("video_materials.module_id = ? AND video_quiz_user_answers.user_id = ?", mp.ModuleID, mp.UserID).
+			Count(&completedVideoQuizzes)
 
-	if totalItems == 0 {
-		return 0
+		allVideoQuizzesAnswered := completedVideoQuizzes == totalVideoQuizzes
+
+		// Progress calculation with video quizzes:
+		// - If all prequizzes AND all video quizzes are answered → 100%
+		// - Otherwise, calculate based on combined progress
+		if allPrequizzesAnswered && allVideoQuizzesAnswered {
+			return 100.0
+		}
+
+		// Calculate partial progress
+		totalQuizzes := float32(totalPrequizzes + totalVideoQuizzes)
+		answeredQuizzes := float32(completedPrequizzes + completedVideoQuizzes)
+		return (answeredQuizzes / totalQuizzes) * 100.0
+	} else {
+		// No video quizzes - progress depends only on prequizzes
+		// If all prequizzes are answered → 100%
+		if allPrequizzesAnswered {
+			return 100.0
+		}
+
+		// Calculate partial progress based on prequizzes only
+		if totalPrequizzes == 0 {
+			return 0
+		}
+		return (float32(completedPrequizzes) / float32(totalPrequizzes)) * 100.0
 	}
-
-	progress := (completedItems / totalItems) * 100
-	if progress > 100 {
-		progress = 100
-	}
-
-	return progress
 }
 
 // MarkAsStarted sets the started timestamp if not already set
@@ -100,11 +113,14 @@ func (mp *ModuleProgress) CheckAndUnlockNextModule(db *gorm.DB) error {
 	var nextModule Module
 	err := db.Where("id > ?", mp.ModuleID).Order("id ASC").First(&nextModule).Error
 	if err != nil {
-		// No next module found, that's okay
-		return nil
+		// No next module found, that's okay (reached last module)
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
 	}
 
-	// Check if next module is already unlocked
+	// Check if next module progress already exists
 	var nextProgress ModuleProgress
 	err = db.Where("user_id = ? AND module_id = ?", mp.UserID, nextModule.ID).First(&nextProgress).Error
 	
@@ -117,12 +133,16 @@ func (mp *ModuleProgress) CheckAndUnlockNextModule(db *gorm.DB) error {
 			IsComplete: false,
 			Progress:   0,
 		}
+		nextProgress.MarkAsStarted()
 		return db.Create(&nextProgress).Error
 	} else if err != nil {
-		return err
+		// Some other database error occurred, but don't fail the whole operation
+		// Log it but continue (the main progress update should still succeed)
+		return nil
 	} else if !nextProgress.IsUnlocked {
 		// Update existing entry to unlock
 		nextProgress.IsUnlocked = true
+		nextProgress.MarkAsStarted()
 		return db.Save(&nextProgress).Error
 	}
 

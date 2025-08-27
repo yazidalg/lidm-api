@@ -54,15 +54,18 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
-	// Preload komponen utama: Video, AR, dan Prequizzes
+	// Preload semua komponen yang diperlukan untuk satu module: Video, AR, Prequizzes, dan Flashcards
 	err := r.db.
-		Preload("VideoMaterial").                                          // Video content
+		Preload("VideoMaterial").                                         // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
 		Preload("ARExperiment"). // AR experiments
-		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Limit prequizzes to 3
-			return db.Order("prequizzes.created_at ASC").Limit(3)
+		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
+			return db.Order("prequizzes.created_at ASC")
+		}).
+		Preload("Flashcards", func(db *gorm.DB) *gorm.DB { // Flashcards ordered by order
+			return db.Order("flashcards.`order` ASC")
 		}).
 		First(&module, id).Error
 
@@ -76,7 +79,7 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 	var modules []models.Module
 
-	// Preload komponen utama: Video, AR, dan Prequizzes
+	// Preload komponen utama: Video, AR, Prequizzes, dan Flashcards
 	err := r.db.
 		Preload("VideoMaterial").                                          // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
@@ -85,6 +88,9 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("ARExperiment"). // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
+		}).
+		Preload("Flashcards", func(db *gorm.DB) *gorm.DB { // Load flashcards ordered by order
+			return db.Order("flashcards.`order` ASC")
 		}).
 		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
