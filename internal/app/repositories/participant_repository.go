@@ -15,6 +15,7 @@ type ParticipantRepositoryInterface interface {
 	GetParticipantsByUserID(userID uint) ([]models.Participant, error)
 	UpdateParticipant(id int32, participant *models.Participant) (*models.Participant, error)
 	DeleteParticipant(id int32) error
+	GetParticipantsWithScores(moduleID *uint, quizType string) ([]models.Participant, error)
 }
 
 type participantRepository struct {
@@ -182,4 +183,35 @@ func (r *participantRepository) DeleteParticipant(id int32) error {
 	}
 
 	return tx.Commit().Error
+}
+
+// GetParticipantsWithScores retrieves participants with their scores for leaderboard
+func (r *participantRepository) GetParticipantsWithScores(moduleID *uint, quizType string) ([]models.Participant, error) {
+	var participants []models.Participant
+
+	query := r.db.Preload("User").Preload("Quiz")
+
+	// Join with quiz table to filter by mode/type
+	if quizType != "" {
+		query = query.Joins("JOIN quizzes ON participants.quiz_id = quizzes.id").
+			Where("quizzes.mode = ?", quizType)
+	}
+
+	// Filter by module if provided
+	if moduleID != nil {
+		if quizType != "" {
+			query = query.Where("quizzes.module_id = ?", *moduleID)
+		} else {
+			query = query.Joins("JOIN quizzes ON participants.quiz_id = quizzes.id").
+				Where("quizzes.module_id = ?", *moduleID)
+		}
+	}
+
+	// Only get finished participants
+	query = query.Where("participants.is_finished = ?", true)
+
+	// Order by total score descending
+	err := query.Order("participants.total_score DESC").Find(&participants).Error
+
+	return participants, err
 }

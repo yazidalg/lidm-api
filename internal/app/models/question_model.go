@@ -14,6 +14,7 @@ type Question struct {
 	ReadTime      int32
 	Options       Options `gorm:"embedded;"`
 	CorrectAnswer string
+	QuestionType  string // "hots" or "regular"
 	Explanation   string
 	Quiz          []Quiz    `gorm:"many2many:quiz_questions;"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`

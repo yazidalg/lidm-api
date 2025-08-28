@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"math/rand"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/gorm"
 )
@@ -13,6 +15,7 @@ type QuestionRepositoryInterface interface {
 	DeleteQuestion(id int32) error
 	GetRandomQuestion(count int) (*[]models.Question, error)
 	GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error)
+	GetQuestionsByModuleAndMode(moduleID uint, mode string) (*[]models.Question, error)
 }
 
 type questionRepository struct {
@@ -67,5 +70,51 @@ func (r *questionRepository) GetRandomQuestionsByModule(moduleID uint, count int
 	if err != nil {
 		return nil, err
 	}
+	return &questions, nil
+}
+
+func (r *questionRepository) GetQuestionsByModuleAndMode(moduleID uint, mode string) (*[]models.Question, error) {
+	var questions []models.Question
+	var hotsCount, regularCount int
+
+	// Determine question mix based on mode
+	if mode == "multiplayer" {
+		hotsCount = 3
+		regularCount = 7
+	} else { // solo or single_player
+		hotsCount = 4
+		regularCount = 6
+	}
+
+	// Get HOTS questions
+	var hotsQuestions []models.Question
+	err := r.db.Where("module_id = ? AND question_type = ?", moduleID, "hots").
+		Order("RAND()").
+		Limit(hotsCount).
+		Find(&hotsQuestions).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Get regular questions
+	var regularQuestions []models.Question
+	err = r.db.Where("module_id = ? AND (question_type = ? OR question_type IS NULL OR question_type = '')", moduleID, "regular").
+		Order("RAND()").
+		Limit(regularCount).
+		Find(&regularQuestions).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Combine and shuffle
+	questions = append(questions, hotsQuestions...)
+	questions = append(questions, regularQuestions...)
+
+	// Shuffle the combined questions
+	for i := len(questions) - 1; i > 0; i-- {
+		j := rand.Intn(i + 1)
+		questions[i], questions[j] = questions[j], questions[i]
+	}
+
 	return &questions, nil
 }

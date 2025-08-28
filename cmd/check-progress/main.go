@@ -18,7 +18,7 @@ func main() {
 	// Query the module progress directly from database
 	var progress models.ModuleProgress
 	result := db.Where("user_id = ? AND module_id = ?", 2, 1).First(&progress)
-	
+
 	if result.Error != nil {
 		log.Fatal("Failed to get module progress:", result.Error)
 	}

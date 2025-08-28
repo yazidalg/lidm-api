@@ -15,7 +15,7 @@ type VideoQuizServiceInterface interface {
 	GetVideoQuizzesByVideoMaterialID(videoMaterialID uint) ([]models.VideoQuiz, error)
 	UpdateVideoQuiz(id uint, videoQuiz request.VideoQuizRequest) (*models.VideoQuiz, error)
 	DeleteVideoQuiz(id uint) error
-	
+
 	// User Answer methods
 	SubmitVideoQuizAnswer(userID uint, answer request.VideoQuizAnswerRequest) (*models.VideoQuizUserAnswer, error)
 	GetUserVideoQuizAnswers(userID uint, videoMaterialID uint) ([]models.VideoQuizUserAnswer, error)
@@ -90,7 +90,7 @@ func (s *videoQuizService) SubmitVideoQuizAnswer(userID uint, answer request.Vid
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if hasAnswered {
 		return nil, errors.New("user has already answered this video quiz")
 	}
@@ -126,9 +126,9 @@ func (s *videoQuizService) SubmitVideoQuizAnswer(userID uint, answer request.Vid
 			// Update progress for the module
 			go func() {
 				_, _ = s.moduleProgressService.UpdateUserProgress(userID, videoQuiz.VideoMaterial.ModuleID)
-				
+
 				// Check if this completion unlocks the next module
-				// Note: We use safe unlock to handle trigger conflicts gracefully  
+				// Note: We use safe unlock to handle trigger conflicts gracefully
 				_ = s.moduleProgressService.CheckAndUnlockNextModule(userID, videoQuiz.VideoMaterial.ModuleID)
 			}()
 		}

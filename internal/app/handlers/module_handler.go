@@ -196,7 +196,7 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
 		return
 	}
-	
+
 	userID := uint(userIDFloat)
 
 	// Use the new method with progress information

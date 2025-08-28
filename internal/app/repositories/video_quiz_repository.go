@@ -11,7 +11,7 @@ type VideoQuizRepositoryInterface interface {
 	GetVideoQuizzesByVideoMaterialID(videoMaterialID uint) ([]models.VideoQuiz, error)
 	UpdateVideoQuiz(id uint, videoQuiz *models.VideoQuiz) (*models.VideoQuiz, error)
 	DeleteVideoQuiz(id uint) error
-	
+
 	// User Answer methods
 	CreateVideoQuizUserAnswer(userAnswer *models.VideoQuizUserAnswer) (*models.VideoQuizUserAnswer, error)
 	GetUserVideoQuizAnswers(userID uint, videoMaterialID uint) ([]models.VideoQuizUserAnswer, error)
@@ -85,28 +85,28 @@ func (r *videoQuizRepository) CreateVideoQuizUserAnswer(userAnswer *models.Video
 
 func (r *videoQuizRepository) GetUserVideoQuizAnswers(userID uint, videoMaterialID uint) ([]models.VideoQuizUserAnswer, error) {
 	var userAnswers []models.VideoQuizUserAnswer
-	
+
 	err := r.db.
 		Joins("JOIN video_quizzes ON video_quiz_user_answers.video_quiz_id = video_quizzes.id").
 		Where("video_quiz_user_answers.user_id = ? AND video_quizzes.video_material_id = ?", userID, videoMaterialID).
 		Preload("VideoQuiz").
 		Find(&userAnswers).Error
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return userAnswers, nil
 }
 
 func (r *videoQuizRepository) GetAllUserVideoQuizAnswers(userID uint) ([]models.VideoQuizUserAnswer, error) {
 	var userAnswers []models.VideoQuizUserAnswer
-	
+
 	err := r.db.Preload("User").Preload("VideoQuiz").Where("user_id = ?", userID).Find(&userAnswers).Error
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return userAnswers, nil
 }
 
@@ -115,10 +115,10 @@ func (r *videoQuizRepository) HasUserAnsweredVideoQuiz(userID uint, videoQuizID 
 	err := r.db.Model(&models.VideoQuizUserAnswer{}).
 		Where("user_id = ? AND video_quiz_id = ?", userID, videoQuizID).
 		Count(&count).Error
-	
+
 	if err != nil {
 		return false, err
 	}
-	
+
 	return count > 0, nil
 }

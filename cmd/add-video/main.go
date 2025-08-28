@@ -39,7 +39,7 @@ func main() {
 		// Check if video material already exists for this module
 		var existingVideo models.VideoMaterial
 		result = db.Where("module_id = ?", moduleID).First(&existingVideo)
-		
+
 		if result.Error == nil {
 			// Video material exists, update it
 			existingVideo.YoutubeLink = video.url

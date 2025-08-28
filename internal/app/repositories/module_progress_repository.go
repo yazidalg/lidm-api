@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"strings"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/gorm"
 )
@@ -99,7 +100,7 @@ func (r *moduleProgressRepository) UnlockModule(userID, moduleID uint) error {
 	// First check if record exists without causing error logs
 	var existingProgress models.ModuleProgress
 	err := r.db.Where("user_id = ? AND module_id = ?", userID, moduleID).First(&existingProgress).Error
-	
+
 	if err == gorm.ErrRecordNotFound {
 		// Create new progress entry silently
 		progress := &models.ModuleProgress{
@@ -130,7 +131,7 @@ func (r *moduleProgressRepository) InitializeFirstModuleForUser(userID uint) err
 	// Check if user already has any module progress
 	var count int64
 	r.db.Model(&models.ModuleProgress{}).Where("user_id = ?", userID).Count(&count)
-	
+
 	if count > 0 {
 		return nil // User already has progress, don't initialize
 	}

@@ -45,21 +45,21 @@ func main() {
 	successCount := 0
 	for _, progress := range allProgress {
 		fmt.Printf("Recalculating progress for User ID: %d, Module ID: %d... ", progress.UserID, progress.ModuleID)
-		
+
 		// Update progress using the new logic
 		_, err := moduleProgressService.UpdateUserProgress(progress.UserID, progress.ModuleID)
 		if err != nil {
 			fmt.Printf("FAILED: %v\n", err)
 			continue
 		}
-		
+
 		// Get updated progress to show new value
 		updatedProgress, err := moduleProgressService.GetUserModuleProgress(progress.UserID, progress.ModuleID)
 		if err != nil {
 			fmt.Printf("FAILED to get updated progress: %v\n", err)
 			continue
 		}
-		
+
 		fmt.Printf("SUCCESS: %.2f%%\n", updatedProgress.Progress)
 		successCount++
 	}

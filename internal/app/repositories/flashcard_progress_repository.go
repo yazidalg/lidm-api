@@ -55,7 +55,6 @@ func (r *flashcardProgressRepository) GetDueByUser(userID uint, dueTime time.Tim
 	var progresses []models.UserFlashcardProgress
 	err := r.db.Where("user_id = ? AND due <= ?", userID, dueTime).
 		Preload("Flashcard").
-		Preload("Flashcard.SubMaterial").
 		Order("due ASC").
 		Find(&progresses).Error
 
@@ -66,7 +65,6 @@ func (r *flashcardProgressRepository) GetAllByUser(userID uint) ([]models.UserFl
 	var progresses []models.UserFlashcardProgress
 	err := r.db.Where("user_id = ?", userID).
 		Preload("Flashcard").
-		Preload("Flashcard.SubMaterial").
 		Find(&progresses).Error
 
 	return progresses, err

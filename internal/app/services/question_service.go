@@ -14,6 +14,7 @@ type QuestionServiceInterface interface {
 	DeleteQuestion(id int32) error
 	GetRandomQuestion(count int) (*[]models.Question, error)
 	GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error)
+	GetQuestionsByModuleAndMode(moduleID uint, mode string) (*[]models.Question, error)
 }
 
 type questionService struct {
@@ -81,4 +82,8 @@ func (s *questionService) GetRandomQuestion(count int) (*[]models.Question, erro
 
 func (s *questionService) GetRandomQuestionsByModule(moduleID uint, count int) (*[]models.Question, error) {
 	return s.questionRepository.GetRandomQuestionsByModule(moduleID, count)
+}
+
+func (s *questionService) GetQuestionsByModuleAndMode(moduleID uint, mode string) (*[]models.Question, error) {
+	return s.questionRepository.GetQuestionsByModuleAndMode(moduleID, mode)
 }

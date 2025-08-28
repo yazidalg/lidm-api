@@ -11,6 +11,7 @@ type ModuleRepositoryInterface interface {
 	GetAllModules() ([]models.Module, error)
 	UpdateModule(id uint32, module *models.Module) (*models.Module, error)
 	DeleteModule(id uint32) error
+	GetFlashcardsByModule(moduleID uint) ([]models.Flashcard, error)
 }
 
 type moduleRepository struct {
@@ -56,11 +57,11 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 
 	// Preload semua komponen yang diperlukan untuk satu module: Video, AR, Prequizzes, dan Flashcards
 	err := r.db.
-		Preload("VideoMaterial").                                         // Video content
+		Preload("VideoMaterial").                                          // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment"). // AR experiments
+		Preload("ARExperiment").                           // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -85,7 +86,7 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment"). // AR experiments
+		Preload("ARExperiment").                           // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -169,4 +170,10 @@ func (r *moduleRepository) DeleteModule(id uint32) error {
 	}
 
 	return nil
+}
+
+func (r *moduleRepository) GetFlashcardsByModule(moduleID uint) ([]models.Flashcard, error) {
+	var flashcards []models.Flashcard
+	err := r.db.Where("module_id = ?", moduleID).Order("`order` ASC").Find(&flashcards).Error
+	return flashcards, err
 }

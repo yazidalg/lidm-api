@@ -22,11 +22,11 @@ type UpdateModuleRequest struct {
 }
 
 type CreateModuleWithVideoRequest struct {
-	Title         string                `json:"title" binding:"required"`
-	Description   string                `json:"description" binding:"required"`
-	OffsetX       *float64              `json:"offset_x" binding:"omitempty"`
-	OffsetY       *float64              `json:"offset_y" binding:"omitempty"`
-	Icon          *string               `json:"icon" binding:"omitempty"`
-	Thumbnail     *string               `json:"thumbnail" binding:"omitempty"`
+	Title         string                 `json:"title" binding:"required"`
+	Description   string                 `json:"description" binding:"required"`
+	OffsetX       *float64               `json:"offset_x" binding:"omitempty"`
+	OffsetY       *float64               `json:"offset_y" binding:"omitempty"`
+	Icon          *string                `json:"icon" binding:"omitempty"`
+	Thumbnail     *string                `json:"thumbnail" binding:"omitempty"`
 	VideoMaterial []models.VideoMaterial `json:"video_material" binding:"omitempty"` // Still accept array for compatibility but use first element only
 }

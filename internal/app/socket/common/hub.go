@@ -232,6 +232,116 @@ func (h *Hub) Run() {
 
 		case msg := <-h.Message:
 			if msg.Sender.Session == nil {
+				// Handle messages that don't require a session
+				if msg.Action == "join_lobby" {
+					var payload struct {
+						InviteCode string `json:"invite_code"`
+						UserID     uint   `json:"user_id"`
+					}
+					if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+						log.Printf("Gagal unmarshal join_lobby payload: %v", err)
+						continue
+					}
+
+					// Get quiz by invite code
+					quiz, err := h.QuizService.GetQuizByInviteCode(payload.InviteCode)
+					if err != nil {
+						log.Printf("Quiz tidak ditemukan untuk invite code %s: %v", payload.InviteCode, err)
+						// Send error back to client
+						errorPayload, _ := json.Marshal(map[string]string{"error": "Quiz tidak ditemukan"})
+						h.SendMessage(msg.Sender, Message{Action: "error", Payload: errorPayload})
+						continue
+					}
+
+					// Change client room to the quiz room
+					newRoomName := fmt.Sprintf("quiz-%d", quiz.ID)
+					h.Mu.Lock()
+
+					// Remove from old room if exists
+					if oldRoom, exists := h.Rooms[msg.Sender.Room]; exists {
+						delete(oldRoom, msg.Sender)
+						if len(oldRoom) == 0 {
+							delete(h.Rooms, msg.Sender.Room)
+						}
+					}
+
+					// Add to new room
+					if _, ok := h.Rooms[newRoomName]; !ok {
+						h.Rooms[newRoomName] = make(map[*Client]bool)
+					}
+					h.Rooms[newRoomName][msg.Sender] = true
+					msg.Sender.Room = newRoomName
+
+					log.Printf("Client %s bergabung ke quiz room %s", msg.Sender.Username, newRoomName)
+
+					// Send confirmation
+					confirmPayload, _ := json.Marshal(map[string]interface{}{
+						"quiz_id":       quiz.ID,
+						"room":          newRoomName,
+						"message":       "Berhasil bergabung ke lobby quiz",
+						"players_count": len(h.Rooms[newRoomName]),
+					})
+					h.SendMessage(msg.Sender, Message{Action: "lobby_joined", Payload: confirmPayload})
+
+					// Notify all players in the room about new player
+					playerJoinedPayload, _ := json.Marshal(map[string]interface{}{
+						"username":      msg.Sender.Username,
+						"players_count": len(h.Rooms[newRoomName]),
+						"message":       fmt.Sprintf("%s bergabung ke lobby", msg.Sender.Username),
+					})
+					for client := range h.Rooms[newRoomName] {
+						if client != msg.Sender {
+							h.SendMessage(client, Message{Action: "player_joined", Payload: playerJoinedPayload})
+						}
+					}
+
+					// Check if room is now full (2 players) and start quiz
+					if len(h.Rooms[newRoomName]) == 2 {
+						log.Printf("Quiz room '%s' penuh, memulai quiz...", newRoomName)
+
+						// Notify all players that quiz is starting
+						quizStartingPayload, _ := json.Marshal(map[string]interface{}{
+							"message": "Quiz dimulai! Semua pemain telah bergabung.",
+							"quiz_id": quiz.ID,
+						})
+						for client := range h.Rooms[newRoomName] {
+							h.SendMessage(client, Message{Action: "quiz_starting", Payload: quizStartingPayload})
+						}
+
+						// Get questions for the quiz
+						questionCount := 5
+						questions, err := h.QuestionService.GetRandomQuestionsByModule(*quiz.ModuleID, questionCount)
+						if err != nil || len(*questions) == 0 {
+							log.Printf("Gagal mendapatkan pertanyaan untuk modul %d: %v", *quiz.ModuleID, err)
+							h.Mu.Unlock()
+							continue
+						}
+
+						players := make([]*Client, 0, 2)
+						for p := range h.Rooms[newRoomName] {
+							players = append(players, p)
+						}
+
+						participants := make([]*models.Participant, len(quiz.Participants))
+						for i, p := range quiz.Participants {
+							tempP := p
+							participants[i] = &tempP
+						}
+
+						session := h.QuizSessionFactory(h, newRoomName, players, *questions, participants, quiz.ID)
+						h.QuizSession[newRoomName] = session
+
+						for _, player := range players {
+							player.Session = session
+						}
+
+						go session.RunQuizLoop()
+					}
+
+					h.Mu.Unlock()
+					continue
+				}
+
 				log.Printf("Pesan dari client tanpa sesi: %s", msg.Sender.Username)
 				continue
 			}

@@ -21,7 +21,7 @@ func main() {
 	// Check prequiz answers
 	var prequizCount int64
 	db.Model(&struct{}{}).Table("prequizzes").Where("module_id = ?", moduleID).Count(&prequizCount)
-	
+
 	var answeredPrequizCount int64
 	db.Model(&struct{}{}).Table("prequiz_user_answers").
 		Joins("JOIN prequizzes ON prequiz_user_answers.prequiz_id = prequizzes.id").
@@ -55,7 +55,7 @@ func main() {
 	if videoQuizCount > 0 {
 		// Module has video quizzes
 		allVideoQuizzesAnswered := answeredVideoQuizCount == videoQuizCount
-		
+
 		if allPrequizzesAnswered && allVideoQuizzesAnswered {
 			expectedProgress = 100.0
 		} else {
@@ -84,7 +84,7 @@ func main() {
 		Where("user_id = ? AND module_id = ? AND deleted_at IS NULL", userID, moduleID).
 		Select("1").
 		Limit(1)
-	
+
 	if result.Error == nil {
 		progressExists = true
 	}
