@@ -26,6 +26,8 @@ func NewRoute(
 	activityHandler *handlers.UserActivityHandler,
 	activityService services.UserActivityServiceInterface,
 	dashboardHandler *handlers.DashboardHandler,
+	leaderboardHandler *handlers.LeaderboardHandler,
+	flashcardHandler *handlers.FlashcardHandler,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -337,6 +339,26 @@ func NewRoute(
 			fileUploadHandler := handlers.NewFileUploadHandler()
 			fileUploadHandler.UploadMultipleImages(c)
 		})
+	}
+
+	// Leaderboard routes - User perlu auth
+	leaderboardGroup := router.Group("leaderboard")
+	leaderboardGroup.Use(authMiddleware.RequireAuth)
+	{
+		leaderboardGroup.GET("/", leaderboardHandler.GetLeaderboard)
+		leaderboardGroup.GET("/user/:user_id", leaderboardHandler.GetUserRank)
+	}
+
+	// Flashcard routes - User perlu auth untuk FSRS algorithm
+	flashcardGroup := router.Group("flashcard")
+	flashcardGroup.Use(authMiddleware.RequireAuth)
+	{
+		flashcardGroup.GET("/intervals", flashcardHandler.GetFlashcardIntervals)                             // Get interval options (1m, 5m, 7h, 10h)
+		flashcardGroup.POST("/module/:module_id/initialize", flashcardHandler.InitializeModuleFlashcards)   // Copy/initialize all flashcards in module
+		flashcardGroup.POST("/:flashcard_id/review", flashcardHandler.ReviewFlashcard)                      // Review flashcard with grade
+		flashcardGroup.POST("/:flashcard_id/initialize", flashcardHandler.InitializeFlashcard)             // Initialize single flashcard
+		flashcardGroup.GET("/due", flashcardHandler.GetDueFlashcards)                                       // Get due flashcards
+		flashcardGroup.GET("/stats", flashcardHandler.GetRetentionStats)                                    // Get retention statistics
 	}
 
 	return router

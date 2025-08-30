@@ -45,6 +45,8 @@ func main() {
 	videoQuizHandler, videoQuizService := helpers.NewBuildVideoQuiz(db)
 	activityHandler, activityService := helpers.NewBuildUserActivity(db)
 	dashboardHandler := helpers.NewBuildDashboard(db)
+	leaderboardHandler := helpers.NewBuildLeaderboard(db)
+	flashcardHandler := helpers.NewBuildFlashcard(db)
 	// User service khusus untuk socket (lives & xp)
 	userServiceForSocket := helpers.NewUserServiceOnly(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService, userServiceForSocket)
@@ -71,6 +73,8 @@ func main() {
 		activityHandler,
 		activityService,
 		dashboardHandler,
+		leaderboardHandler,
+		flashcardHandler,
 	)
 
 	// Start Socket.IO server (mounts /socket.io endpoints)

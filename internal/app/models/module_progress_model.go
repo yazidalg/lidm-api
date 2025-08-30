@@ -8,13 +8,13 @@ import (
 
 type ModuleProgress struct {
 	gorm.Model
-	UserID     uint      `gorm:"not null;index;uniqueIndex:idx_user_module" json:"user_id"`        // Foreign key to User
-	ModuleID   uint      `gorm:"not null;index;uniqueIndex:idx_user_module" json:"module_id"`      // Foreign key to Module
-	IsUnlocked bool      `gorm:"default:false" json:"is_unlocked"`                                 // Whether the module is unlocked for this user
-	IsComplete bool      `gorm:"default:false" json:"is_complete"`                                 // Whether the module is completed
-	StartedAt  *time.Time `json:"started_at"`                                                       // When user first accessed this module
-	CompletedAt *time.Time `json:"completed_at"`                                                    // When user completed this module
-	Progress   float32   `gorm:"default:0" json:"progress"`                                        // Progress percentage (0-100)
+	UserID      uint       `gorm:"not null;index;uniqueIndex:idx_user_module" json:"user_id"`   // Foreign key to User
+	ModuleID    uint       `gorm:"not null;index;uniqueIndex:idx_user_module" json:"module_id"` // Foreign key to Module
+	IsUnlocked  bool       `gorm:"default:false" json:"is_unlocked"`                            // Whether the module is unlocked for this user
+	IsComplete  bool       `gorm:"default:false" json:"is_complete"`                            // Whether the module is completed
+	StartedAt   *time.Time `json:"started_at"`                                                  // When user first accessed this module
+	CompletedAt *time.Time `json:"completed_at"`                                                // When user completed this module
+	Progress    float32    `gorm:"default:0" json:"progress"`                                   // Progress percentage (0-100)
 
 	// Relationships
 	User   *User   `gorm:"foreignKey:UserID" json:"user,omitempty"`
@@ -123,7 +123,7 @@ func (mp *ModuleProgress) CheckAndUnlockNextModule(db *gorm.DB) error {
 	// Check if next module progress already exists
 	var nextProgress ModuleProgress
 	err = db.Where("user_id = ? AND module_id = ?", mp.UserID, nextModule.ID).First(&nextProgress).Error
-	
+
 	if err == gorm.ErrRecordNotFound {
 		// Create new progress entry for next module
 		nextProgress = ModuleProgress{

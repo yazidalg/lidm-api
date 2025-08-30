@@ -62,7 +62,7 @@ func main() {
 
 	// Test 3: Try to simulate trigger execution
 	fmt.Println("\n🚀 Testing trigger functionality...")
-	
+
 	// Get a test user and module
 	var userID, moduleID int
 	err = db.Raw("SELECT user_id, module_id FROM module_progresses WHERE is_complete = 0 LIMIT 1").Row().Scan(&userID, &moduleID)

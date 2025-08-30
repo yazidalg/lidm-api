@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
+	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/config"
 	"github.com/yazidalg/lidm_backend/internal/helpers"
-	"github.com/yazidalg/lidm_backend/internal/app/models"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	successCount := 0
 	for _, user := range users {
 		log.Printf("Initializing module progress for user ID %d (%s)", user.ID, user.Name)
-		
+
 		// Check if user already has any module progress
 		var existingProgress []models.ModuleProgress
 		if err := db.Where("user_id = ?", user.ID).Find(&existingProgress).Error; err != nil {

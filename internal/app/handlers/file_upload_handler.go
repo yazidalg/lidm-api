@@ -18,9 +18,9 @@ func NewFileUploadHandler() *FileUploadHandler {
 func (h *FileUploadHandler) UploadImage(c *gin.Context) {
 	// Get upload type from query parameter (default: images)
 	uploadType := c.DefaultQuery("type", "images")
-	
+
 	var config utils.FileUploadConfig
-	
+
 	switch uploadType {
 	case "icons":
 		config = utils.DefaultImageUploadConfig()
@@ -67,7 +67,7 @@ func (h *FileUploadHandler) UploadImage(c *gin.Context) {
 // UploadMultipleImages uploads multiple images at once
 func (h *FileUploadHandler) UploadMultipleImages(c *gin.Context) {
 	uploadType := c.DefaultQuery("type", "images")
-	
+
 	var config utils.FileUploadConfig
 	switch uploadType {
 	case "icons":

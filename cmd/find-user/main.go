@@ -14,7 +14,7 @@ func main() {
 	db := config.ConnectDB()
 
 	fmt.Printf("Finding user with Module 2 and 3 answers...\n")
-	
+
 	// Query to find users with Module 2 answers (3 prequizzes + 1 video quiz)
 	rows, err := db.Raw(`
 		SELECT pua.user_id, 
@@ -35,10 +35,10 @@ func main() {
 	for rows.Next() {
 		var userID, module2Prequizzes, module3Prequizzes int
 		rows.Scan(&userID, &module2Prequizzes, &module3Prequizzes)
-		fmt.Printf("User %d: Module2(pre:%d) Module3(pre:%d)\n", 
+		fmt.Printf("User %d: Module2(pre:%d) Module3(pre:%d)\n",
 			userID, module2Prequizzes, module3Prequizzes)
 	}
-	
+
 	// Also check video quiz answers separately
 	fmt.Printf("\nVideo quiz answers by user:\n")
 	rows2, err := db.Raw(`
@@ -49,13 +49,13 @@ func main() {
 		GROUP BY vqua.user_id, vm.module_id
 		ORDER BY vqua.user_id, vm.module_id
 	`).Rows()
-	
+
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
 	defer rows2.Close()
-	
+
 	for rows2.Next() {
 		var userID, moduleID, count int
 		rows2.Scan(&userID, &moduleID, &count)

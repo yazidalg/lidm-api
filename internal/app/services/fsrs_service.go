@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/open-spaced-repetition/go-fsrs/v3"
@@ -10,25 +11,33 @@ import (
 
 type FSRSServiceInterface interface {
 	InitializeFlashcard(userID, flashcardID uint) (*models.UserFlashcardProgress, error)
+	InitializeModuleFlashcards(userID, moduleID uint) (int, error) // Returns count of initialized flashcards
 	ReviewFlashcard(userID, flashcardID uint, grade int) (*models.UserFlashcardProgress, error)
 	GetDueFlashcards(userID uint) ([]models.UserFlashcardProgress, error)
 	GetFlashcardProgress(userID, flashcardID uint) (*models.UserFlashcardProgress, error)
 	GetUserRetentionStats(userID uint) (map[string]interface{}, error)
+	GetNextReviewSchedule(userID, flashcardID uint, currentState int) (map[string]interface{}, error) // Preview next review times
+	IsFlashcardDue(userID, flashcardID uint) (bool, error) // Check if flashcard is due for review
+	GetFlashcardReviewStats(userID, flashcardID uint) (map[string]int, error) // Get review statistics (u, s, l, m counts)
 }
 
 type fsrsService struct {
 	flashcardProgressRepo repositories.FlashcardProgressRepositoryInterface
-	fsrsAlgorithm         *fsrs.FSRS
+	moduleRepo           repositories.ModuleRepositoryInterface
+	fsrsAlgorithm        *fsrs.FSRS
 }
 
-func NewFSRSService(flashcardProgressRepo repositories.FlashcardProgressRepositoryInterface) FSRSServiceInterface {
-	// Initialize FSRS with default parameters
+func NewFSRSService(flashcardProgressRepo repositories.FlashcardProgressRepositoryInterface, moduleRepo repositories.ModuleRepositoryInterface) FSRSServiceInterface {
+	// Initialize FSRS with custom parameters
 	params := fsrs.DefaultParam()
+	params.RequestRetention = 0.98 // Set retention rate to 98%
+	
 	algorithm := fsrs.NewFSRS(params)
 
 	return &fsrsService{
 		flashcardProgressRepo: flashcardProgressRepo,
-		fsrsAlgorithm:         algorithm,
+		moduleRepo:           moduleRepo,
+		fsrsAlgorithm:        algorithm,
 	}
 }
 
@@ -42,6 +51,11 @@ func (s *fsrsService) InitializeFlashcard(userID, flashcardID uint) (*models.Use
 	// Create new card using FSRS
 	card := fsrs.NewCard()
 	now := time.Now()
+
+	// Set Due to current time for new flashcards (immediately available for review)
+	if card.Due.IsZero() {
+		card.Due = now
+	}
 
 	progress := &models.UserFlashcardProgress{
 		UserID:      userID,
@@ -59,6 +73,41 @@ func (s *fsrsService) InitializeFlashcard(userID, flashcardID uint) (*models.Use
 	}
 
 	return s.flashcardProgressRepo.Create(progress)
+}
+
+// InitializeModuleFlashcards initializes all flashcards in a module for a user
+func (s *fsrsService) InitializeModuleFlashcards(userID, moduleID uint) (int, error) {
+	// Get module with flashcards
+	module, err := s.moduleRepo.GetModuleByID(uint32(moduleID))
+	if err != nil {
+		return 0, err
+	}
+
+	if module == nil {
+		return 0, fmt.Errorf("module not found")
+	}
+
+	initializedCount := 0
+	
+	for _, flashcard := range module.Flashcards {
+		// Check if this flashcard is already initialized for this user
+		existing, err := s.flashcardProgressRepo.GetByUserAndFlashcard(userID, flashcard.ID)
+		if err == nil && existing != nil {
+			// Already exists, skip
+			continue
+		}
+
+		// Initialize this flashcard for the user
+		_, err = s.InitializeFlashcard(userID, flashcard.ID)
+		if err != nil {
+			// Log error but continue with other flashcards
+			continue
+		}
+		
+		initializedCount++
+	}
+
+	return initializedCount, nil
 }
 
 func (s *fsrsService) ReviewFlashcard(userID, flashcardID uint, grade int) (*models.UserFlashcardProgress, error) {
@@ -105,12 +154,10 @@ func (s *fsrsService) ReviewFlashcard(userID, flashcardID uint, grade int) (*mod
 	progress.LastReview = &reviewTime
 	progress.ReviewCount++
 
-	// Update average grade
-	if progress.ReviewCount == 1 {
-		progress.AverageGrade = float64(grade)
-	} else {
-		progress.AverageGrade = (progress.AverageGrade*float64(progress.ReviewCount-1) + float64(grade)) / float64(progress.ReviewCount)
-	}
+	// Update average grade using UNIQUE system - only store the last grade
+	// This supports the unique l/m/s/u statistics where each flashcard has only one active status
+	fmt.Printf("DEBUG: Setting grade %d for flashcard %d (was %f)\n", grade, flashcardID, progress.AverageGrade)
+	progress.AverageGrade = float64(grade) // Store last grade directly
 
 	return s.flashcardProgressRepo.Update(progress)
 }
@@ -192,4 +239,180 @@ func (s *fsrsService) progressToCard(progress *models.UserFlashcardProgress) fsr
 	}
 
 	return card
+}
+
+// GetNextReviewSchedule gets preview of next review schedule for all grades
+func (s *fsrsService) GetNextReviewSchedule(userID, flashcardID uint, currentState int) (map[string]interface{}, error) {
+	// Get current progress or create default
+	progress, err := s.flashcardProgressRepo.GetByUserAndFlashcard(userID, flashcardID)
+	if err != nil {
+		// Use default new card if no progress exists
+		card := fsrs.NewCard()
+		return s.generateSchedulePreview(card), nil
+	}
+
+	// Convert progress to FSRS card
+	card := s.progressToCard(progress)
+	return s.generateSchedulePreview(card), nil
+}
+
+// Helper function to generate schedule preview for all grades
+func (s *fsrsService) generateSchedulePreview(card fsrs.Card) map[string]interface{} {
+	now := time.Now()
+	
+	// Calculate schedule for each grade
+	againResult := s.fsrsAlgorithm.Next(card, now, fsrs.Again)
+	hardResult := s.fsrsAlgorithm.Next(card, now, fsrs.Hard)
+	goodResult := s.fsrsAlgorithm.Next(card, now, fsrs.Good)
+	easyResult := s.fsrsAlgorithm.Next(card, now, fsrs.Easy)
+
+	return map[string]interface{}{
+		"scheduleTimers": map[string]interface{}{
+			"ulang": map[string]interface{}{
+				"grade":           1,
+				"due":             againResult.Card.Due,
+				"due_display":     s.formatDueDisplay(againResult.Card.Due, now),
+				"stability":       againResult.Card.Stability,
+				"difficulty":      againResult.Card.Difficulty,
+				"elapsed_days":    againResult.Card.ElapsedDays,
+				"scheduled_days":  againResult.Card.ScheduledDays,
+				"reps":            againResult.Card.Reps,
+				"lapses":          againResult.Card.Lapses,
+				"state":           againResult.Card.State,
+				"description":     "Ulangi",
+				"color":           "#ef4444",
+			},
+			"sulit": map[string]interface{}{
+				"grade":           2,
+				"due":             hardResult.Card.Due,
+				"due_display":     s.formatDueDisplay(hardResult.Card.Due, now),
+				"stability":       hardResult.Card.Stability,
+				"difficulty":      hardResult.Card.Difficulty,
+				"elapsed_days":    hardResult.Card.ElapsedDays,
+				"scheduled_days":  hardResult.Card.ScheduledDays,
+				"reps":            hardResult.Card.Reps,
+				"lapses":          hardResult.Card.Lapses,
+				"state":           hardResult.Card.State,
+				"description":     "Sulit",
+				"color":           "#f59e0b",
+			},
+			"lumayan": map[string]interface{}{
+				"grade":           3,
+				"due":             goodResult.Card.Due,
+				"due_display":     s.formatDueDisplay(goodResult.Card.Due, now),
+				"stability":       goodResult.Card.Stability,
+				"difficulty":      goodResult.Card.Difficulty,
+				"elapsed_days":    goodResult.Card.ElapsedDays,
+				"scheduled_days":  goodResult.Card.ScheduledDays,
+				"reps":            goodResult.Card.Reps,
+				"lapses":          goodResult.Card.Lapses,
+				"state":           goodResult.Card.State,
+				"description":     "Lumayan",
+				"color":           "#10b981",
+			},
+			"mudah": map[string]interface{}{
+				"grade":           4,
+				"due":             easyResult.Card.Due,
+				"due_display":     s.formatDueDisplay(easyResult.Card.Due, now),
+				"stability":       easyResult.Card.Stability,
+				"difficulty":      easyResult.Card.Difficulty,
+				"elapsed_days":    easyResult.Card.ElapsedDays,
+				"scheduled_days":  easyResult.Card.ScheduledDays,
+				"reps":            easyResult.Card.Reps,
+				"lapses":          easyResult.Card.Lapses,
+				"state":           easyResult.Card.State,
+				"description":     "Mudah",
+				"color":           "#3b82f6",
+			},
+		},
+	}
+}
+
+// Helper function to format due time display
+func (s *fsrsService) formatDueDisplay(due time.Time, now time.Time) string {
+	duration := due.Sub(now)
+	
+	if duration < 0 {
+		return "now"
+	}
+	
+	if duration < time.Hour {
+		minutes := int(duration.Minutes())
+		if minutes < 1 {
+			return "now"
+		}
+		return fmt.Sprintf("%dm", minutes)
+	}
+	
+	if duration < 24*time.Hour {
+		hours := int(duration.Hours())
+		return fmt.Sprintf("%dh", hours)
+	}
+	
+	days := int(duration.Hours() / 24)
+	return fmt.Sprintf("%dd", days)
+}
+
+// IsFlashcardDue checks if a flashcard is due for review
+func (s *fsrsService) IsFlashcardDue(userID, flashcardID uint) (bool, error) {
+	// Get flashcard progress
+	progress, err := s.flashcardProgressRepo.GetByUserAndFlashcard(userID, flashcardID)
+	if err != nil {
+		// If no progress found, it means flashcard has never been reviewed, so it's "due"
+		return true, nil
+	}
+
+	// Check if current time is past the due time
+	now := time.Now()
+	return now.After(progress.Due), nil
+}
+
+// GetFlashcardReviewStats returns review statistics for a flashcard
+// This uses UNIQUE logic - each flashcard can only have one active review status
+func (s *fsrsService) GetFlashcardReviewStats(userID, flashcardID uint) (map[string]int, error) {
+	// Get flashcard progress
+	progress, err := s.flashcardProgressRepo.GetByUserAndFlashcard(userID, flashcardID)
+	if err != nil {
+		// If no progress found, return all zeros (never reviewed)
+		return map[string]int{
+			"u": 0, // ulang (grade 1)
+			"s": 0, // sulit (grade 2)
+			"l": 0, // lumayan (grade 3)
+			"m": 0, // mudah (grade 4)
+		}, nil
+	}
+
+	// Initialize stats with all zeros
+	stats := map[string]int{
+		"u": 0, // ulang (grade 1)
+		"s": 0, // sulit (grade 2)  
+		"l": 0, // lumayan (grade 3)
+		"m": 0, // mudah (grade 4)
+	}
+
+	// UNIQUE LOGIC: Each flashcard has only ONE active status based on last review
+	if progress.ReviewCount > 0 {
+		// Use the last grade to determine current status
+		// Since we store last grade directly in AverageGrade field
+		
+		lastGrade := progress.AverageGrade
+		
+		// Debug logging for flashcard 12
+		if flashcardID == 12 {
+			fmt.Printf("DEBUG flashcard 12: reviewCount=%d, lastGrade=%f\n", progress.ReviewCount, lastGrade)
+		}
+		
+		// Determine category based on last review grade
+		if lastGrade <= 1.5 {
+			stats["u"] = 1 // This flashcard is currently in "ulang" status
+		} else if lastGrade <= 2.5 {
+			stats["s"] = 1 // This flashcard is currently in "sulit" status
+		} else if lastGrade <= 3.5 {
+			stats["l"] = 1 // This flashcard is currently in "lumayan" status
+		} else {
+			stats["m"] = 1 // This flashcard is currently in "mudah" status
+		}
+	}
+
+	return stats, nil
 }

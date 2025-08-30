@@ -34,7 +34,7 @@ func main() {
 
 	// Find user with module 1 complete but module 2 not unlocked
 	userID := 1 // Let's test with user 1
-	
+
 	// Check module 1 status
 	var module1Progress float64
 	var module1Complete bool
@@ -69,16 +69,16 @@ func main() {
 	// If module 1 is not complete, let's test the trigger
 	if !module1Complete {
 		fmt.Println("\n🚀 Testing trigger by completing module 1...")
-		
+
 		// Update module 1 to complete (this should trigger auto-unlock)
 		result := db.Exec("UPDATE module_progresses SET is_complete = 1, progress = 100 WHERE user_id = ? AND module_id = 1", userID)
 		if result.Error != nil {
 			fmt.Printf("❌ Error updating module 1: %v\n", result.Error)
 			return
 		}
-		
+
 		fmt.Println("✅ Module 1 marked as complete")
-		
+
 		// Check if module 2 was automatically created/unlocked
 		var module2ExistsAfter int
 		err = db.Raw("SELECT COUNT(*) FROM module_progresses WHERE user_id = ? AND module_id = 2", userID).Row().Scan(&module2ExistsAfter)
@@ -86,7 +86,7 @@ func main() {
 			fmt.Printf("❌ Error checking module 2 after trigger: %v\n", err)
 			return
 		}
-		
+
 		if module2ExistsAfter > 0 {
 			var module2UnlockedAfter bool
 			err = db.Raw("SELECT is_unlocked FROM module_progresses WHERE user_id = ? AND module_id = 2", userID).Row().Scan(&module2UnlockedAfter)
@@ -94,9 +94,9 @@ func main() {
 				fmt.Printf("❌ Error getting module 2 status after trigger: %v\n", err)
 				return
 			}
-			
+
 			fmt.Printf("🎉 TRIGGER RESULT: Module 2 - Exists: Yes, Unlocked: %t\n", module2UnlockedAfter)
-			
+
 			if module2UnlockedAfter {
 				fmt.Println("✅ SUCCESS: Trigger worked! Module 2 automatically unlocked!")
 			} else {

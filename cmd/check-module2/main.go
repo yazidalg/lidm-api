@@ -17,7 +17,7 @@ func main() {
 	// Query the module progress for Module 2
 	var progress models.ModuleProgress
 	result := db.Where("user_id = ? AND module_id = ?", 2, 2).First(&progress)
-	
+
 	if result.Error != nil {
 		fmt.Printf("No progress record found for User ID: 2, Module ID: 2: %v\n", result.Error)
 	} else {

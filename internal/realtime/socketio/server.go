@@ -678,19 +678,62 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				io.To(socket.Room(roomName(quiz.ID))).Emit("bonus_multiplier", gin.H{"multiplier": bonus})
 				// Start quiz automatically
 				if quiz.ModuleID != nil {
-					qc := quiz.QuestionCount
-					if qc <= 0 {
-						qc = 10
-					}
-					qs, err := questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
-					if err == nil && qs != nil && len(*qs) > 0 {
-						s := getOrCreateSession(quiz)
-						s.Questions = *qs
-						if s.State != "running" { // prevent double start
-							io.To(socket.Room(roomName(quiz.ID))).Emit(EventStartQuiz, gin.H{"quiz_id": quiz.ID, "total_questions": len(*qs), "questions": sanitizeQuestions(*qs)})
-							go s.run(io)
+					log.Printf("[socket.io] Auto-starting quiz for module_id=%d", *quiz.ModuleID)
+
+					// Use mode-based question selection
+					qs, err := questionSvc.GetQuestionsByModuleAndMode(*quiz.ModuleID, quiz.Mode)
+					if err != nil {
+						log.Printf("[socket.io] ERROR: Failed to get questions for module_id=%d mode=%s: %v", *quiz.ModuleID, quiz.Mode, err)
+						// Fallback to old method
+						qc := quiz.QuestionCount
+						if qc <= 0 {
+							qc = 10
+						}
+						qs, err = questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
+						if err != nil {
+							log.Printf("[socket.io] ERROR: Fallback also failed for module_id=%d: %v", *quiz.ModuleID, err)
+							// Emit error to both players
+							io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+								"error":   "no_questions",
+								"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
+							})
+							return
 						}
 					}
+					if qs == nil || len(*qs) == 0 {
+						log.Printf("[socket.io] ERROR: No questions returned for module_id=%d mode=%s", *quiz.ModuleID, quiz.Mode)
+						// Emit error to both players
+						io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+							"error":   "no_questions",
+							"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
+						})
+						return
+					}
+
+					log.Printf("[socket.io] Successfully retrieved %d questions for module_id=%d mode=%s", len(*qs), *quiz.ModuleID, quiz.Mode)
+
+					s := getOrCreateSession(quiz)
+					s.Questions = *qs
+					if s.State != "running" { // prevent double start
+						log.Printf("[socket.io] Emitting start_quiz event for quiz_id=%d with %d questions", quiz.ID, len(*qs))
+						io.To(socket.Room(roomName(quiz.ID))).Emit(EventStartQuiz, gin.H{
+							"quiz_id":         quiz.ID,
+							"total_questions": len(*qs),
+							"questions":       sanitizeQuestions(*qs),
+							"module_id":       *quiz.ModuleID,
+							"mode":            quiz.Mode,
+						})
+						log.Printf("[socket.io] Starting quiz session runner for quiz_id=%d", quiz.ID)
+						go s.run(io)
+					} else {
+						log.Printf("[socket.io] Quiz session already running for quiz_id=%d, state=%s", quiz.ID, s.State)
+					}
+				} else {
+					log.Printf("[socket.io] ERROR: Quiz has no module_id, cannot start quiz for quiz_id=%d", quiz.ID)
+					io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+						"error":   "no_module",
+						"message": "Quiz has no module assigned",
+					})
 				}
 				return
 			}
@@ -751,41 +794,79 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 					quizID, userIDUint, players)
 
 				if players == 2 && quiz.ModuleID != nil {
-					qc := quiz.QuestionCount
-					if qc <= 0 {
-						qc = 10
+					log.Printf("[socket.io] join_quiz: Auto-starting quiz for module_id=%d with 2 players", *quiz.ModuleID)
+
+					// Use mode-based question selection
+					qs, err := questionSvc.GetQuestionsByModuleAndMode(*quiz.ModuleID, quiz.Mode)
+					if err != nil {
+						log.Printf("[socket.io] join_quiz: Failed to get questions by mode, falling back to random: %v", err)
+						qc := quiz.QuestionCount
+						if qc <= 0 {
+							qc = 10
+						}
+						qs, err = questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
 					}
-					qs, err := questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
+
 					if err == nil && qs != nil && len(*qs) > 0 {
+						log.Printf("[socket.io] join_quiz: Successfully retrieved %d questions for module_id=%d mode=%s", len(*qs), *quiz.ModuleID, quiz.Mode)
 						sessions.Lock()
 						if sessions.M[quizID] != nil {
 							sessions.M[quizID].Questions = *qs
 							sessions.Unlock()
-							io.To(socket.Room(room)).Emit(EventStartQuiz, gin.H{"quiz_id": quiz.ID, "total_questions": len(*qs), "questions": sanitizeQuestions(*qs)})
+							log.Printf("[socket.io] join_quiz: Emitting start_quiz event for quiz_id=%d", quiz.ID)
+							io.To(socket.Room(room)).Emit(EventStartQuiz, gin.H{
+								"quiz_id":         quiz.ID,
+								"total_questions": len(*qs),
+								"questions":       sanitizeQuestions(*qs),
+								"module_id":       *quiz.ModuleID,
+								"mode":            quiz.Mode,
+							})
+							log.Printf("[socket.io] join_quiz: Starting quiz session runner for quiz_id=%d", quiz.ID)
 							go sessions.M[quizID].run(io)
 						} else {
 							sessions.Unlock()
 							log.Printf("[socket.io] ERROR: session disappeared for quiz_id=%d", quizID)
 						}
 					} else {
-						log.Printf("[socket.io] ERROR: failed to get questions for module_id=%d: %v", *quiz.ModuleID, err)
+						log.Printf("[socket.io] ERROR: failed to get questions for module_id=%d mode=%s: %v, questions count: %d", *quiz.ModuleID, quiz.Mode, err, func() int {
+							if qs == nil {
+								return 0
+							}
+							return len(*qs)
+						}())
 					}
+				} else if players == 2 && quiz.ModuleID == nil {
+					log.Printf("[socket.io] ERROR: join_quiz: Quiz has no module_id, cannot start quiz for quiz_id=%d", quizID)
+				} else {
+					log.Printf("[socket.io] join_quiz: Not starting quiz yet, players=%d, module_id present=%t", players, quiz.ModuleID != nil)
 				}
 				return
 			}
 			if quiz.ModuleID == nil {
 				return
 			}
-			qc := quiz.QuestionCount
-			if qc <= 0 {
-				qc = 10
+
+			// Use mode-based question selection for single player
+			qs, err := questionSvc.GetQuestionsByModuleAndMode(*quiz.ModuleID, quiz.Mode)
+			if err != nil {
+				log.Printf("[socket.io] Single player: Failed to get questions by mode, falling back to random: %v", err)
+				qc := quiz.QuestionCount
+				if qc <= 0 {
+					qc = 10
+				}
+				qs, err = questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
 			}
-			qs, err := questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
+
 			if err != nil || qs == nil || len(*qs) == 0 {
 				return
 			}
 			singleSess = NewSocketQuizSession(client, quiz, *qs, questionSvc, quizSvc, userSvc)
-			client.Emit(EventStartQuiz, gin.H{"quiz_id": quiz.ID, "total_questions": len(singleSess.Questions), "questions": sanitizeQuestions(singleSess.Questions)})
+			client.Emit(EventStartQuiz, gin.H{
+				"quiz_id":         quiz.ID,
+				"total_questions": len(singleSess.Questions),
+				"questions":       sanitizeQuestions(singleSess.Questions),
+				"mode":            quiz.Mode,
+			})
 			singleSess.emitQuestion()
 		})
 
@@ -1031,6 +1112,7 @@ func sanitizeQuestions(qs []models.Question) []map[string]any {
 			// Expose correct answer as requested by FE
 			"correct_index":  optionIndex(q.CorrectAnswer),
 			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
+			"explanation":    q.Explanation,
 		})
 	}
 	return out

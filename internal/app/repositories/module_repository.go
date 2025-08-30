@@ -15,6 +15,7 @@ type ModuleRepositoryInterface interface {
 	UpdateModuleWithVideo(id uint32, module *models.Module) (*models.Module, error)
 	DeleteModule(id uint32) error
 	CreateARExperiment(arExperiment *models.ARExperiment) (*models.ARExperiment, error)
+	GetFlashcardsByModule(moduleID uint) ([]models.Flashcard, error)
 }
 
 type moduleRepository struct {
@@ -255,4 +256,10 @@ func (r *moduleRepository) CreateARExperiment(arExperiment *models.ARExperiment)
 	}
 
 	return arExperiment, nil
+}
+
+func (r *moduleRepository) GetFlashcardsByModule(moduleID uint) ([]models.Flashcard, error) {
+	var flashcards []models.Flashcard
+	err := r.db.Where("module_id = ?", moduleID).Order("`order` ASC").Find(&flashcards).Error
+	return flashcards, err
 }

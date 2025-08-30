@@ -18,7 +18,7 @@ type FlashcardData struct {
 func main() {
 	// Load environment variables
 	config.LoadEnv()
-	
+
 	// Initialize database connection
 	db := config.ConnectDB()
 

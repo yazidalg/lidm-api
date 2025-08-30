@@ -151,33 +151,48 @@ func SeedFotosintesisData(db *gorm.DB) {
 	videoQuizzes1 := []models.VideoQuiz{
 		{
 			VideoMaterialID: videoMaterial1.ID,
-			Question:        "Berdasarkan video, apa yang membuat daun berwarna hijau?",
-			TimestampStart:  60, // Muncul di detik ke-60 (1 menit)
-			TimestampEnd:    75, // Berakhir di detik ke-75
+			Question:        "Kata fotosintesis berasal dari bahasa Yunani. Apa arti dari kata \"photo\" dan \"synthesis\"?",
+			TimestampStart:  50, // Muncul di detik ke-50 (0:50)
+			TimestampEnd:    65, // Berakhir di detik ke-65
 			Options: models.Options{
-				OptionA: "Cat hijau",
-				OptionB: "Klorofil",
-				OptionC: "Air",
-				OptionD: "Tanah",
+				OptionA: "Photo berarti cahaya, synthesis berarti menggabungkan atau menyusun",
+				OptionB: "Photo berarti air, synthesis berarti tumbuhan",
+				OptionC: "Photo berarti udara, synthesis berarti makanan",
+				OptionD: "Photo berarti daun, synthesis berarti energi",
 			},
-			CorrectAnswer: "B",
-			Explanation:   "Benar! Klorofil adalah zat hijau yang membuat daun berwarna hijau dan berperan penting dalam fotosintesis!",
+			CorrectAnswer: "A",
+			Explanation:   "Benar! Photo berarti cahaya dan synthesis berarti menggabungkan atau menyusun. Jadi fotosintesis artinya menggabungkan dengan bantuan cahaya!",
 			Order:         1,
 		},
 		{
 			VideoMaterialID: videoMaterial1.ID,
-			Question:        "Menurut video, apa saja yang dibutuhkan tumbuhan untuk fotosintesis?",
-			TimestampStart:  120, // Muncul di detik ke-120 (2 menit)
-			TimestampEnd:    135, // Berakhir di detik ke-135
+			Question:        "Agar proses fotosintesis dapat berlangsung, tumbuhan memerlukan beberapa bahan. Manakah kombinasi yang benar?",
+			TimestampStart:  60, // Muncul di detik ke-60 (1:00)
+			TimestampEnd:    75, // Berakhir di detik ke-75
 			Options: models.Options{
-				OptionA: "Hanya air",
-				OptionB: "Hanya sinar matahari",
-				OptionC: "Air, sinar matahari, dan karbon dioksida",
-				OptionD: "Pupuk dan pestisida",
+				OptionA: "Cahaya matahari, Air (H₂O), Karbon dioksida (CO₂), dan Klorofil",
+				OptionB: "Air (H₂O), Nitrogen, Karbon dioksida (CO₂), dan Cahaya bulan",
+				OptionC: "Cahaya matahari, Oksigen, Air (H₂O), dan Tanah",
+				OptionD: "Cahaya matahari, Protein, Oksigen, dan Kloroplas",
 			},
-			CorrectAnswer: "C",
-			Explanation:   "Tepat! Fotosintesis membutuhkan 3 bahan utama: air, sinar matahari, dan karbon dioksida dari udara!",
+			CorrectAnswer: "A",
+			Explanation:   "Tepat! Fotosintesis membutuhkan 4 komponen utama: cahaya matahari sebagai energi, air dari akar, karbon dioksida dari udara, dan klorofil untuk menangkap cahaya!",
 			Order:         2,
+		},
+		{
+			VideoMaterialID: videoMaterial1.ID,
+			Question:        "Tumbuhan membuat makanannya sendiri di bagian dalam daun yang tidak terlihat oleh mata kita. Bagian tersebut disebut",
+			TimestampStart:  90,  // Muncul di detik ke-90 (1:30)
+			TimestampEnd:    105, // Berakhir di detik ke-105
+			Options: models.Options{
+				OptionA: "Klorofil",
+				OptionB: "Kloroplas",
+				OptionC: "Stomata",
+				OptionD: "Xilem",
+			},
+			CorrectAnswer: "B",
+			Explanation:   "Benar! Kloroplas adalah organel kecil di dalam sel daun tempat fotosintesis terjadi. Di sanalah klorofil berada!",
+			Order:         3,
 		},
 	}
 
@@ -280,6 +295,77 @@ func SeedFotosintesisData(db *gorm.DB) {
 		}
 	}
 
+	// Video Material untuk Module 2 (Bagian-bagian Tumbuhan)
+	videoMaterial2 := models.VideoMaterial{
+		ModuleID:    module.ID,
+		Title:       "Video Bagian-bagian Tumbuhan",
+		YoutubeLink: "https://www.youtube.com/watch?v=example-bagian-tumbuhan",
+		Duration:    200, // 3 menit 20 detik
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	if err := db.Create(&videoMaterial2).Error; err != nil {
+		log.Printf("Error creating video material 2: %v", err)
+		return
+	}
+
+	// Video Quizzes untuk Video Material 2 (bagian-bagian tumbuhan)
+	videoQuizzes2 := []models.VideoQuiz{
+		{
+			VideoMaterialID: videoMaterial2.ID,
+			Question:        "Apa fungsi utama akar pada tumbuhan?",
+			TimestampStart:  127, // Muncul di detik ke-127 (2:07)
+			TimestampEnd:    142, // Berakhir di detik ke-142
+			Options: models.Options{
+				OptionA: "Menyerap air dan nutrisi dari tanah",
+				OptionB: "Menghasilkan cahaya",
+				OptionC: "Menyimpan oksigen",
+				OptionD: "Menghindari hama",
+			},
+			CorrectAnswer: "A",
+			Explanation:   "Benar! Akar berfungsi menyerap air dan nutrisi dari tanah yang dibutuhkan untuk fotosintesis dan pertumbuhan tumbuhan!",
+			Order:         1,
+		},
+		{
+			VideoMaterialID: videoMaterial2.ID,
+			Question:        "Bagian tumbuhan manakah yang berfungsi mengangkut air dan zat makanan dari akar ke daun?",
+			TimestampStart:  152, // Muncul di detik ke-152 (2:32)
+			TimestampEnd:    167, // Berakhir di detik ke-167
+			Options: models.Options{
+				OptionA: "Akar",
+				OptionB: "Batang",
+				OptionC: "Daun",
+				OptionD: "Biji",
+			},
+			CorrectAnswer: "B",
+			Explanation:   "Tepat! Batang berfungsi sebagai jalan raya bagi tumbuhan untuk mengangkut air dari akar ke daun dan makanan dari daun ke seluruh tubuh tumbuhan!",
+			Order:         2,
+		},
+		{
+			VideoMaterialID: videoMaterial2.ID,
+			Question:        "Apa fungsi daun dalam tumbuhan?",
+			TimestampStart:  196, // Muncul di detik ke-196 (3:16)
+			TimestampEnd:    211, // Berakhir di detik ke-211
+			Options: models.Options{
+				OptionA: "Menyerap air dan nutrisi",
+				OptionB: "Tempat fotosintesis untuk membuat makanan",
+				OptionC: "Melindungi tanah",
+				OptionD: "Menyimpan cadangan makanan",
+			},
+			CorrectAnswer: "B",
+			Explanation:   "Benar! Daun adalah tempat fotosintesis terjadi. Di daun inilah tumbuhan membuat makanannya sendiri menggunakan cahaya matahari!",
+			Order:         3,
+		},
+	}
+
+	for _, videoQuiz := range videoQuizzes2 {
+		if err := db.Create(&videoQuiz).Error; err != nil {
+			log.Printf("Error creating video quiz for video material 2: %v", err)
+			continue
+		}
+	}
+
 	// Prequizzes untuk SubMaterial 3 (AR Lab - hanya 3)
 	prequizzes3 := []models.Prequiz{
 		{
@@ -346,47 +432,47 @@ func SeedFotosintesisData(db *gorm.DB) {
 	videoQuizzes4 := []models.VideoQuiz{
 		{
 			VideoMaterialID: videoMaterial4.ID,
-			Question:        "Berdasarkan video, di bagian mana fotosintesis terjadi?",
-			TimestampStart:  45, // Muncul di detik ke-45
-			TimestampEnd:    60, // Berakhir di detik ke-60
+			Question:        "Apa saja yang dibutuhkan tumbuhan untuk melakukan fotosintesis?",
+			TimestampStart:  227, // Muncul di detik ke-227 (3:47)
+			TimestampEnd:    242, // Berakhir di detik ke-242
 			Options: models.Options{
-				OptionA: "Di akar",
-				OptionB: "Di batang",
-				OptionC: "Di kloroplas dalam daun",
-				OptionD: "Di bunga",
+				OptionA: "Air, Karbondioksida, Matahari, Klorofil",
+				OptionB: "Oksigen, Air, Karbondioksida, Tanah",
+				OptionC: "Air, Matahari, Tanah, Oksigen",
+				OptionD: "Air, Klorofil, Nitrogen, Cahaya Bulan",
 			},
-			CorrectAnswer: "C",
-			Explanation:   "Benar! Fotosintesis terjadi di kloroplas yang terdapat dalam sel-sel daun!",
+			CorrectAnswer: "A",
+			Explanation:   "Benar! Tumbuhan membutuhkan air dari akar, karbondioksida dari udara, cahaya matahari sebagai energi, dan klorofil untuk menangkap cahaya!",
 			Order:         1,
 		},
 		{
 			VideoMaterialID: videoMaterial4.ID,
-			Question:        "Apa hasil utama dari proses fotosintesis yang dijelaskan dalam video?",
-			TimestampStart:  120, // Muncul di detik ke-120 (2 menit)
-			TimestampEnd:    135, // Berakhir di detik ke-135
+			Question:        "Apa hasil utama dari proses fotosintesis?",
+			TimestampStart:  248, // Muncul di detik ke-248 (4:08)
+			TimestampEnd:    263, // Berakhir di detik ke-263
 			Options: models.Options{
-				OptionA: "Air dan tanah",
-				OptionB: "Glukosa dan oksigen",
-				OptionC: "Karbon dioksida dan nitrogen",
-				OptionD: "Protein dan lemak",
+				OptionA: "Nitrogen dan Air",
+				OptionB: "Oksigen dan Karbohidrat (makanan/glukosa)",
+				OptionC: "Karbondioksida dan Oksigen",
+				OptionD: "Cahaya Matahari dan Air",
 			},
 			CorrectAnswer: "B",
-			Explanation:   "Tepat! Fotosintesis menghasilkan glukosa (makanan tumbuhan) dan oksigen yang kita hirup!",
+			Explanation:   "Tepat! Fotosintesis menghasilkan oksigen yang kita hirup dan karbohidrat (glukosa) sebagai makanan untuk tumbuhan!",
 			Order:         2,
 		},
 		{
 			VideoMaterialID: videoMaterial4.ID,
-			Question:        "Menurut video, mengapa fotosintesis penting bagi kehidupan?",
-			TimestampStart:  200, // Muncul di detik ke-200
-			TimestampEnd:    215, // Berakhir di detik ke-215
+			Question:        "Mengapa fotosintesis penting bagi makhluk hidup di Bumi?",
+			TimestampStart:  284, // Muncul di detik ke-284 (4:44)
+			TimestampEnd:    299, // Berakhir di detik ke-299
 			Options: models.Options{
-				OptionA: "Menghasilkan oksigen untuk bernapas",
-				OptionB: "Membuat tumbuhan terlihat cantik",
-				OptionC: "Menghasilkan suara",
-				OptionD: "Membuat udara panas",
+				OptionA: "Karena menghasilkan tanah yang subur",
+				OptionB: "Karena menghasilkan oksigen dan makanan untuk rantai makanan",
+				OptionC: "Karena membuat daun selalu hijau",
+				OptionD: "Karena menyerap semua air hujan",
 			},
-			CorrectAnswer: "A",
-			Explanation:   "Benar! Fotosintesis menghasilkan oksigen yang sangat penting untuk semua makhluk hidup bernapas!",
+			CorrectAnswer: "B",
+			Explanation:   "Benar! Fotosintesis menghasilkan oksigen untuk bernapas dan menjadi dasar rantai makanan bagi semua makhluk hidup di Bumi!",
 			Order:         3,
 		},
 	}
@@ -567,6 +653,13 @@ func SeedFotosintesisData(db *gorm.DB) {
 	log.Printf("- SubMaterial 3: AR Lab (%g, %g)", arExperiment.OffsetX, arExperiment.OffsetY)
 	log.Println("- SubMaterial 4: Video Proses (implicitly positioned)")
 	log.Println("- SubMaterial 5: Flashcards & Quiz Final (implicitly positioned)")
+
+	// Additional seeding for video quizzes using the new system
+	log.Println("\n🎥 Seeding additional video quizzes for all fotosintesis modules...")
+	SeedVideoQuizzesForModule(db, "Fotosintesis - Dasar")
+	SeedVideoQuizzesForModule(db, "Fotosintesis - Lanjutan")
+	SeedVideoQuizzesForModule(db, "Fotosintesis - Eksperimen")
+	log.Println("✅ Additional video quizzes seeding completed!")
 }
 
 func createDummyUsersAndAnswers(db *gorm.DB) error {
