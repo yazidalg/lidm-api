@@ -197,6 +197,8 @@ func NewRoute(
 			moduleAdminGroup.POST("/create", moduleHandler.CreateModule)
 			moduleAdminGroup.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
 			moduleAdminGroup.PUT("/:id", moduleHandler.UpdateModule)
+			moduleAdminGroup.PUT("/:id/with-video", moduleHandler.UpdateModuleWithVideo)
+			moduleAdminGroup.POST("/ar-experiment", moduleHandler.AddARExperimentToModule)
 			moduleAdminGroup.DELETE("/:id", moduleHandler.DeleteModule)
 			moduleAdminGroup.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
 			moduleAdminGroup.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
@@ -329,7 +331,7 @@ func NewRoute(
 			fileUploadHandler := handlers.NewFileUploadHandler()
 			fileUploadHandler.UploadImage(c)
 		})
-		
+
 		// Multiple images upload
 		uploadGroup.POST("/images", func(c *gin.Context) {
 			fileUploadHandler := handlers.NewFileUploadHandler()

@@ -196,7 +196,7 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID format"})
 		return
 	}
-	
+
 	userID := uint(userIDFloat)
 
 	// Use the new method with progress information
@@ -506,5 +506,79 @@ func (h *ModuleHandler) GetAllModulesWithUnlockStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Modules retrieved successfully with unlock status",
 		"data":    results,
+	})
+}
+
+func (h *ModuleHandler) UpdateModuleWithVideo(c *gin.Context) {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid module ID"})
+		return
+	}
+
+	var request request.UpdateModuleWithVideoRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	moduleId, err := h.moduleService.GetModuleByID(uint32(id))
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   err.Error(),
+			"message": "Module not found",
+		})
+		return
+	}
+
+	result, err := h.moduleService.UpdateModuleWithVideo(uint32(moduleId.ID), request)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   err.Error(),
+			"message": "Failed to update module with video",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Module with video updated successfully",
+		"data":    result,
+	})
+}
+
+func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
+	var request request.AddARExperimentToModuleRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	// Check if module exists
+	_, err := h.moduleService.GetModuleByID(request.ModuleID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   err.Error(),
+			"message": "Module not found",
+		})
+		return
+	}
+
+	result, err := h.moduleService.AddARExperimentToModule(request)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   err.Error(),
+			"message": "Failed to add AR experiment to module",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "AR experiment added to module successfully",
+		"data":    result,
 	})
 }

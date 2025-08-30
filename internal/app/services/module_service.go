@@ -1,9 +1,12 @@
 package services
 
 import (
+	"time"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"gorm.io/gorm"
 )
 
 type ModuleServiceInterface interface {
@@ -15,16 +18,18 @@ type ModuleServiceInterface interface {
 	GetAllModulesWithProgress(userID uint) ([]map[string]interface{}, error)
 	GetAllModulesWithUnlockStatus(userID uint) ([]map[string]interface{}, error)
 	UpdateModule(id uint32, request request.UpdateModuleRequest) (*models.Module, error)
+	UpdateModuleWithVideo(id uint32, request request.UpdateModuleWithVideoRequest) (*models.Module, error)
 	DeleteModule(id uint32) error
+	AddARExperimentToModule(request request.AddARExperimentToModuleRequest) (*models.ARExperiment, error)
 }
 
 type moduleService struct {
-	moduleRepository        repositories.ModuleRepositoryInterface
-	progressRepo            repositories.ProgressRepositoryInterface
-	videoQuizRepo           repositories.VideoQuizRepositoryInterface
-	prequizRepo             repositories.PrequizRepositoryInterface
-	moduleProgressRepo      repositories.ModuleProgressRepositoryInterface
-	moduleProgressService   ModuleProgressServiceInterface
+	moduleRepository      repositories.ModuleRepositoryInterface
+	progressRepo          repositories.ProgressRepositoryInterface
+	videoQuizRepo         repositories.VideoQuizRepositoryInterface
+	prequizRepo           repositories.PrequizRepositoryInterface
+	moduleProgressRepo    repositories.ModuleProgressRepositoryInterface
+	moduleProgressService ModuleProgressServiceInterface
 }
 
 func NewModuleService(
@@ -94,9 +99,15 @@ func (s *moduleService) CreateModuleWithVideo(request request.CreateModuleWithVi
 	}
 
 	// Handle VideoMaterial
-	if len(request.VideoMaterial) > 0 {
+	if request.VideoMaterial != nil {
+		// Ensure VideoMaterial doesn't have pre-set ID to avoid conflicts
+		request.VideoMaterial.ID = 0
+		request.VideoMaterial.CreatedAt = time.Time{}
+		request.VideoMaterial.UpdatedAt = time.Time{}
+		request.VideoMaterial.DeletedAt = gorm.DeletedAt{}
+
 		// Take only the first VideoMaterial if multiple provided
-		module.VideoMaterial = &request.VideoMaterial[0]
+		module.VideoMaterial = request.VideoMaterial
 	}
 
 	result, err := s.moduleRepository.CreateModule(module)
@@ -197,6 +208,64 @@ func (s *moduleService) UpdateModule(id uint32, request request.UpdateModuleRequ
 	return result, nil
 }
 
+func (s *moduleService) UpdateModuleWithVideo(id uint32, request request.UpdateModuleWithVideoRequest) (*models.Module, error) {
+	module := &models.Module{
+		Title:       request.Title,
+		Description: request.Description,
+	}
+
+	// Handle optional fields
+	if request.OffsetX != nil {
+		module.OffsetX = uint16(*request.OffsetX)
+	}
+	if request.OffsetY != nil {
+		module.OffsetY = uint16(*request.OffsetY)
+	}
+	if request.Icon != nil {
+		module.Icon = *request.Icon
+	}
+	if request.Thumbnail != nil {
+		module.Thumbnail = *request.Thumbnail
+	}
+
+	// Handle VideoMaterial if provided
+	if request.VideoMaterial != nil {
+		request.VideoMaterial.ModuleID = uint(id)
+		module.VideoMaterial = request.VideoMaterial
+	}
+
+	// Handle ARExperiment if provided
+	if request.ARExperiment != nil {
+		request.ARExperiment.ModuleID = uint(id)
+		module.ARExperiment = request.ARExperiment
+	}
+
+	result, err := s.moduleRepository.UpdateModuleWithVideo(id, module)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (s *moduleService) AddARExperimentToModule(request request.AddARExperimentToModuleRequest) (*models.ARExperiment, error) {
+	arExperiment := &models.ARExperiment{
+		ModuleID:  uint(request.ModuleID),
+		Title:     request.Title,
+		LinkAR:    request.LinkAR,
+		LinkEmbed: request.LinkEmbed,
+		OffsetX:   request.OffsetX,
+		OffsetY:   request.OffsetY,
+	}
+
+	result, err := s.moduleRepository.CreateARExperiment(arExperiment)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 func (s *moduleService) DeleteModule(id uint32) error {
 	err := s.moduleRepository.DeleteModule(id)
 	if err != nil {
@@ -221,7 +290,7 @@ func (s *moduleService) GetAllModulesWithUnlockStatus(userID uint) ([]map[string
 	for _, module := range modules {
 		// Get module progress for this user
 		moduleProgress, err := s.moduleProgressService.GetUserModuleProgress(userID, module.ID)
-		
+
 		isUnlocked := false
 		isComplete := false
 		progress := float32(0)
@@ -245,7 +314,7 @@ func (s *moduleService) GetAllModulesWithUnlockStatus(userID uint) ([]map[string
 			hasAccess, _ := s.moduleProgressService.CheckModuleAccess(userID, module.ID)
 			isUnlocked = hasAccess
 		}
-		
+
 		// Calculate fresh progress using the calculation method
 		calculatedProgress, err := s.moduleProgressService.CalculateModuleProgress(userID, module.ID)
 		if err == nil {
@@ -269,14 +338,14 @@ func (s *moduleService) GetAllModulesWithUnlockStatus(userID uint) ([]map[string
 		// Get completion counts if module is unlocked
 		answeredPrequizzes := 0
 		answeredVideoQuizzes := 0
-		
+
 		// Get video quiz answers for all modules (needed for answered status)
 		videoAnswers, _ := s.videoQuizRepo.GetAllUserVideoQuizAnswers(userID)
 		answeredVideoMap := make(map[uint]bool)
 		for _, answer := range videoAnswers {
 			answeredVideoMap[answer.VideoQuizID] = true
 		}
-		
+
 		if isUnlocked {
 			userAnswers, _ := s.prequizRepo.GetUserPrequizAnswers(userID)
 			answeredPrequizMap := make(map[uint]bool)
@@ -309,21 +378,21 @@ func (s *moduleService) GetAllModulesWithUnlockStatus(userID uint) ([]map[string
 			"offset_y":    module.OffsetY,
 			"created_at":  module.CreatedAt,
 			"updated_at":  module.UpdatedAt,
-			
+
 			// Progress and unlock status
-			"is_unlocked":            isUnlocked,
-			"is_complete":            isComplete,
-			"progress":               progress,
-			"started_at":             startedAt,
-			"completed_at":           completedAt,
-			
+			"is_unlocked":  isUnlocked,
+			"is_complete":  isComplete,
+			"progress":     progress,
+			"started_at":   startedAt,
+			"completed_at": completedAt,
+
 			// Content counts
 			"total_prequizzes":       totalPrequizzes,
 			"answered_prequizzes":    answeredPrequizzes,
 			"total_video_quizzes":    totalVideoQuizzes,
 			"answered_video_quizzes": answeredVideoQuizzes,
 			"total_flashcards":       totalFlashcards,
-			
+
 			// Include content based on unlock status
 			"video_material": s.enrichVideoMaterialWithAnswers(module.VideoMaterial, answeredVideoMap), // Always show video_material with answered status
 			"ar_experiment": func() interface{} {
@@ -355,17 +424,17 @@ func (s *moduleService) enrichVideoMaterialWithAnswers(videoMaterial *models.Vid
 
 	// Create a copy of video material with answered status
 	enrichedVideoMaterial := map[string]interface{}{
-		"ID":              videoMaterial.ID,
-		"CreatedAt":       videoMaterial.CreatedAt,
-		"UpdatedAt":       videoMaterial.UpdatedAt,
-		"DeletedAt":       videoMaterial.DeletedAt,
-		"module_id":       videoMaterial.ModuleID,
-		"title":           videoMaterial.Title,
-		"youtube_link":    videoMaterial.YoutubeLink,
-		"duration":        videoMaterial.Duration,
-		"created_at":      videoMaterial.CreatedAt,
-		"updated_at":      videoMaterial.UpdatedAt,
-		"video_quizzes":   s.enrichVideoQuizzes(videoMaterial.VideoQuizzes, answeredVideoMap),
+		"ID":            videoMaterial.ID,
+		"CreatedAt":     videoMaterial.CreatedAt,
+		"UpdatedAt":     videoMaterial.UpdatedAt,
+		"DeletedAt":     videoMaterial.DeletedAt,
+		"module_id":     videoMaterial.ModuleID,
+		"title":         videoMaterial.Title,
+		"youtube_link":  videoMaterial.YoutubeLink,
+		"duration":      videoMaterial.Duration,
+		"created_at":    videoMaterial.CreatedAt,
+		"updated_at":    videoMaterial.UpdatedAt,
+		"video_quizzes": s.enrichVideoQuizzes(videoMaterial.VideoQuizzes, answeredVideoMap),
 	}
 
 	return enrichedVideoMaterial
@@ -410,7 +479,7 @@ func (s *moduleService) GetModuleByIDWithProgress(moduleID uint32, userID uint) 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	isUnlocked := false
 	for _, progress := range unlockedModules {
 		if progress.ModuleID == uint(moduleID) {
@@ -424,7 +493,7 @@ func (s *moduleService) GetModuleByIDWithProgress(moduleID uint32, userID uint) 
 	progress := float32(0)
 	var startedAt interface{} = nil
 	var completedAt interface{} = nil
-	
+
 	for _, mp := range moduleProgresses {
 		if mp.ModuleID == uint(moduleID) {
 			startedAt = mp.StartedAt
@@ -432,7 +501,7 @@ func (s *moduleService) GetModuleByIDWithProgress(moduleID uint32, userID uint) 
 			break
 		}
 	}
-	
+
 	// Calculate fresh progress using the calculation method
 	calculatedProgress, err := s.moduleProgressService.CalculateModuleProgress(userID, uint(moduleID))
 	if err == nil {
@@ -449,7 +518,7 @@ func (s *moduleService) GetModuleByIDWithProgress(moduleID uint32, userID uint) 
 
 	// Get all prequizzes (not limited like in GetModuleByID repository)
 	allPrequizzes, _ := s.prequizRepo.GetPrequizzesByModule(uint(moduleID), 0) // 0 means no limit
-	
+
 	for _, prequiz := range allPrequizzes {
 		if answeredPrequizMap[prequiz.ID] {
 			answeredPrequizzes++

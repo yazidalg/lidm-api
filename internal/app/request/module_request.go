@@ -28,5 +28,25 @@ type CreateModuleWithVideoRequest struct {
 	OffsetY       *float64              `json:"offset_y" binding:"omitempty"`
 	Icon          *string               `json:"icon" binding:"omitempty"`
 	Thumbnail     *string               `json:"thumbnail" binding:"omitempty"`
-	VideoMaterial []models.VideoMaterial `json:"video_material" binding:"omitempty"` // Still accept array for compatibility but use first element only
+	VideoMaterial *models.VideoMaterial `json:"video_material" binding:"omitempty"` // Still accept array for compatibility but use first element only
+}
+
+type AddARExperimentToModuleRequest struct {
+	ModuleID  uint32  `json:"module_id" binding:"required"`
+	Title     string  `json:"title" binding:"required"`
+	LinkAR    string  `json:"link_ar" binding:"omitempty"`
+	LinkEmbed string  `json:"link_embed" binding:"omitempty"`
+	OffsetX   float64 `json:"offset_x" binding:"omitempty"`
+	OffsetY   float64 `json:"offset_y" binding:"omitempty"`
+}
+
+type UpdateModuleWithVideoRequest struct {
+	Title         string                `json:"title" binding:"required"`
+	Description   string                `json:"description" binding:"required"`
+	OffsetX       *float64              `json:"offset_x" binding:"omitempty"`
+	OffsetY       *float64              `json:"offset_y" binding:"omitempty"`
+	Icon          *string               `json:"icon" binding:"omitempty"`
+	Thumbnail     *string               `json:"thumbnail" binding:"omitempty"`
+	VideoMaterial *models.VideoMaterial `json:"video_material" binding:"omitempty"`
+	ARExperiment  *models.ARExperiment  `json:"ar_experiment" binding:"omitempty"`
 }

@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"time"
+
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"gorm.io/gorm"
 )
@@ -10,7 +12,9 @@ type ModuleRepositoryInterface interface {
 	GetModuleByID(id uint32) (*models.Module, error)
 	GetAllModules() ([]models.Module, error)
 	UpdateModule(id uint32, module *models.Module) (*models.Module, error)
+	UpdateModuleWithVideo(id uint32, module *models.Module) (*models.Module, error)
 	DeleteModule(id uint32) error
+	CreateARExperiment(arExperiment *models.ARExperiment) (*models.ARExperiment, error)
 }
 
 type moduleRepository struct {
@@ -36,6 +40,25 @@ func (r *moduleRepository) CreateModule(module *models.Module) (*models.Module, 
 		// Set the ModuleID
 		module.VideoMaterial.ModuleID = module.ID
 
+		// Ensure VideoMaterial doesn't have a pre-set ID to avoid conflicts
+		module.VideoMaterial.ID = 0
+
+		// Reset timestamps to let GORM handle them
+		module.VideoMaterial.CreatedAt = time.Time{}
+		module.VideoMaterial.UpdatedAt = time.Time{}
+		module.VideoMaterial.DeletedAt = gorm.DeletedAt{}
+
+		// Handle VideoQuizzes if provided
+		if len(module.VideoMaterial.VideoQuizzes) > 0 {
+			for i := range module.VideoMaterial.VideoQuizzes {
+				// Reset ID and timestamps for each quiz
+				module.VideoMaterial.VideoQuizzes[i].ID = 0
+				module.VideoMaterial.VideoQuizzes[i].CreatedAt = time.Time{}
+				module.VideoMaterial.VideoQuizzes[i].UpdatedAt = time.Time{}
+				module.VideoMaterial.VideoQuizzes[i].DeletedAt = gorm.DeletedAt{}
+			}
+		}
+
 		// Create the video material
 		if err := tx.Create(module.VideoMaterial).Error; err != nil {
 			tx.Rollback()
@@ -56,11 +79,11 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 
 	// Preload semua komponen yang diperlukan untuk satu module: Video, AR, Prequizzes, dan Flashcards
 	err := r.db.
-		Preload("VideoMaterial").                                         // Video content
+		Preload("VideoMaterial").                                          // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment"). // AR experiments
+		Preload("ARExperiment").                           // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -85,7 +108,7 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment"). // AR experiments
+		Preload("ARExperiment").                           // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -103,6 +126,51 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 }
 
 func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*models.Module, error) {
+	existingModule, err := r.GetModuleByID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Update the module fields
+	existingModule.Title = module.Title
+	existingModule.Description = module.Description
+	existingModule.OffsetX = module.OffsetX
+	existingModule.OffsetY = module.OffsetY
+	existingModule.Icon = module.Icon
+	existingModule.Thumbnail = module.Thumbnail
+
+	// Use a transaction to ensure data integrity
+	tx := r.db.Begin()
+
+	// Update the module
+	if err := tx.Save(&existingModule).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Handle VideoMaterial creation if provided
+	if module.VideoMaterial != nil {
+		// Set the ModuleID
+		module.VideoMaterial.ModuleID = uint(id)
+
+		// Create the video material
+		if err := tx.Create(module.VideoMaterial).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	// Return the updated module with preloaded relationships
+	return r.GetModuleByID(id)
+}
+
+func (r *moduleRepository) UpdateModuleWithVideo(id uint32, module *models.Module) (*models.Module, error) {
 	existingModule, err := r.GetModuleByID(id)
 
 	if err != nil {
@@ -169,4 +237,22 @@ func (r *moduleRepository) DeleteModule(id uint32) error {
 	}
 
 	return nil
+}
+
+func (r *moduleRepository) CreateARExperiment(arExperiment *models.ARExperiment) (*models.ARExperiment, error) {
+	// Use a transaction to ensure data integrity
+	tx := r.db.Begin()
+
+	// Create the ARExperiment
+	if err := tx.Create(arExperiment).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return arExperiment, nil
 }
