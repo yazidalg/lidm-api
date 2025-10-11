@@ -353,12 +353,13 @@ func NewRoute(
 	flashcardGroup := router.Group("flashcard")
 	flashcardGroup.Use(authMiddleware.RequireAuth)
 	{
-		flashcardGroup.GET("/intervals", flashcardHandler.GetFlashcardIntervals)                             // Get interval options (1m, 5m, 7h, 10h)
-		flashcardGroup.POST("/module/:module_id/initialize", flashcardHandler.InitializeModuleFlashcards)   // Copy/initialize all flashcards in module
-		flashcardGroup.POST("/:flashcard_id/review", flashcardHandler.ReviewFlashcard)                      // Review flashcard with grade
-		flashcardGroup.POST("/:flashcard_id/initialize", flashcardHandler.InitializeFlashcard)             // Initialize single flashcard
-		flashcardGroup.GET("/due", flashcardHandler.GetDueFlashcards)                                       // Get due flashcards
-		flashcardGroup.GET("/stats", flashcardHandler.GetRetentionStats)                                    // Get retention statistics
+		flashcardGroup.GET("/all", flashcardHandler.GetAllFlashcards)                                     // Get all flashcards
+		flashcardGroup.GET("/intervals", flashcardHandler.GetFlashcardIntervals)                          // Get interval options (1m, 5m, 7h, 10h)
+		flashcardGroup.POST("/module/:module_id/initialize", flashcardHandler.InitializeModuleFlashcards) // Copy/initialize all flashcards in module
+		flashcardGroup.POST("/:flashcard_id/review", flashcardHandler.ReviewFlashcard)                    // Review flashcard with grade
+		flashcardGroup.POST("/:flashcard_id/initialize", flashcardHandler.InitializeFlashcard)            // Initialize single flashcard
+		flashcardGroup.GET("/due", flashcardHandler.GetDueFlashcards)                                     // Get due flashcards
+		flashcardGroup.GET("/stats", flashcardHandler.GetRetentionStats)                                  // Get retention statistics
 	}
 
 	return router

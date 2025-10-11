@@ -282,7 +282,8 @@ func NewBuildLeaderboard(db *gorm.DB) *handlers.LeaderboardHandler {
 func NewBuildFlashcard(db *gorm.DB) *handlers.FlashcardHandler {
 	flashcardProgressRepository := repositories.NewFlashcardProgressRepository(db)
 	moduleRepository := repositories.NewModuleRepository(db)
+	flashcardRepository := repositories.NewFlashcardRepository(db)
 	fsrsService := services.NewFSRSService(flashcardProgressRepository, moduleRepository)
-	flashcardHandler := handlers.NewFlashcardHandler(fsrsService, moduleRepository)
+	flashcardHandler := handlers.NewFlashcardHandler(fsrsService, moduleRepository, flashcardRepository)
 	return flashcardHandler
 }

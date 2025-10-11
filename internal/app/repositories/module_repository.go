@@ -189,19 +189,51 @@ func (r *moduleRepository) UpdateModuleWithVideo(id uint32, module *models.Modul
 	// Use a transaction to ensure data integrity
 	tx := r.db.Begin()
 
-	// Update the module
-	if err := tx.Save(&existingModule).Error; err != nil {
+	// Update the module using Model and Updates to avoid timestamp issues
+	if err := tx.Model(&existingModule).Updates(map[string]interface{}{
+		"title":       existingModule.Title,
+		"description": existingModule.Description,
+		"offset_x":    existingModule.OffsetX,
+		"offset_y":    existingModule.OffsetY,
+		"icon":        existingModule.Icon,
+		"thumbnail":   existingModule.Thumbnail,
+		"updated_at":  time.Now(), // Set current timestamp
+	}).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	// Handle VideoMaterial creation if provided
 	if module.VideoMaterial != nil {
+		// Reset ID and timestamps to let GORM auto-generate
+		module.VideoMaterial.ID = 0
+		module.VideoMaterial.CreatedAt = time.Time{}
+		module.VideoMaterial.UpdatedAt = time.Time{}
+		module.VideoMaterial.DeletedAt = gorm.DeletedAt{}
+
 		// Set the ModuleID
 		module.VideoMaterial.ModuleID = uint(id)
 
 		// Create the video material
 		if err := tx.Create(module.VideoMaterial).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	// Handle ARExperiment creation if provided
+	if module.ARExperiment != nil {
+		// Reset ID and timestamps to let GORM auto-generate
+		module.ARExperiment.ID = 0
+		module.ARExperiment.CreatedAt = time.Time{}
+		module.ARExperiment.UpdatedAt = time.Time{}
+		module.ARExperiment.DeletedAt = gorm.DeletedAt{}
+
+		// Set the ModuleID
+		module.ARExperiment.ModuleID = uint(id)
+
+		// Create the AR experiment
+		if err := tx.Create(module.ARExperiment).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}

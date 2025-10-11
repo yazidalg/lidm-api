@@ -230,12 +230,24 @@ func (s *moduleService) UpdateModuleWithVideo(id uint32, request request.UpdateM
 
 	// Handle VideoMaterial if provided
 	if request.VideoMaterial != nil {
+		// Reset ID and timestamps to let GORM auto-generate
+		request.VideoMaterial.ID = 0
+		request.VideoMaterial.CreatedAt = time.Time{}
+		request.VideoMaterial.UpdatedAt = time.Time{}
+		request.VideoMaterial.DeletedAt = gorm.DeletedAt{}
+
 		request.VideoMaterial.ModuleID = uint(id)
 		module.VideoMaterial = request.VideoMaterial
 	}
 
 	// Handle ARExperiment if provided
 	if request.ARExperiment != nil {
+		// Reset ID and timestamps to let GORM auto-generate
+		request.ARExperiment.ID = 0
+		request.ARExperiment.CreatedAt = time.Time{}
+		request.ARExperiment.UpdatedAt = time.Time{}
+		request.ARExperiment.DeletedAt = gorm.DeletedAt{}
+
 		request.ARExperiment.ModuleID = uint(id)
 		module.ARExperiment = request.ARExperiment
 	}

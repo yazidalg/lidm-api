@@ -12,15 +12,34 @@ import (
 )
 
 type FlashcardHandler struct {
-	fsrsService  services.FSRSServiceInterface
-	moduleRepo   repositories.ModuleRepositoryInterface
+	fsrsService   services.FSRSServiceInterface
+	moduleRepo    repositories.ModuleRepositoryInterface
+	flashcardRepo repositories.FlashcardRepositoryInterface
 }
 
-func NewFlashcardHandler(fsrsService services.FSRSServiceInterface, moduleRepo repositories.ModuleRepositoryInterface) *FlashcardHandler {
+func NewFlashcardHandler(fsrsService services.FSRSServiceInterface, moduleRepo repositories.ModuleRepositoryInterface, flashcardRepo repositories.FlashcardRepositoryInterface) *FlashcardHandler {
 	return &FlashcardHandler{
-		fsrsService: fsrsService,
-		moduleRepo:  moduleRepo,
+		fsrsService:   fsrsService,
+		moduleRepo:    moduleRepo,
+		flashcardRepo: flashcardRepo,
 	}
+}
+
+// GetAllFlashcards - Get all flashcards
+func (h *FlashcardHandler) GetAllFlashcards(c *gin.Context) {
+	flashcards, err := h.flashcardRepo.GetAllFlashcards()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch flashcards",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "All flashcards retrieved successfully",
+		"count":   len(flashcards),
+		"data":    flashcards,
+	})
 }
 
 // ReviewFlashcard - Review a flashcard with FSRS algorithm
@@ -286,7 +305,7 @@ func (h *FlashcardHandler) InitializeFlashcard(c *gin.Context) {
 func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 	flashcardIDParam := c.Query("flashcard_id")
 	moduleIDParam := c.Query("module_id")
-	
+
 	// If no parameters provided, return default intervals
 	if flashcardIDParam == "" && moduleIDParam == "" {
 		c.JSON(http.StatusOK, gin.H{
@@ -294,28 +313,28 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 			"data": gin.H{
 				"options": gin.H{
 					"ulang": gin.H{
-						"grade":        1,
-						"time":         "1m",
-						"description":  "Ulangi",
-						"color":        "#ef4444",
+						"grade":       1,
+						"time":        "1m",
+						"description": "Ulangi",
+						"color":       "#ef4444",
 					},
 					"sulit": gin.H{
-						"grade":        2,
-						"time":         "5m",
-						"description":  "Sulit", 
-						"color":        "#f59e0b",
+						"grade":       2,
+						"time":        "5m",
+						"description": "Sulit",
+						"color":       "#f59e0b",
 					},
 					"lumayan": gin.H{
-						"grade":        3,
-						"time":         "7h",
-						"description":  "Lumayan",
-						"color":        "#10b981",
+						"grade":       3,
+						"time":        "7h",
+						"description": "Lumayan",
+						"color":       "#10b981",
 					},
 					"mudah": gin.H{
-						"grade":        4,
-						"time":         "10h",
-						"description":  "Mudah",
-						"color":        "#3b82f6",
+						"grade":       4,
+						"time":        "10h",
+						"description": "Mudah",
+						"color":       "#3b82f6",
 					},
 				},
 				"usage": "Use the grade (1-4) when calling the review endpoint",
@@ -376,7 +395,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 
 		// Filter to only show flashcards that are due or never reviewed
 		dueFlashcardsInModule := make([]models.Flashcard, 0)
-		
+
 		for _, flashcard := range allFlashcards {
 			// Check if this flashcard is due for this user
 			isDue, err := h.fsrsService.IsFlashcardDue(uid, flashcard.ID)
@@ -385,7 +404,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 				dueFlashcardsInModule = append(dueFlashcardsInModule, flashcard)
 				continue
 			}
-			
+
 			// Only include if it's due (includes never reviewed flashcards)
 			if isDue {
 				dueFlashcardsInModule = append(dueFlashcardsInModule, flashcard)
@@ -394,27 +413,27 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 
 		// Generate schedule preview for each due flashcard
 		flashcardSchedules := make(map[string]interface{})
-		
+
 		// Track overall module review statistics from ALL flashcards in module (not just due ones)
 		moduleReviewStats := map[string]int{
 			"u": 0, // total ulang reviews
-			"s": 0, // total sulit reviews  
+			"s": 0, // total sulit reviews
 			"l": 0, // total lumayan reviews
 			"m": 0, // total mudah reviews
 		}
-		
+
 		// Calculate module stats from ALL flashcards in the module
 		for _, flashcard := range allFlashcards {
 			// Get review statistics for this flashcard and add to module total
 			reviewStats, err := h.fsrsService.GetFlashcardReviewStats(uid, flashcard.ID)
 			if err == nil {
 				moduleReviewStats["u"] += reviewStats["u"]
-				moduleReviewStats["s"] += reviewStats["s"] 
+				moduleReviewStats["s"] += reviewStats["s"]
 				moduleReviewStats["l"] += reviewStats["l"]
 				moduleReviewStats["m"] += reviewStats["m"]
 			}
 		}
-		
+
 		// Generate schedule preview only for due flashcards
 		for _, flashcard := range dueFlashcardsInModule {
 			schedule, err := h.fsrsService.GetNextReviewSchedule(uid, flashcard.ID, 0)
@@ -429,13 +448,13 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 				}
 				continue
 			}
-			
+
 			flashcardSchedules[fmt.Sprintf("flashcard_%d", flashcard.ID)] = gin.H{
-				"front_text":      flashcard.FrontText,
-				"back_text":       flashcard.BackText,
-				"order":           flashcard.Order,
-				"flashcard_id":    flashcard.ID,
-				"scheduleTimers":  schedule["scheduleTimers"],
+				"front_text":     flashcard.FrontText,
+				"back_text":      flashcard.BackText,
+				"order":          flashcard.Order,
+				"flashcard_id":   flashcard.ID,
+				"scheduleTimers": schedule["scheduleTimers"],
 			}
 		}
 
@@ -443,7 +462,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 			"message":     fmt.Sprintf("Module %d flashcard intervals", moduleID),
 			"module_id":   moduleID,
 			"count":       len(allFlashcards), // Total flashcards in module, not just due ones
-			"reviewStats": moduleReviewStats, // Overall module review statistics from ALL flashcards
+			"reviewStats": moduleReviewStats,  // Overall module review statistics from ALL flashcards
 			"data":        flashcardSchedules,
 		})
 		return
@@ -473,7 +492,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 		// If error getting stats, set to default
 		reviewStats = map[string]int{
 			"u": 0, // ulang
-			"s": 0, // sulit  
+			"s": 0, // sulit
 			"l": 0, // lumayan
 			"m": 0, // mudah
 		}
@@ -487,7 +506,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Flashcard schedule preview",
-		"data": scheduleWithStats,
+		"data":    scheduleWithStats,
 	})
 }
 
@@ -537,7 +556,7 @@ func (h *FlashcardHandler) InitializeModuleFlashcards(c *gin.Context) {
 	initializedCount, err := h.fsrsService.InitializeModuleFlashcards(uid, uint(moduleID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to initialize module flashcards",
+			"error":   "Failed to initialize module flashcards",
 			"details": err.Error(),
 		})
 		return
@@ -546,8 +565,8 @@ func (h *FlashcardHandler) InitializeModuleFlashcards(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Module flashcards initialized successfully",
 		"data": gin.H{
-			"module_id": moduleID,
-			"user_id": uid,
+			"module_id":         moduleID,
+			"user_id":           uid,
 			"initialized_count": initializedCount,
 		},
 	})

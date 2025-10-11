@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"github.com/yazidalg/lidm_backend/internal/app/response"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 	"github.com/yazidalg/lidm_backend/internal/utils"
 )
@@ -536,6 +537,21 @@ func (h *ModuleHandler) UpdateModuleWithVideo(c *gin.Context) {
 
 	result, err := h.moduleService.UpdateModuleWithVideo(uint32(moduleId.ID), request)
 
+	// Bentuk respons sesuai format yang Anda minta
+	response := response.CustomModuleResponse{
+		ID:            uint32(result.ID),
+		Title:         result.Title,
+		Description:   result.Description,
+		Thumbnail:     result.Thumbnail,
+		Icon:          result.Icon,
+		OffsetX:       int(result.OffsetX),
+		OffsetY:       int(result.OffsetY),
+		CreatedAt:     result.CreatedAt,
+		UpdatedAt:     result.UpdatedAt,
+		VideoMaterial: *result.VideoMaterial,
+		ARExperiment:  *result.ARExperiment,
+	}
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   err.Error(),
@@ -546,7 +562,7 @@ func (h *ModuleHandler) UpdateModuleWithVideo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Module with video updated successfully",
-		"data":    result,
+		"data":    response,
 	})
 }
 

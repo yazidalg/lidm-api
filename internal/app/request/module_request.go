@@ -41,6 +41,7 @@ type AddARExperimentToModuleRequest struct {
 }
 
 type UpdateModuleWithVideoRequest struct {
+	ModuleID      uint32                `json:"module_id" binding:"required"`
 	Title         string                `json:"title" binding:"required"`
 	Description   string                `json:"description" binding:"required"`
 	OffsetX       *float64              `json:"offset_x" binding:"omitempty"`
