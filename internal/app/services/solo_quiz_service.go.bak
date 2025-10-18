@@ -1,0 +1,411 @@
+package services
+
+import (
+	"errors"
+	"fmt"
+	"math/rand"
+	"time"
+
+	"github.com/yazidalg/lidm_backend/internal/app/models"
+	"github.com/yazidalg/lidm_backend/internal/app/repositories"
+	"github.com/yazidalg/lidm_backend/internal/utils"
+)
+
+type SoloQuizServiceInterface interface {
+	StartSoloQuiz(userID uint, moduleID uint) (*models.SoloQuiz, []models.Question, error)
+	SubmitAnswer(soloQuizID uint, questionID uint, userAnswer string, timeSpent int) (*AnswerResult, error)
+	GetQuizReview(soloQuizID uint, userID uint) (*models.SoloQuiz, error)
+	CompleteQuiz(soloQuizID uint) (*QuizCompletionResult, error)
+	GetUserSoloHistory(userID uint, limit int) ([]models.SoloQuiz, error)
+	CanUserPlayQuiz(userID uint) (*QuizAvailability, error)
+	ResetUserHealth(userID uint) error
+}
+
+type SoloQuizService struct {
+	userRepo        repositories.UserRepositoryInterface
+	questionRepo    repositories.QuestionRepositoryInterface
+	moduleRepo      repositories.ModuleRepositoryInterface
+	db              *gorm.DB // Untuk operasi solo quiz langsung
+}
+
+type AnswerResult struct {
+	IsCorrect     bool    `json:"is_correct"`
+	CorrectAnswer string  `json:"correct_answer"`
+	XPGained      int     `json:"xp_gained"`
+	BoosterXP     int     `json:"booster_xp"`
+	NewHealth     int     `json:"new_health"`
+	GameOver      bool    `json:"game_over"`
+	Explanation   string  `json:"explanation"`
+}
+
+type QuizCompletionResult struct {
+	TotalQuestions  int     `json:"total_questions"`
+	CorrectAnswers  int     `json:"correct_answers"`
+	WrongAnswers    int     `json:"wrong_answers"`
+	AccuracyRate    float64 `json:"accuracy_rate"`
+	TotalXP         int     `json:"total_xp"`
+	BaseXP          int     `json:"base_xp"`
+	BoosterXP       int     `json:"booster_xp"`
+	FinalHealth     int     `json:"final_health"`
+	Duration        int     `json:"duration"`
+	Status          string  `json:"status"`
+	IsWin           bool    `json:"is_win"`
+}
+
+type QuizAvailability struct {
+	CanPlay       bool   `json:"can_play"`
+	Health        int    `json:"health"`
+	MaxHealth     int    `json:"max_health"`
+	Reason        string `json:"reason,omitempty"`
+	NextResetTime *time.Time `json:"next_reset_time,omitempty"`
+}
+
+func NewSoloQuizService(
+	soloQuizRepo repositories.SoloQuizRepositoryInterface,
+	userRepo repositories.UserRepositoryInterface,
+	questionRepo repositories.QuestionRepositoryInterface,
+	moduleRepo repositories.ModuleRepositoryInterface,
+	xpHistoryRepo repositories.XPHistoryRepositoryInterface,
+	boosterRepo repositories.BoosterRepositoryInterface,
+) SoloQuizServiceInterface {
+	return &SoloQuizService{
+		soloQuizRepo:  soloQuizRepo,
+		userRepo:      userRepo,
+		questionRepo:  questionRepo,
+		moduleRepo:    moduleRepo,
+		xpHistoryRepo: xpHistoryRepo,
+		boosterRepo:   boosterRepo,
+	}
+}
+
+func (s *SoloQuizService) StartSoloQuiz(userID uint, moduleID uint) (*models.SoloQuiz, []models.Question, error) {
+	// 1. Cek apakah user bisa main quiz
+	availability, err := s.CanUserPlayQuiz(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !availability.CanPlay {
+		return nil, nil, errors.New(availability.Reason)
+	}
+
+	// 2. Reset health harian jika perlu
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	user.ResetDailyHealth()
+	s.userRepo.Update(user)
+
+	// 3. Ambil questions dari module
+	questions, err := s.questionRepo.GetByModuleID(moduleID, 10) // Max 10 pertanyaan
+	if err != nil || len(questions) == 0 {
+		return nil, nil, errors.New("no questions found for this module")
+	}
+
+	// 4. Shuffle questions
+	s.shuffleQuestions(questions)
+
+	// 5. Tentukan apakah ada booster
+	hasBooster, boosterType := s.generateBooster()
+
+	// 6. Buat solo quiz session
+	sessionCode := utils.GenerateUniqueCode()
+	soloQuiz := &models.SoloQuiz{
+		UserID:          userID,
+		ModuleID:        moduleID,
+		SessionCode:     sessionCode,
+		TotalQuestions:  len(questions),
+		CorrectAnswers:  0,
+		WrongAnswers:    0,
+		BaseXP:          0,
+		BoosterXP:       0,
+		TotalXP:         0,
+		AccuracyRate:    0,
+		Status:          "ongoing",
+		StartedAt:       time.Now(),
+		Duration:        0,
+		HasBooster:      hasBooster,
+		BoosterType:     boosterType,
+		InitialHealth:   user.Health,
+		CurrentHealth:   user.Health,
+		HealthLost:      0,
+		IsGameOver:      false,
+	}
+
+	// 7. Simpan ke database
+	createdQuiz, err := s.soloQuizRepo.Create(soloQuiz)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return createdQuiz, questions, nil
+}
+
+func (s *SoloQuizService) SubmitAnswer(soloQuizID uint, questionID uint, userAnswer string, timeSpent int) (*AnswerResult, error) {
+	// 1. Ambil quiz session
+	soloQuiz, err := s.soloQuizRepo.GetByID(soloQuizID)
+	if err != nil {
+		return nil, err
+	}
+
+	if soloQuiz.Status != "ongoing" {
+		return nil, errors.New("quiz is not active")
+	}
+
+	// 2. Ambil question dan jawaban yang benar
+	question, err := s.questionRepo.GetByID(questionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Cek apakah jawaban benar
+	isCorrect := (userAnswer == question.CorrectAnswer)
+
+	// 4. Hitung XP
+	baseXP := 10 // Base XP per correct answer
+	boosterXP := 0
+	
+	if isCorrect {
+		if soloQuiz.HasBooster {
+			boosterXP = s.calculateBoosterXP(baseXP, soloQuiz.BoosterType)
+		}
+	} else {
+		baseXP = -5 // Minus XP for wrong answer
+	}
+
+	// 5. Update health jika salah
+	newHealth := soloQuiz.CurrentHealth
+	gameOver := false
+	
+	if !isCorrect {
+		newHealth--
+		if newHealth <= 0 {
+			gameOver = true
+			soloQuiz.Status = "failed"
+			soloQuiz.IsGameOver = true
+		}
+	}
+
+	// 6. Simpan answer
+	answerData := &models.SoloQuizAnswer{
+		SoloQuizID:    soloQuizID,
+		QuestionID:    questionID,
+		UserAnswer:    userAnswer,
+		CorrectAnswer: question.CorrectAnswer,
+		IsCorrect:     isCorrect,
+		TimeSpent:     timeSpent,
+		QuestionText:  question.Question,
+		HasBooster:    soloQuiz.HasBooster && isCorrect,
+		BoosterXP:     boosterXP,
+		AnsweredAt:    time.Now(),
+	}
+
+	err = s.soloQuizRepo.CreateAnswer(answerData)
+	if err != nil {
+		return nil, err
+	}
+
+	// 7. Update quiz stats
+	if isCorrect {
+		soloQuiz.CorrectAnswers++
+		soloQuiz.BaseXP += baseXP
+		soloQuiz.BoosterXP += boosterXP
+	} else {
+		soloQuiz.WrongAnswers++
+		soloQuiz.BaseXP += baseXP // baseXP sudah minus
+		soloQuiz.HealthLost++
+	}
+
+	soloQuiz.CurrentHealth = newHealth
+	soloQuiz.TotalXP = soloQuiz.BaseXP + soloQuiz.BoosterXP
+	soloQuiz.AccuracyRate = float64(soloQuiz.CorrectAnswers) / float64(soloQuiz.CorrectAnswers+soloQuiz.WrongAnswers) * 100
+
+	// 8. Update user health
+	user, _ := s.userRepo.GetByID(soloQuiz.UserID)
+	if !isCorrect {
+		user.DeductHealth()
+		s.userRepo.Update(user)
+	}
+
+	// 9. Simpan perubahan quiz
+	s.soloQuizRepo.Update(soloQuiz)
+
+	return &AnswerResult{
+		IsCorrect:     isCorrect,
+		CorrectAnswer: question.CorrectAnswer,
+		XPGained:      baseXP,
+		BoosterXP:     boosterXP,
+		NewHealth:     newHealth,
+		GameOver:      gameOver,
+		Explanation:   question.Explanation,
+	}, nil
+}
+
+func (s *SoloQuizService) CompleteQuiz(soloQuizID uint) (*QuizCompletionResult, error) {
+	// 1. Ambil quiz session
+	soloQuiz, err := s.soloQuizRepo.GetByID(soloQuizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Update status jika belum selesai
+	if soloQuiz.Status == "ongoing" {
+		soloQuiz.Status = "completed"
+	}
+
+	// 3. Hitung durasi
+	now := time.Now()
+	soloQuiz.CompletedAt = &now
+	soloQuiz.Duration = int(now.Sub(soloQuiz.StartedAt).Seconds())
+
+	// 4. Tentukan apakah menang (accuracy >= 60%)
+	isWin := soloQuiz.AccuracyRate >= 60.0
+
+	// 5. Update user stats
+	user, err := s.userRepo.GetByID(soloQuiz.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	user.SoloQuizPlayed++
+	if isWin {
+		user.SoloQuizWon++
+	}
+
+	// Update average accuracy
+	if user.SoloQuizPlayed > 0 {
+		user.AverageAccuracy = (user.AverageAccuracy*float64(user.SoloQuizPlayed-1) + soloQuiz.AccuracyRate) / float64(user.SoloQuizPlayed)
+	}
+
+	// Add XP to user
+	if soloQuiz.TotalXP > 0 {
+		user.AddXP(int32(soloQuiz.TotalXP))
+	}
+
+	// 6. Simpan XP history
+	xpHistory := &models.UserXPHistory{
+		UserID:       user.ID,
+		SoloQuizID:   &soloQuizID,
+		ActivityType: "solo_quiz",
+		XPChange:     soloQuiz.TotalXP,
+		XPBefore:     int(user.TotalXP) - soloQuiz.TotalXP,
+		XPAfter:      int(user.TotalXP),
+		Reason:       fmt.Sprintf("Solo quiz completed with %.1f%% accuracy", soloQuiz.AccuracyRate),
+		HasBooster:   soloQuiz.HasBooster,
+		BoosterType:  soloQuiz.BoosterType,
+	}
+	s.xpHistoryRepo.Create(xpHistory)
+
+	// 7. Update database
+	s.soloQuizRepo.Update(soloQuiz)
+	s.userRepo.Update(user)
+
+	return &QuizCompletionResult{
+		TotalQuestions: soloQuiz.TotalQuestions,
+		CorrectAnswers: soloQuiz.CorrectAnswers,
+		WrongAnswers:   soloQuiz.WrongAnswers,
+		AccuracyRate:   soloQuiz.AccuracyRate,
+		TotalXP:        soloQuiz.TotalXP,
+		BaseXP:         soloQuiz.BaseXP,
+		BoosterXP:      soloQuiz.BoosterXP,
+		FinalHealth:    soloQuiz.CurrentHealth,
+		Duration:       soloQuiz.Duration,
+		Status:         soloQuiz.Status,
+		IsWin:          isWin,
+	}, nil
+}
+
+func (s *SoloQuizService) GetQuizReview(soloQuizID uint, userID uint) (*models.SoloQuiz, error) {
+	soloQuiz, err := s.soloQuizRepo.GetByIDWithAnswers(soloQuizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Pastikan quiz milik user yang request
+	if soloQuiz.UserID != userID {
+		return nil, errors.New("unauthorized access to quiz review")
+	}
+
+	return soloQuiz, nil
+}
+
+func (s *SoloQuizService) GetUserSoloHistory(userID uint, limit int) ([]models.SoloQuiz, error) {
+	return s.soloQuizRepo.GetByUserID(userID, limit)
+}
+
+func (s *SoloQuizService) CanUserPlayQuiz(userID uint) (*QuizAvailability, error) {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reset health jika hari baru
+	user.ResetDailyHealth()
+
+	if !user.CanPlayQuiz() {
+		nextReset := s.getNextHealthReset()
+		return &QuizAvailability{
+			CanPlay:       false,
+			Health:        user.Health,
+			MaxHealth:     user.MaxHealth,
+			Reason:        "No health remaining. Health will reset tomorrow.",
+			NextResetTime: &nextReset,
+		}, nil
+	}
+
+	return &QuizAvailability{
+		CanPlay:   true,
+		Health:    user.Health,
+		MaxHealth: user.MaxHealth,
+	}, nil
+}
+
+func (s *SoloQuizService) ResetUserHealth(userID uint) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	user.Health = user.MaxHealth
+	now := time.Now()
+	user.LastHealthReset = &now
+
+	return s.userRepo.Update(user)
+}
+
+// Helper methods
+func (s *SoloQuizService) shuffleQuestions(questions []models.Question) {
+	rand.Seed(time.Now().UnixNano())
+	for i := range questions {
+		j := rand.Intn(i + 1)
+		questions[i], questions[j] = questions[j], questions[i]
+	}
+}
+
+func (s *SoloQuizService) generateBooster() (bool, string) {
+	// 30% chance untuk booster
+	if rand.Float64() < 0.3 {
+		boosters := []string{"2x", "3x", "lucky"}
+		return true, boosters[rand.Intn(len(boosters))]
+	}
+	return false, ""
+}
+
+func (s *SoloQuizService) calculateBoosterXP(baseXP int, boosterType string) int {
+	switch boosterType {
+	case "2x":
+		return baseXP
+	case "3x":
+		return baseXP * 2
+	case "lucky":
+		return baseXP * 5 // Lucky bonus
+	default:
+		return 0
+	}
+}
+
+func (s *SoloQuizService) getNextHealthReset() time.Time {
+	now := time.Now()
+	tomorrow := now.AddDate(0, 0, 1)
+	return time.Date(tomorrow.Year(), tomorrow.Month(), tomorrow.Day(), 0, 0, 0, 0, tomorrow.Location())
+}
