@@ -411,8 +411,8 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 			}
 		}
 
-		// Generate schedule preview for each due flashcard
-		flashcardSchedules := make(map[string]interface{})
+		// Generate schedule preview for each due flashcard (using array instead of map)
+		flashcardSchedules := make([]interface{}, 0)
 
 		// Track overall module review statistics from ALL flashcards in module (not just due ones)
 		moduleReviewStats := map[string]int{
@@ -439,23 +439,23 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 			schedule, err := h.fsrsService.GetNextReviewSchedule(uid, flashcard.ID, 0)
 			if err != nil {
 				// If error, use basic info
-				flashcardSchedules[fmt.Sprintf("flashcard_%d", flashcard.ID)] = gin.H{
+				flashcardSchedules = append(flashcardSchedules, gin.H{
 					"front_text":   flashcard.FrontText,
 					"back_text":    flashcard.BackText,
 					"order":        flashcard.Order,
 					"flashcard_id": flashcard.ID,
 					"error":        "Failed to get schedule",
-				}
+				})
 				continue
 			}
 
-			flashcardSchedules[fmt.Sprintf("flashcard_%d", flashcard.ID)] = gin.H{
+			flashcardSchedules = append(flashcardSchedules, gin.H{
 				"front_text":     flashcard.FrontText,
 				"back_text":      flashcard.BackText,
 				"order":          flashcard.Order,
 				"flashcard_id":   flashcard.ID,
 				"scheduleTimers": schedule["scheduleTimers"],
-			}
+			})
 		}
 
 		c.JSON(http.StatusOK, gin.H{
