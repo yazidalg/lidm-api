@@ -43,7 +43,7 @@ COPY --from=builder /app/main .
 
 # Expose the port your app will listen on. This is for documentation.
 # Cloud Run will set the PORT environment variable at runtime.
-EXPOSE 3000
+EXPOSE 8080
 
 # The command to run your application.
 CMD ["./main"]
