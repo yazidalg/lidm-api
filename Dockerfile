@@ -25,4 +25,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 # Opsional: minimal tambahan CA tools
 RUN apk add --no-cache ca-certificates
 
+EXPORT 3000
+
 CMD ["./main"]
