@@ -31,26 +31,36 @@ func LoadEnv() {
 }
 
 func ConnectDB() *gorm.DB {
-	var err error
-
-	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
+	instanceConnectionName := os.Getenv("DB_HOST") // this is your instance connection name
+	env := os.Getenv("ENV")
 
-	// Format: user:password@tcp(host:port)/dbname?parseTime=true&loc=Local
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		dbUser, dbPassword, dbHost, dbPort, dbName,
-	)
+	var dsn string
+	if env == "production" {
+		// Use Cloud SQL Unix socket
+		dsn = fmt.Sprintf(
+			"%s:%s@unix(/cloudsql/%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+			dbUser, dbPassword, instanceConnectionName, dbName,
+		)
+	} else {
+		// Local development connection
+		dbHost := os.Getenv("DB_HOST")
+		dbPort := os.Getenv("DB_PORT")
+		dsn = fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+			dbUser, dbPassword, dbHost, dbPort, dbName,
+		)
+	}
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to connect to MySQL database: %v", err))
+		panic(fmt.Sprintf("Failed to connect to MySQL: %v", err))
 	}
 
 	return db
 }
+
