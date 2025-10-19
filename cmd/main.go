@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt" // Import the fmt package
 	"os"
 	"strings"
 
@@ -80,5 +81,14 @@ func main() {
 	// Start Socket.IO server (mounts /socket.io endpoints)
 	socketio.StartSocketIOServer(router, questionService, quizService, userServiceForSocket, participantService)
 
-	router.Run(":3000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+
+	fmt.Printf("🚀 Starting server on port %s\n", port)
+	err := router.Run(":" + port)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to start server: %v", err))
+	}
 }
