@@ -4,7 +4,9 @@ import (
 	"fmt" // Import the fmt package
 	"os"
 	"strings"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/config"
 	"github.com/yazidalg/lidm_backend/internal/database"
 	"github.com/yazidalg/lidm_backend/internal/helpers"
@@ -13,9 +15,18 @@ import (
 )
 
 func main() {
+	fmt.Println("🚀 Starting LIDM Backend...")
+
 	config.LoadEnv()
+	fmt.Println("✅ Environment loaded")
+
+	fmt.Println("🔌 Connecting to database...")
 	db := config.ConnectDB()
+	fmt.Println("✅ Database connected")
+
+	fmt.Println("📊 Running database migrations...")
 	database.Migrate(db)
+	fmt.Println("✅ Database migrations completed")
 
 	// Optional quiz seeding via env: SEED_QUIZ_MODULES="Module Title 1,Module Title 2"
 	if modsEnv := os.Getenv("SEED_QUIZ_MODULES"); modsEnv != "" {
@@ -79,16 +90,30 @@ func main() {
 	)
 
 	// Start Socket.IO server (mounts /socket.io endpoints)
+	fmt.Println("🔌 Starting Socket.IO server...")
 	socketio.StartSocketIOServer(router, questionService, quizService, userServiceForSocket, participantService)
+	fmt.Println("✅ Socket.IO server started")
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	fmt.Printf("🚀 Starting server on port %s\n", port)
-	err := router.Run(":" + port)
+	fmt.Printf("🌐 Starting HTTP server on port %s\n", port)
+	fmt.Printf("📡 Server will listen on 0.0.0.0:%s\n", port)
+
+	// Add a health check endpoint
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":    "healthy",
+			"port":      port,
+			"timestamp": time.Now().Unix(),
+		})
+	})
+
+	err := router.Run("0.0.0.0:" + port)
 	if err != nil {
+		fmt.Printf("❌ Failed to start server: %v\n", err)
 		panic(fmt.Sprintf("Failed to start server: %v", err))
 	}
 }

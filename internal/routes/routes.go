@@ -31,9 +31,31 @@ func NewRoute(
 ) *gin.Engine {
 	router := gin.Default()
 
-	// Enable CORS for localhost:5173
+	// Enable CORS - configurable for different environments
 	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
+		origin := c.Request.Header.Get("Origin")
+		allowedOrigins := []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			// "https://your-frontend-domain.com", // Replace with your actual frontend domain
+		}
+
+		// Allow requests from allowed origins or if no origin (like Postman)
+		allowOrigin := ""
+		if origin == "" {
+			allowOrigin = "*"
+		} else {
+			for _, allowed := range allowedOrigins {
+				if origin == allowed {
+					allowOrigin = origin
+					break
+				}
+			}
+		}
+
+		if allowOrigin != "" {
+			c.Header("Access-Control-Allow-Origin", allowOrigin)
+		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
 		c.Header("Access-Control-Allow-Credentials", "true")

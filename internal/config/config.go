@@ -58,9 +58,11 @@ func ConnectDB() *gorm.DB {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
+		log.Printf("❌ Database connection failed: %v", err)
+		log.Printf("🔍 Connection string: %s", dsn)
 		panic(fmt.Sprintf("Failed to connect to MySQL: %v", err))
 	}
 
+	log.Printf("✅ Database connected successfully")
 	return db
 }
-

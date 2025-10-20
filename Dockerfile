@@ -41,6 +41,9 @@ WORKDIR /app
 # Copy ONLY the compiled binary and any necessary static assets from the builder stage.
 COPY --from=builder /app/main .
 
+# Create necessary directories
+RUN mkdir -p uploads/icons
+
 # Expose the port your app will listen on. This is for documentation.
 # Cloud Run will set the PORT environment variable at runtime.
 EXPOSE 8080
