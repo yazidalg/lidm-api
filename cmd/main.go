@@ -83,7 +83,7 @@ func main() {
 		prequizHandler,
 		videoQuizHandler,
 		authMiddleware,
-		roleHandler, // Add roleHandler parameter
+		roleHandler,
 		activityHandler,
 		activityService,
 		dashboardHandler,
