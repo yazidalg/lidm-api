@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/config"
 	"github.com/yazidalg/lidm_backend/internal/database"
 	"github.com/yazidalg/lidm_backend/internal/helpers"
@@ -15,6 +14,7 @@ import (
 )
 
 func main() {
+	startTime := time.Now()
 	fmt.Println("🚀 Starting LIDM Backend...")
 
 	config.LoadEnv()
@@ -59,6 +59,8 @@ func main() {
 	dashboardHandler := helpers.NewBuildDashboard(db)
 	leaderboardHandler := helpers.NewBuildLeaderboard(db)
 	flashcardHandler := helpers.NewBuildFlashcard(db)
+	// Health handler for monitoring
+	healthHandler := helpers.NewBuildHealth(db, startTime)
 	// User service khusus untuk socket (lives & xp)
 	userServiceForSocket := helpers.NewUserServiceOnly(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService, userServiceForSocket)
@@ -87,6 +89,7 @@ func main() {
 		dashboardHandler,
 		leaderboardHandler,
 		flashcardHandler,
+		healthHandler,
 	)
 
 	// Start Socket.IO server (mounts /socket.io endpoints)
@@ -101,15 +104,6 @@ func main() {
 
 	fmt.Printf("🌐 Starting HTTP server on port %s\n", port)
 	fmt.Printf("📡 Server will listen on 0.0.0.0:%s\n", port)
-
-	// Add a health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":    "healthy",
-			"port":      port,
-			"timestamp": time.Now().Unix(),
-		})
-	})
 
 	err := router.Run("0.0.0.0:" + port)
 	if err != nil {

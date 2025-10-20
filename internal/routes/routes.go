@@ -28,6 +28,7 @@ func NewRoute(
 	dashboardHandler *handlers.DashboardHandler,
 	leaderboardHandler *handlers.LeaderboardHandler,
 	flashcardHandler *handlers.FlashcardHandler,
+	healthHandler *handlers.HealthHandler,
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -79,6 +80,11 @@ func NewRoute(
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "Welcome to the API"})
 	})
+
+	// Health check routes (public - no auth required)
+	router.GET("/health", healthHandler.Health)
+	router.GET("/ready", healthHandler.Ready)
+	router.GET("/healthy", healthHandler.Healthy)
 
 	// Public routes (tidak perlu auth)
 	authGroupHandler := router.Group("auth")
