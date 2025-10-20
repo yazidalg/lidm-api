@@ -26,6 +26,8 @@ const (
 	EventAnswerResult   = "answer_result"
 	EventQuizCompleted  = "quiz_completed"
 	EventJoinQuiz       = "join_quiz"
+	// New: join single-player quiz by module id (no quiz lobby needed)
+	EventJoinQuizByModule = "join_quiz_by_module"
 	EventStartQuiz      = "start_quiz"
 	EventLivesExhausted = "lives_exhausted"
 	EventUserJoin       = "user_join"
@@ -51,6 +53,14 @@ type SocketQuizSession struct {
 	QuestionSvc services.QuestionServiceInterface
 	QuizSvc     services.QuizServiceInterface
 	UserSvc     services.UserServiceInterface
+
+	// scoring & summary
+	CorrectCount int
+	WrongCount   int
+	BoostUsed    int
+	PointsEarned int
+	// boosters per question id (so FE and BE agree)
+	QuestionBoosters map[uint]int
 }
 
 func NewSocketQuizSession(sock *socket.Socket, quiz *models.Quiz, questions []models.Question, qSvc services.QuestionServiceInterface, quizSvc services.QuizServiceInterface, userSvc services.UserServiceInterface) *SocketQuizSession {
@@ -59,7 +69,7 @@ func NewSocketQuizSession(sock *socket.Socket, quiz *models.Quiz, questions []mo
 
 func (s *SocketQuizSession) emitQuestion() {
 	if s.CurrentIdx >= len(s.Questions) {
-		s.Socket.Emit(EventQuizCompleted, gin.H{"message": "Quiz finished"})
+		s.emitSummary("Quiz finished")
 		return
 	}
 	q := s.Questions[s.CurrentIdx]
@@ -80,13 +90,40 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	// Compare by index to be case-insensitive and robust
 	correct := optionIndex(option) == optionIndex(q.CorrectAnswer)
 	if correct {
-		_ = s.UserSvc.AddXP(userID, 10)
+		// compute earned points with booster
+		booster := 0
+		if s.QuestionBoosters != nil {
+			booster = s.QuestionBoosters[q.ID]
+		}
+		if booster > 0 {
+			s.BoostUsed++
+		}
+		earned := 10
+		if booster > 0 {
+			earned = earned * booster
+		}
+	s.CorrectCount++
+	s.PointsEarned += earned
+	_ = s.UserSvc.AddXP(userID, int32(earned))
 	} else {
-		quiz, _ := s.QuizSvc.GetQuizByID(s.Quiz.ID)
-		if quiz != nil && quiz.Mode == "single_player" {
+		s.WrongCount++
+		// Determine mode without requiring a persisted quiz
+		mode := "single_player"
+		if s.Quiz != nil && s.Quiz.Mode != "" {
+			mode = s.Quiz.Mode
+		} else if s.QuizSvc != nil && s.Quiz != nil && s.Quiz.ID != 0 {
+			if quiz, err := s.QuizSvc.GetQuizByID(s.Quiz.ID); err == nil && quiz != nil && quiz.Mode != "" {
+				mode = quiz.Mode
+			}
+		}
+		if mode == "single_player" {
 			_ = s.UserSvc.DecrementLife(userID)
 			if u, err := s.UserSvc.GetUserByIDUint(userID); err == nil && u != nil && u.Lives <= 0 {
 				s.Socket.Emit(EventLivesExhausted, gin.H{"message": "Lives exhausted", "lives": u.Lives})
+				s.emitSummary("Lives exhausted")
+				// Stop further progression
+				s.CurrentIdx = len(s.Questions)
+				return
 			}
 		}
 	}
@@ -102,7 +139,40 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	s.Answered[q.ID] = true
 	// no question_ended event
 	s.CurrentIdx++
-	go func() { time.Sleep(time.Second); s.emitQuestion() }()
+	// If this was the last question, emit completion immediately to avoid race/missed event
+	if s.CurrentIdx >= len(s.Questions) {
+		s.emitQuestion()
+	} else {
+		go func() { time.Sleep(time.Second); s.emitQuestion() }()
+	}
+}
+
+// emitSummary sends the final quiz_completed payload for single-player
+func (s *SocketQuizSession) emitSummary(message string) {
+	total := len(s.Questions)
+	accuracy := 0.0
+	if total > 0 {
+		accuracy = float64(s.CorrectCount) / float64(total)
+	}
+	neededCorrect := (total + 1) / 2 // ceil(50%)
+	gap := neededCorrect - s.CorrectCount
+	if gap < 0 {
+		gap = 0
+	}
+	penalty := gap * 5 // 5 points per missing correct to reach 50%
+
+	s.Socket.Emit(EventQuizCompleted, gin.H{
+		"message":         message,
+		"total_questions": total,
+		"benar":           s.CorrectCount,
+		"salah":           s.WrongCount,
+		"boost":           s.BoostUsed,
+		"points": gin.H{
+			"earned":       s.PointsEarned,
+			"delta_type":   func() string { if accuracy >= 0.5 { return "plus" } else { return "minus" } }(),
+			"delta_amount": func() int { if accuracy >= 0.5 { return s.PointsEarned } else { return penalty } }(),
+		},
+	})
 }
 
 // Multiplayer session (simplified)
@@ -860,12 +930,98 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			if err != nil || qs == nil || len(*qs) == 0 {
 				return
 			}
+			// Precompute boosters for determinism between FE/BE
+			boosters := genBoosters(len(*qs))
 			singleSess = NewSocketQuizSession(client, quiz, *qs, questionSvc, quizSvc, userSvc)
+			singleSess.QuestionBoosters = make(map[uint]int)
+			for i, qq := range *qs {
+				idx := i
+				if idx < len(boosters) {
+					singleSess.QuestionBoosters[qq.ID] = boosters[idx]
+				}
+			}
 			client.Emit(EventStartQuiz, gin.H{
 				"quiz_id":         quiz.ID,
 				"total_questions": len(singleSess.Questions),
-				"questions":       sanitizeQuestions(singleSess.Questions),
+				"questions":       sanitizeQuestionsWithBoosters(singleSess.Questions, boosters),
 				"mode":            quiz.Mode,
+			})
+			singleSess.emitQuestion()
+		})
+
+		// join_quiz_by_module (single-player by module_id)
+		client.On(EventJoinQuizByModule, func(args ...any) {
+			// Supports: ({ module_id, user_id, question_count? }) | (module_id, user_id[, question_count]) | JSON string
+			var moduleID uint
+			var userID uint
+			questionCount := 10
+			parsed := false
+
+			if len(args) == 1 {
+				switch v := args[0].(type) {
+				case map[string]any:
+					if midf, ok := v["module_id"].(float64); ok { moduleID = uint(midf) }
+					if uidf, ok := v["user_id"].(float64); ok { userID = uint(uidf) }
+					if qc, ok := v["question_count"].(float64); ok && int(qc) > 0 { questionCount = int(qc) }
+					parsed = moduleID != 0 && userID != 0
+				case string:
+					s := strings.TrimSpace(v)
+					if strings.HasPrefix(s, "{") {
+						var obj map[string]any
+						if err := json.Unmarshal([]byte(s), &obj); err == nil {
+							if midf, ok := obj["module_id"].(float64); ok { moduleID = uint(midf) }
+							if uidf, ok := obj["user_id"].(float64); ok { userID = uint(uidf) }
+							if qc, ok := obj["question_count"].(float64); ok && int(qc) > 0 { questionCount = int(qc) }
+							parsed = moduleID != 0 && userID != 0
+						}
+					}
+				}
+			} else if len(args) >= 2 {
+				if midf, ok := args[0].(float64); ok { moduleID = uint(midf) }
+				if uidf, ok := args[1].(float64); ok { userID = uint(uidf) }
+				if len(args) >= 3 {
+					if qc, ok := args[2].(float64); ok && int(qc) > 0 { questionCount = int(qc) }
+				}
+				parsed = moduleID != 0 && userID != 0
+			}
+
+			if !parsed {
+				client.Emit(EventLobbyError, gin.H{"error": "invalid_args", "args": args})
+				return
+			}
+
+			// Prefer mode-specific question API
+			var qs *[]models.Question
+			var err error
+			qs, err = questionSvc.GetQuestionsByModuleAndMode(moduleID, "single_player")
+			if err != nil || qs == nil || len(*qs) == 0 {
+				qs, err = questionSvc.GetRandomQuestionsByModule(moduleID, questionCount)
+				if err != nil || qs == nil || len(*qs) == 0 {
+					client.Emit(EventLobbyError, gin.H{"error": "no_questions", "module_id": moduleID})
+					return
+				}
+			}
+
+			// Create synthetic quiz metadata for session (not persisted)
+			syntheticQuiz := &models.Quiz{Mode: "single_player"}
+			syntheticQuiz.ModuleID = new(uint)
+			*syntheticQuiz.ModuleID = moduleID
+
+			// Precompute boosters for determinism
+			boosters := genBoosters(len(*qs))
+			singleSess = NewSocketQuizSession(client, syntheticQuiz, *qs, questionSvc, quizSvc, userSvc)
+			singleSess.QuestionBoosters = make(map[uint]int)
+			for i, qq := range *qs {
+				if i < len(boosters) {
+					singleSess.QuestionBoosters[qq.ID] = boosters[i]
+				}
+			}
+			client.Emit(EventStartQuiz, gin.H{
+				"quiz_id":         0, // no persisted quiz id
+				"module_id":       moduleID,
+				"total_questions": len(singleSess.Questions),
+				"questions":       sanitizeQuestionsWithBoosters(singleSess.Questions, boosters),
+				"mode":            "single_player",
 			})
 			singleSess.emitQuestion()
 		})
@@ -904,7 +1060,8 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 					if uidf, ok := v["user_id"].(float64); ok {
 						userID = uint(uidf)
 					}
-					parsed = quizID != 0 && questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
+					// Allow quiz_id == 0 for module mode
+					parsed = questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
 				case string:
 					s := strings.TrimSpace(v)
 					if strings.HasPrefix(s, "{") {
@@ -932,7 +1089,8 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 							if uidf, ok := obj["user_id"].(float64); ok {
 								userID = uint(uidf)
 							}
-							parsed = quizID != 0 && questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
+							// Allow quiz_id == 0 for module mode
+							parsed = questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
 						}
 					}
 				}
@@ -956,7 +1114,8 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 						questionID = uint(qnidf)
 						option = opt
 						userID = uint(uidf)
-						parsed = true
+						// Allow quiz_id == 0 (module mode)
+						parsed = questionID != 0 && (option != "" || selectedIndex != nil) && userID != 0
 					}
 				}
 			}
@@ -1111,6 +1270,47 @@ func sanitizeQuestions(qs []models.Question) []map[string]any {
 			"booster":     booster,
 			// Expose correct answer as requested by FE
 			"correct_index":  optionIndex(q.CorrectAnswer),
+			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
+			"explanation":    q.Explanation,
+		})
+	}
+	return out
+}
+
+// genBoosters creates a deterministic booster slice for N questions.
+// We base it on a simple repeating pattern for predictability: [0,2,0,3,0,5] ...
+func genBoosters(n int) []int {
+	pattern := []int{0, 2, 0, 3, 0, 5}
+	out := make([]int, n)
+	for i := 0; i < n; i++ {
+		out[i] = pattern[i%len(pattern)]
+	}
+	return out
+}
+
+// sanitizeQuestionsWithBoosters uses provided boosters instead of random assignment
+func sanitizeQuestionsWithBoosters(qs []models.Question, boosters []int) []map[string]any {
+	out := make([]map[string]any, 0, len(qs))
+	for i, q := range qs {
+		booster := 0
+		if i < len(boosters) {
+			booster = boosters[i]
+		}
+		out = append(out, map[string]any{
+			"id":          q.ID,
+			"question_id": q.ID,
+			"question":    q.Question,
+			"options": map[string]any{
+				"a": q.Options.OptionA,
+				"b": q.Options.OptionB,
+				"c": q.Options.OptionC,
+				"d": q.Options.OptionD,
+			},
+			"read_time":     q.ReadTime,
+			"answer_time":   q.AnswerTime,
+			"module_id":     q.ModuleID,
+			"booster":       booster,
+			"correct_index": optionIndex(q.CorrectAnswer),
 			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
 			"explanation":    q.Explanation,
 		})
