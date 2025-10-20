@@ -1,6 +1,8 @@
 package helpers
 
 import (
+	"time"
+
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
@@ -286,4 +288,9 @@ func NewBuildFlashcard(db *gorm.DB) *handlers.FlashcardHandler {
 	fsrsService := services.NewFSRSService(flashcardProgressRepository, moduleRepository)
 	flashcardHandler := handlers.NewFlashcardHandler(fsrsService, moduleRepository, flashcardRepository)
 	return flashcardHandler
+}
+
+func NewBuildHealth(db *gorm.DB, startTime time.Time) *handlers.HealthHandler {
+	healthHandler := handlers.NewHealthHandler(db, startTime)
+	return healthHandler
 }

@@ -13,44 +13,92 @@ import (
 
 var DB *gorm.DB
 
+// LoadEnv loads .env only in non-production environments
 func LoadEnv() {
 	env := os.Getenv("ENV")
 	if env == "" {
-		env = "development" // default to dev if ENV is not set
+		env = "development"
 	}
 
 	if env != "production" {
 		if err := godotenv.Load(); err != nil {
-			log.Println("No .env file found, skipping...")
+			log.Println("⚠️  No .env file found, skipping...")
 		} else {
-			log.Println(".env file loaded")
+			log.Println("✅ .env file loaded")
 		}
 	} else {
-		log.Println("Production environment, skipping .env load")
+		log.Println("🌍 Production environment detected — skipping .env load")
 	}
 }
 
+// ConnectDB opens a MySQL connection using GORM
 func ConnectDB() *gorm.DB {
-	var err error
-
-	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
+	env := os.Getenv("ENV")
 
-	// Format: user:password@tcp(host:port)/dbname?parseTime=true&loc=Local
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		dbUser, dbPassword, dbHost, dbPort, dbName,
-	)
+	// Validate required environment variables
+	if dbUser == "" {
+		log.Fatal("❌ DB_USER environment variable is not set")
+	}
+	if dbPassword == "" {
+		log.Fatal("❌ DB_PASSWORD environment variable is not set")
+	}
+	if dbName == "" {
+		log.Fatal("❌ DB_NAME environment variable is not set")
+	}
+
+	var dsn string
+
+	if env == "production" {
+		// -----------------------------
+		// Cloud SQL connection (Unix socket)
+		// -----------------------------
+		instanceConnectionName := os.Getenv("INSTANCE_CONNECTION_NAME") // e.g. "project:region:instance"
+		if instanceConnectionName == "" {
+			// Fallback to DB_HOST if INSTANCE_CONNECTION_NAME is not set
+			instanceConnectionName = os.Getenv("DB_HOST")
+			if instanceConnectionName == "" {
+				log.Fatal("❌ Both INSTANCE_CONNECTION_NAME and DB_HOST are not set")
+			}
+		}
+
+		dsn = fmt.Sprintf(
+			"%s:%s@unix(/cloudsql/%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+			dbUser, dbPassword, instanceConnectionName, dbName,
+		)
+		log.Printf("🔗 Connecting to Cloud SQL via /cloudsql/%s", instanceConnectionName)
+
+	} else {
+		// -----------------------------
+		// Local dev (TCP connection)
+		// -----------------------------
+		dbHost := os.Getenv("DB_HOST")
+		dbPort := os.Getenv("DB_PORT")
+		if dbHost == "" {
+			dbHost = "127.0.0.1"
+		}
+		if dbPort == "" {
+			dbPort = "3306"
+		}
+
+		dsn = fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+			dbUser, dbPassword, dbHost, dbPort, dbName,
+		)
+		log.Printf("🔗 Connecting to local DB at %s:%s", dbHost, dbPort)
+	}
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to connect to MySQL database: %v", err))
+		log.Printf("❌ Database connection failed: %v", err)
+		log.Printf("🔍 DSN used: %s", dsn)
+		panic(fmt.Sprintf("Failed to connect to MySQL: %v", err))
 	}
 
+	log.Println("✅ Database connected successfully")
 	return db
 }

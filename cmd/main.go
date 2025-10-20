@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt" // Import the fmt package
 	"os"
 	"strings"
+	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/config"
 	"github.com/yazidalg/lidm_backend/internal/database"
@@ -12,9 +14,19 @@ import (
 )
 
 func main() {
+	startTime := time.Now()
+	fmt.Println("🚀 Starting LIDM Backend...")
+
 	config.LoadEnv()
+	fmt.Println("✅ Environment loaded")
+
+	fmt.Println("🔌 Connecting to database...")
 	db := config.ConnectDB()
+	fmt.Println("✅ Database connected")
+
+	fmt.Println("📊 Running database migrations...")
 	database.Migrate(db)
+	fmt.Println("✅ Database migrations completed")
 
 	// Optional quiz seeding via env: SEED_QUIZ_MODULES="Module Title 1,Module Title 2"
 	if modsEnv := os.Getenv("SEED_QUIZ_MODULES"); modsEnv != "" {
@@ -47,6 +59,8 @@ func main() {
 	dashboardHandler := helpers.NewBuildDashboard(db)
 	leaderboardHandler := helpers.NewBuildLeaderboard(db)
 	flashcardHandler := helpers.NewBuildFlashcard(db)
+	// Health handler for monitoring
+	healthHandler := helpers.NewBuildHealth(db, startTime)
 	// User service khusus untuk socket (lives & xp)
 	userServiceForSocket := helpers.NewUserServiceOnly(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService, userServiceForSocket)
@@ -69,16 +83,31 @@ func main() {
 		prequizHandler,
 		videoQuizHandler,
 		authMiddleware,
-		roleHandler, // Add roleHandler parameter
+		roleHandler,
 		activityHandler,
 		activityService,
 		dashboardHandler,
 		leaderboardHandler,
 		flashcardHandler,
+		healthHandler,
 	)
 
 	// Start Socket.IO server (mounts /socket.io endpoints)
+	fmt.Println("🔌 Starting Socket.IO server...")
 	socketio.StartSocketIOServer(router, questionService, quizService, userServiceForSocket, participantService)
+	fmt.Println("✅ Socket.IO server started")
 
-	router.Run(":3000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	fmt.Printf("🌐 Starting HTTP server on port %s\n", port)
+	fmt.Printf("📡 Server will listen on 0.0.0.0:%s\n", port)
+
+	err := router.Run("0.0.0.0:" + port)
+	if err != nil {
+		fmt.Printf("❌ Failed to start server: %v\n", err)
+		panic(fmt.Sprintf("Failed to start server: %v", err))
+	}
 }
