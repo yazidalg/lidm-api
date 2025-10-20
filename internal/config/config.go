@@ -38,6 +38,17 @@ func ConnectDB() *gorm.DB {
 	dbName := os.Getenv("DB_NAME")
 	env := os.Getenv("ENV")
 
+	// Validate required environment variables
+	if dbUser == "" {
+		log.Fatal("❌ DB_USER environment variable is not set")
+	}
+	if dbPassword == "" {
+		log.Fatal("❌ DB_PASSWORD environment variable is not set")
+	}
+	if dbName == "" {
+		log.Fatal("❌ DB_NAME environment variable is not set")
+	}
+
 	var dsn string
 
 	if env == "production" {
@@ -46,7 +57,11 @@ func ConnectDB() *gorm.DB {
 		// -----------------------------
 		instanceConnectionName := os.Getenv("INSTANCE_CONNECTION_NAME") // e.g. "project:region:instance"
 		if instanceConnectionName == "" {
-			log.Fatal("❌ INSTANCE_CONNECTION_NAME is not set")
+			// Fallback to DB_HOST if INSTANCE_CONNECTION_NAME is not set
+			instanceConnectionName = os.Getenv("DB_HOST")
+			if instanceConnectionName == "" {
+				log.Fatal("❌ Both INSTANCE_CONNECTION_NAME and DB_HOST are not set")
+			}
 		}
 
 		dsn = fmt.Sprintf(
