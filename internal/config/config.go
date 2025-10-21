@@ -40,13 +40,16 @@ func ConnectDB() *gorm.DB {
 
 	// Validate required environment variables
 	if dbUser == "" {
-		log.Fatal("❌ DB_USER environment variable is not set")
+		log.Printf("⚠️  DB_USER environment variable is not set, using default")
+		dbUser = "root"
 	}
 	if dbPassword == "" {
-		log.Fatal("❌ DB_PASSWORD environment variable is not set")
+		log.Printf("⚠️  DB_PASSWORD environment variable is not set, using empty password")
+		dbPassword = ""
 	}
 	if dbName == "" {
-		log.Fatal("❌ DB_NAME environment variable is not set")
+		log.Printf("⚠️  DB_NAME environment variable is not set, using default")
+		dbName = "lidm_db"
 	}
 
 	var dsn string
@@ -96,6 +99,13 @@ func ConnectDB() *gorm.DB {
 	if err != nil {
 		log.Printf("❌ Database connection failed: %v", err)
 		log.Printf("🔍 DSN used: %s", dsn)
+
+		// For Cloud Run, don't panic immediately - try to continue without DB
+		if env == "production" {
+			log.Printf("⚠️  Production environment: continuing without database connection")
+			return nil
+		}
+
 		panic(fmt.Sprintf("Failed to connect to MySQL: %v", err))
 	}
 

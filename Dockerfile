@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install git only if you have private modules, otherwise it's not needed.
 # ca-certificates are needed for 'go mod download' to talk to HTTPS servers.
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates git
 
 # Copy dependency files and download them. This is cached.
 COPY go.mod go.sum ./
@@ -43,6 +43,10 @@ COPY --from=builder /app/main .
 
 # Cloud Run will set the PORT environment variable at runtime.
 EXPOSE 8080
+
+# Set environment variables for Cloud Run
+ENV ENV=production
+ENV PORT=8080
 
 # The command to run your application.
 CMD ["./main"]
