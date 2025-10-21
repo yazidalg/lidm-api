@@ -1,8 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"fmt" // Import the fmt package
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +14,6 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/helpers"
 	"github.com/yazidalg/lidm_backend/internal/realtime/socketio"
 	"github.com/yazidalg/lidm_backend/internal/routes"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -21,15 +23,16 @@ func main() {
 	config.LoadEnv()
 	fmt.Println("✅ Environment loaded")
 
-	// Get port
+	// Start HTTP server first to satisfy Cloud Run health checks
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
 	fmt.Printf("🌐 Starting HTTP server on port %s\n", port)
+	fmt.Printf("📡 Server will listen on 0.0.0.0:%s\n", port)
 
-	// Create router
+	// Create a basic router first for health checks
 	router := gin.Default()
 
 	// Add basic health check endpoint immediately
@@ -45,42 +48,69 @@ func main() {
 		c.JSON(200, gin.H{"message": "Welcome to the API"})
 	})
 
-	// Try to connect to database and initialize full app
-	fmt.Println("🔌 Attempting database connection...")
-	db := config.ConnectDB()
-	if db != nil {
-		fmt.Println("✅ Database connected")
-
-		// Run migrations
-		fmt.Println("📊 Running database migrations...")
-		if err := database.Migrate(db); err != nil {
-			fmt.Printf("❌ Database migration failed: %v\n", err)
-		} else {
-			fmt.Println("✅ Database migrations completed")
-
-			// Initialize full application routes
-			fmt.Println("🔧 Initializing full application...")
-			initializeFullRoutes(router, db, startTime)
-		}
-	} else {
-		fmt.Println("⚠️  Database connection failed, running in basic mode")
+	// Start server in a goroutine to allow database connection
+	server := &http.Server{
+		Addr:    "0.0.0.0:" + port,
+		Handler: router,
 	}
 
-	// Start server
-	fmt.Printf("📡 Server listening on 0.0.0.0:%s\n", port)
-	if err := router.Run("0.0.0.0:" + port); err != nil {
-		fmt.Printf("❌ Failed to start server: %v\n", err)
-		panic(err)
-	}
-}
-
-// initializeFullRoutes adds all the full application routes
-func initializeFullRoutes(router *gin.Engine, db *gorm.DB, startTime time.Time) {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("❌ Panic in route initialization: %v\n", r)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("❌ Failed to start initial server: %v\n", err)
 		}
 	}()
+
+	// Give the server a moment to start
+	time.Sleep(1 * time.Second)
+
+	fmt.Println("🔌 Connecting to database...")
+	db := config.ConnectDB()
+	if db == nil {
+		fmt.Println("⚠️  Database connection failed, starting in limited mode...")
+		// Start a basic server without database features
+		basicRouter := gin.Default()
+		basicRouter.GET("/health", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"status":    "ok",
+				"timestamp": time.Now().Unix(),
+				"uptime":    time.Since(startTime).Seconds(),
+				"mode":      "limited",
+			})
+		})
+		basicRouter.GET("/", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "Welcome to the API (Limited Mode)"})
+		})
+
+		// Gracefully shutdown the initial server
+		server.Shutdown(context.TODO())
+
+		// Start the basic server
+		basicServer := &http.Server{
+			Addr:    "0.0.0.0:" + port,
+			Handler: basicRouter,
+		}
+
+		fmt.Printf("✅ Basic server started on port %s (limited mode)\n", port)
+		if err := basicServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("❌ Failed to start basic server: %v\n", err)
+			panic(fmt.Sprintf("Failed to start basic server: %v", err))
+		}
+		return
+	}
+	fmt.Println("✅ Database connected")
+
+	fmt.Println("📊 Running database migrations...")
+	database.Migrate(db)
+	fmt.Println("✅ Database migrations completed")
+
+	// Optional quiz seeding via env: SEED_QUIZ_MODULES="Module Title 1,Module Title 2"
+	if modsEnv := os.Getenv("SEED_QUIZ_MODULES"); modsEnv != "" {
+		modules := strings.Split(modsEnv, ",")
+		for i := range modules {
+			modules[i] = strings.TrimSpace(modules[i])
+		}
+		database.SeedQuizData(db, modules)
+	}
 
 	// Build middleware
 	authMiddleware := helpers.NewBuildAuthMiddleware(db)
@@ -96,6 +126,7 @@ func initializeFullRoutes(router *gin.Engine, db *gorm.DB, startTime time.Time) 
 	quizHandler, quizService := helpers.NewBuildQuiz(db)
 	quizSessionHandler, quizSessionService := helpers.NewBuildQuizSession(db)
 	moduleHandler := helpers.NewBuildModule(db)
+
 	progressHandler := helpers.NewBuildProgress(db)
 	prequizHandler, prequizService := helpers.NewBuildPrequiz(db)
 	videoQuizHandler, videoQuizService := helpers.NewBuildVideoQuiz(db)
@@ -103,11 +134,13 @@ func initializeFullRoutes(router *gin.Engine, db *gorm.DB, startTime time.Time) 
 	dashboardHandler := helpers.NewBuildDashboard(db)
 	leaderboardHandler := helpers.NewBuildLeaderboard(db)
 	flashcardHandler := helpers.NewBuildFlashcard(db)
+	// Health handler for monitoring
 	healthHandler := helpers.NewBuildHealth(db, startTime)
+	// User service khusus untuk socket (lives & xp)
 	userServiceForSocket := helpers.NewUserServiceOnly(db)
 	socketHandler := helpers.NewBuildSocket(questionService, quizService, participantService, prequizService, quizSessionService, userServiceForSocket)
 
-	// Suppress unused variable warning
+	// Suppress unused variable warning for videoQuizService if needed
 	_ = videoQuizService
 
 	// Create the full application router
@@ -135,30 +168,26 @@ func initializeFullRoutes(router *gin.Engine, db *gorm.DB, startTime time.Time) 
 		healthHandler,
 	)
 
-	// Start Socket.IO server
+	// Start Socket.IO server (mounts /socket.io endpoints)
 	fmt.Println("🔌 Starting Socket.IO server...")
 	socketio.StartSocketIOServer(fullRouter, questionService, quizService, userServiceForSocket, participantService)
 	fmt.Println("✅ Socket.IO server started")
 
-	// Add all routes from fullRouter to the current router
-	addRoutesToRouter(router, fullRouter)
+	// Gracefully shutdown the initial server and start the full application
+	fmt.Println("🔄 Restarting server with full application...")
+	server.Shutdown(context.TODO())
 
-	fmt.Println("✅ Full application routes initialized")
-}
+	// Start the full application server
+	fullServer := &http.Server{
+		Addr:    "0.0.0.0:" + port,
+		Handler: fullRouter,
+	}
 
-// addRoutesToRouter copies routes from source to destination router
-func addRoutesToRouter(dest, src *gin.Engine) {
-	// This is a simplified approach - we'll add the essential routes manually
-	// to avoid the sync.Pool copying issue
+	fmt.Printf("✅ Full application server started on port %s\n", port)
 
-	// Add basic routes that are commonly used
-	dest.GET("/ready", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ready"})
-	})
-
-	dest.GET("/healthy", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "healthy"})
-	})
-
-	fmt.Println("✅ Essential routes added to router")
+	// Keep the application running
+	if err := fullServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		fmt.Printf("❌ Failed to start full server: %v\n", err)
+		panic(fmt.Sprintf("Failed to start full server: %v", err))
+	}
 }
