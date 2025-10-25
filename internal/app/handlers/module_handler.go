@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/response"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
@@ -571,6 +572,33 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		return
+	}
+
+	// Check if user is admin
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "User not found in context",
+			"message": "Authentication required",
+		})
+		return
+	}
+
+	userModel, ok := user.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Invalid user data",
+			"message": "Failed to process user information",
+		})
+		return
+	}
+
+	if !userModel.IsAdmin() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":   "Admin access required",
+			"message": "Only administrators can add AR experiments to modules",
+		})
 		return
 	}
 
