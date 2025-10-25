@@ -598,3 +598,56 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 		"data":    result,
 	})
 }
+
+// GetAllModulesAdmin returns all modules for admin use (no user-specific data) with pagination
+func (h *ModuleHandler) GetAllModulesAdmin(c *gin.Context) {
+	// Parse pagination parameters
+	pageParam := c.DefaultQuery("page", "1")
+	limitParam := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageParam)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(limitParam)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	// Set maximum limit to prevent abuse
+	if limit > 100 {
+		limit = 100
+	}
+
+	// Calculate offset
+	offset := (page - 1) * limit
+
+	results, totalCount, err := h.moduleService.GetAllModulesWithPagination(limit, offset)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to retrieve modules",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// Calculate pagination metadata
+	totalPages := (totalCount + int64(limit) - 1) / int64(limit)
+	hasNext := page < int(totalPages)
+	hasPrev := page > 1
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "All modules retrieved successfully",
+		"data":    results,
+		"pagination": gin.H{
+			"current_page": page,
+			"per_page":     limit,
+			"total_count":  totalCount,
+			"total_pages":  totalPages,
+			"has_next":     hasNext,
+			"has_previous": hasPrev,
+		},
+	})
+}

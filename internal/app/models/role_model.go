@@ -19,8 +19,9 @@ type Role struct {
 
 // Role constants
 const (
-	RoleUserName  = "user"
-	RoleAdminName = "admin"
+	RoleUserName    = "user"
+	RoleAdminName   = "admin"
+	RoleTeacherName = "teacher"
 )
 
 // Helper methods
@@ -30,6 +31,10 @@ func (r *Role) IsAdmin() bool {
 
 func (r *Role) IsUser() bool {
 	return r.Name == RoleUserName
+}
+
+func (r *Role) IsTeacher() bool {
+	return r.Name == RoleTeacherName
 }
 
 // Seed data function
@@ -42,6 +47,10 @@ func SeedRoles(db *gorm.DB) error {
 		{
 			Name:        RoleAdminName,
 			Description: "Administrator with full permissions",
+		},
+		{
+			Name:        RoleTeacherName,
+			Description: "Teacher with educational content management permissions",
 		},
 	}
 

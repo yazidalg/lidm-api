@@ -221,17 +221,24 @@ func NewRoute(
 	moduleGroupHandler.Use(activityMiddleware.TrackActivity()) // Track module activities
 	{
 		// Admin only routes
-		moduleAdminGroup := moduleGroupHandler.Group("")
+		moduleAdminGroup := moduleGroupHandler.Group("admin")
 		moduleAdminGroup.Use(authMiddleware.RequireAdmin)
 		{
-			moduleAdminGroup.POST("/create", moduleHandler.CreateModule)
-			moduleAdminGroup.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
-			moduleAdminGroup.PUT("/:id", moduleHandler.UpdateModule)
-			moduleAdminGroup.PUT("/:id/with-video", moduleHandler.UpdateModuleWithVideo)
-			moduleAdminGroup.POST("/ar-experiment", moduleHandler.AddARExperimentToModule)
-			moduleAdminGroup.DELETE("/:id", moduleHandler.DeleteModule)
-			moduleAdminGroup.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
-			moduleAdminGroup.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
+			moduleAdminGroup.GET("/all", moduleHandler.GetAllModulesAdmin)
+		}
+
+		// Admin only routes (original admin group)
+		moduleAdminGroupOriginal := moduleGroupHandler.Group("")
+		moduleAdminGroupOriginal.Use(authMiddleware.RequireAdmin)
+		{
+			moduleAdminGroupOriginal.POST("/create", moduleHandler.CreateModule)
+			moduleAdminGroupOriginal.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
+			moduleAdminGroupOriginal.PUT("/:id", moduleHandler.UpdateModule)
+			moduleAdminGroupOriginal.PUT("/:id/with-video", moduleHandler.UpdateModuleWithVideo)
+			moduleAdminGroupOriginal.POST("/ar-experiment", moduleHandler.AddARExperimentToModule)
+			moduleAdminGroupOriginal.DELETE("/:id", moduleHandler.DeleteModule)
+			moduleAdminGroupOriginal.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
+			moduleAdminGroupOriginal.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
 		}
 
 		// User accessible routes (register more specific pattern before generic one)
