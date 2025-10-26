@@ -15,6 +15,7 @@ type ModuleServiceInterface interface {
 	GetModuleByID(id uint32) (*models.Module, error)
 	GetModuleByIDWithProgress(moduleID uint32, userID uint) (interface{}, error)
 	GetAllModules() ([]models.Module, error)
+	GetAllModulesWithPagination(limit, offset int) ([]models.Module, int64, error)
 	GetAllModulesWithProgress(userID uint) ([]map[string]interface{}, error)
 	GetAllModulesWithUnlockStatus(userID uint) ([]map[string]interface{}, error)
 	UpdateModule(id uint32, request request.UpdateModuleRequest) (*models.Module, error)
@@ -134,6 +135,15 @@ func (s *moduleService) GetAllModules() ([]models.Module, error) {
 	}
 
 	return result, nil
+}
+
+func (s *moduleService) GetAllModulesWithPagination(limit, offset int) ([]models.Module, int64, error) {
+	result, totalCount, err := s.moduleRepository.GetAllModulesWithPagination(limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return result, totalCount, nil
 }
 
 func (s *moduleService) GetAllModulesWithProgress(userID uint) ([]map[string]interface{}, error) {

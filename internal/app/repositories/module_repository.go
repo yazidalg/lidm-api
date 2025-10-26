@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -11,6 +12,7 @@ type ModuleRepositoryInterface interface {
 	CreateModule(module *models.Module) (*models.Module, error)
 	GetModuleByID(id uint32) (*models.Module, error)
 	GetAllModules() ([]models.Module, error)
+	GetAllModulesWithPagination(limit, offset int) ([]models.Module, int64, error)
 	UpdateModule(id uint32, module *models.Module) (*models.Module, error)
 	UpdateModuleWithVideo(id uint32, module *models.Module) (*models.Module, error)
 	DeleteModule(id uint32) error
@@ -109,7 +111,9 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiments
+		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
+			return db.Order("ar_experiments.created_at ASC")
+		}).                                                // AR experiments
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -119,11 +123,52 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
 
+	for _, module := range modules {
+		fmt.Println("ANJEENG ====> ✅", module.ARExperiment)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	return modules, nil
+}
+
+func (r *moduleRepository) GetAllModulesWithPagination(limit, offset int) ([]models.Module, int64, error) {
+	var modules []models.Module
+	var totalCount int64
+
+	// First, get the total count
+	err := r.db.Model(&models.Module{}).Count(&totalCount).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Then get the paginated results with preloads
+	err = r.db.
+		Preload("VideoMaterial").                                          // Video content
+		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
+			return db.Order("video_quizzes.timestamp_start ASC")
+		}).
+		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
+			return db.Order("ar_experiments.created_at ASC")
+		}).                                                // AR experiments
+		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
+			return db.Order("prequizzes.created_at ASC")
+		}).
+		Preload("Flashcards", func(db *gorm.DB) *gorm.DB { // Load flashcards ordered by order
+			return db.Order("flashcards.`order` ASC")
+		}).
+		Order("created_at ASC"). // Order modules by creation
+		Limit(limit).
+		Offset(offset).
+		Find(&modules).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return modules, totalCount, nil
 }
 
 func (r *moduleRepository) UpdateModule(id uint32, module *models.Module) (*models.Module, error) {

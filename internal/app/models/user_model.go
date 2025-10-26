@@ -34,8 +34,9 @@ type User struct {
 }
 
 const (
-	RoleUser  = "user"
-	RoleAdmin = "admin"
+	RoleUser    = "user"
+	RoleAdmin   = "admin"
+	RoleTeacher = "teacher"
 )
 
 func (u *User) IsAdmin() bool {
@@ -44,4 +45,8 @@ func (u *User) IsAdmin() bool {
 
 func (u *User) IsUser() bool {
 	return u.Role.Name == RoleUser
+}
+
+func (u *User) IsTeacher() bool {
+	return u.Role.Name == RoleTeacher
 }

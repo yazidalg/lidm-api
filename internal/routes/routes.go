@@ -118,9 +118,9 @@ func NewRoute(
 	questionGroupHandler := router.Group("question")
 	questionGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		questionAdminGroup := questionGroupHandler.Group("")
-		questionAdminGroup.Use(authMiddleware.RequireAdmin)
+		questionAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			questionAdminGroup.POST("/create", questionHandler.CreateQuestion)
 			questionAdminGroup.PUT("/:id", questionHandler.UpdateQuestion)
@@ -137,9 +137,9 @@ func NewRoute(
 	answerGroupHandler := router.Group("answer")
 	answerGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		answerAdminGroup := answerGroupHandler.Group("")
-		answerAdminGroup.Use(authMiddleware.RequireAdmin)
+		answerAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			answerAdminGroup.POST("/create", answerHandler.CreateAnswer)
 			answerAdminGroup.PUT("/:id", answerHandler.UpdateAnswer)
@@ -155,9 +155,9 @@ func NewRoute(
 	participantGroupHandler := router.Group("participant")
 	participantGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		participantAdminGroup := participantGroupHandler.Group("")
-		participantAdminGroup.Use(authMiddleware.RequireAdmin)
+		participantAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			participantAdminGroup.GET("/all", participantHandler.GetAllParticipants)
 			participantAdminGroup.PUT("/:id", participantHandler.UpdateParticipant)
@@ -176,9 +176,9 @@ func NewRoute(
 	quizGroupHandler.Use(authMiddleware.RequireAuth)
 	quizGroupHandler.Use(activityMiddleware.TrackActivity()) // Track quiz activities
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		quizAdminGroup := quizGroupHandler.Group("")
-		quizAdminGroup.Use(authMiddleware.RequireAdmin)
+		quizAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			quizAdminGroup.PUT("/:id", quizHandler.UpdateQuiz)
 			quizAdminGroup.DELETE("/:id", quizHandler.DeleteQuiz)
@@ -220,18 +220,25 @@ func NewRoute(
 	moduleGroupHandler.Use(authMiddleware.RequireAuth)
 	moduleGroupHandler.Use(activityMiddleware.TrackActivity()) // Track module activities
 	{
-		// Admin only routes
-		moduleAdminGroup := moduleGroupHandler.Group("")
-		moduleAdminGroup.Use(authMiddleware.RequireAdmin)
+		// Admin and Teacher routes
+		moduleAdminGroup := moduleGroupHandler.Group("admin")
+		moduleAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
-			moduleAdminGroup.POST("/create", moduleHandler.CreateModule)
-			moduleAdminGroup.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
-			moduleAdminGroup.PUT("/:id", moduleHandler.UpdateModule)
-			moduleAdminGroup.PUT("/:id/with-video", moduleHandler.UpdateModuleWithVideo)
-			moduleAdminGroup.POST("/ar-experiment", moduleHandler.AddARExperimentToModule)
-			moduleAdminGroup.DELETE("/:id", moduleHandler.DeleteModule)
-			moduleAdminGroup.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
-			moduleAdminGroup.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
+			moduleAdminGroup.GET("/all", moduleHandler.GetAllModulesAdmin)
+		}
+
+		// Admin and Teacher routes (original admin group)
+		moduleAdminGroupOriginal := moduleGroupHandler.Group("")
+		moduleAdminGroupOriginal.Use(authMiddleware.RequireAdminOrTeacher)
+		{
+			moduleAdminGroupOriginal.POST("/create", moduleHandler.CreateModule)
+			moduleAdminGroupOriginal.POST("/create-with-video", moduleHandler.CreateModuleWithVideo)
+			moduleAdminGroupOriginal.PUT("/:id", moduleHandler.UpdateModule)
+			moduleAdminGroupOriginal.PUT("/:id/with-video", moduleHandler.UpdateModuleWithVideo)
+			moduleAdminGroupOriginal.POST("/ar-experiment", moduleHandler.AddARExperimentToModule)
+			moduleAdminGroupOriginal.DELETE("/:id", moduleHandler.DeleteModule)
+			moduleAdminGroupOriginal.POST("/:id/upload-icon", moduleHandler.UploadModuleIcon)
+			moduleAdminGroupOriginal.DELETE("/:id/delete-icon", moduleHandler.DeleteModuleIcon)
 		}
 
 		// User accessible routes (register more specific pattern before generic one)
@@ -247,9 +254,9 @@ func NewRoute(
 	progressGroupHandler := router.Group("progress")
 	progressGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		progressAdminGroup := progressGroupHandler.Group("")
-		progressAdminGroup.Use(authMiddleware.RequireAdmin)
+		progressAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			progressAdminGroup.GET("/all", progressHandler.GetAllProgress)
 		}
@@ -265,9 +272,9 @@ func NewRoute(
 	prequizGroupHandler := router.Group("prequiz")
 	prequizGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes
+		// Admin and Teacher routes
 		prequizAdminGroup := prequizGroupHandler.Group("")
-		prequizAdminGroup.Use(authMiddleware.RequireAdmin)
+		prequizAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			prequizAdminGroup.POST("/create", prequizHandler.CreatePrequiz)
 			prequizAdminGroup.PUT("/:id", prequizHandler.UpdatePrequiz)
@@ -285,9 +292,9 @@ func NewRoute(
 	videoQuizGroupHandler := router.Group("video-quiz")
 	videoQuizGroupHandler.Use(authMiddleware.RequireAuth)
 	{
-		// Admin only routes for Create, Update, Delete
+		// Admin and Teacher routes for Create, Update, Delete
 		videoQuizAdminGroup := videoQuizGroupHandler.Group("")
-		videoQuizAdminGroup.Use(authMiddleware.RequireAdmin)
+		videoQuizAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			videoQuizAdminGroup.POST("/create", videoQuizHandler.CreateVideoQuiz)
 			videoQuizAdminGroup.PUT("/:id", videoQuizHandler.UpdateVideoQuiz)
@@ -335,9 +342,9 @@ func NewRoute(
 		activityGroup.GET("/most-active", activityHandler.GetMostActiveUsers)                  // Summary version
 		activityGroup.GET("/most-active-detailed", activityHandler.GetMostActiveUsersDetailed) // Detailed version
 
-		// Admin only routes
+		// Admin and Teacher routes
 		activityAdminGroup := activityGroup.Group("")
-		activityAdminGroup.Use(authMiddleware.RequireAdmin)
+		activityAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			activityAdminGroup.GET("/users/:user_id", activityHandler.GetUserActivities)
 			activityAdminGroup.GET("/stats", activityHandler.GetActivityStats)

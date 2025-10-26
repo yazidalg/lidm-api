@@ -174,6 +174,37 @@ func (m *AuthMiddleware) RequireAdmin(c *gin.Context) {
 	c.Next()
 }
 
+// RequireAdminOrTeacher - middleware untuk memastikan user adalah admin atau teacher
+func (m *AuthMiddleware) RequireAdminOrTeacher(c *gin.Context) {
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "User not found in context",
+		})
+		c.Abort()
+		return
+	}
+
+	userModel, ok := user.(models.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Invalid user data",
+		})
+		c.Abort()
+		return
+	}
+
+	if !userModel.IsAdmin() && !userModel.IsTeacher() {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "Admin or Teacher access required",
+		})
+		c.Abort()
+		return
+	}
+
+	c.Next()
+}
+
 // RequireUserOrAdmin - middleware untuk memastikan user adalah owner resource atau admin
 func (m *AuthMiddleware) RequireUserOrAdmin(c *gin.Context) {
 	user, exists := c.Get("user")

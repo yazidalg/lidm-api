@@ -38,15 +38,15 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	log.Printf("Request body: %+v", body)
 
 	// Validasi role
-	if body.RoleName != "" && body.RoleName != "user" && body.RoleName != "admin" {
+	if body.RoleName != "" && body.RoleName != "user" && body.RoleName != "admin" && body.RoleName != "teacher" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid role. Must be 'user' or 'admin'",
+			"message": "Invalid role. Must be 'user', 'admin', or 'teacher'",
 		})
 		return
 	}
 
-	// Validasi class - hanya wajib untuk user biasa, admin boleh kosong
-	if body.RoleName != "admin" && body.Class == "" {
+	// Validasi class - hanya wajib untuk user biasa, admin dan teacher boleh kosong
+	if body.RoleName != "admin" && body.RoleName != "teacher" && body.Class == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Class is required for user role",
 		})
