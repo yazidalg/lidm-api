@@ -25,10 +25,12 @@ const (
 	EventAnswerSubmit   = "submit_answer"
 	EventAnswerResult   = "answer_result"
 	EventQuizCompleted  = "quiz_completed"
+	EventReviewJawaban  = "review_jawaban"
 	EventJoinQuiz       = "join_quiz"
 	// New: join single-player quiz by module id (no quiz lobby needed)
 	EventJoinQuizByModule = "join_quiz_by_module"
 	EventStartQuiz      = "start_quiz"
+	EventHostStartQuiz  = "host_start_quiz" // Event untuk host memulai quiz multiplayer
 	EventLivesExhausted = "lives_exhausted"
 	EventUserJoin       = "user_join"
 	EventUserLeave      = "user_leave"
@@ -41,6 +43,14 @@ const (
 	EventLobbyError     = "lobby_error"
 	EventNextQuestion   = "next_question"
 )
+
+// AnswerReviewItem stores details of each answered question for review
+type AnswerReviewItem struct {
+	Pertanyaan   string `json:"pertanyaan"`
+	JawabanUser  string `json:"jawaban_user"`
+	Penjelasan   string `json:"penjelasan"`
+	IsCorrect    bool   `json:"is_correct"`
+}
 
 // Single player session
 type SocketQuizSession struct {
@@ -55,10 +65,13 @@ type SocketQuizSession struct {
 	UserSvc     services.UserServiceInterface
 
 	// scoring & summary
-	CorrectCount int
-	WrongCount   int
-	BoostUsed    int
-	PointsEarned int
+	CorrectCount    int
+	WrongCount      int
+	BoostUsed       int
+	PointsEarned    int
+	InitialUserPoint int // Poin user sebelum mulai quiz
+	UserID          uint // ID user untuk tracking
+	AnswerReview    []AnswerReviewItem // Track all answers for review
 	// boosters per question id (so FE and BE agree)
 	QuestionBoosters map[uint]int
 }
@@ -80,6 +93,16 @@ func (s *SocketQuizSession) emitQuestion() {
 func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
+	
+	// Set UserID jika belum diset
+	if s.UserID == 0 {
+		s.UserID = userID
+		// Ambil initial point user
+		if u, err := s.UserSvc.GetUserByIDUint(userID); err == nil && u != nil {
+			s.InitialUserPoint = int(u.Point)
+		}
+	}
+	
 	if s.CurrentIdx >= len(s.Questions) {
 		return
 	}
@@ -89,6 +112,18 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	}
 	// Compare by index to be case-insensitive and robust
 	correct := optionIndex(option) == optionIndex(q.CorrectAnswer)
+	var earnedXP int32 = 0
+	
+	// Determine mode
+	mode := "single_player"
+	if s.Quiz != nil && s.Quiz.Mode != "" {
+		mode = s.Quiz.Mode
+	} else if s.QuizSvc != nil && s.Quiz != nil && s.Quiz.ID != 0 {
+		if quiz, err := s.QuizSvc.GetQuizByID(s.Quiz.ID); err == nil && quiz != nil && quiz.Mode != "" {
+			mode = quiz.Mode
+		}
+	}
+	
 	if correct {
 		// compute earned points with booster
 		booster := 0
@@ -102,41 +137,63 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 		if booster > 0 {
 			earned = earned * booster
 		}
-	s.CorrectCount++
-	s.PointsEarned += earned
-	_ = s.UserSvc.AddXP(userID, int32(earned))
+		s.CorrectCount++
+		s.PointsEarned += earned
+		earnedXP = int32(earned)
+		_ = s.UserSvc.AddXP(userID, earnedXP)
 	} else {
 		s.WrongCount++
-		// Determine mode without requiring a persisted quiz
-		mode := "single_player"
-		if s.Quiz != nil && s.Quiz.Mode != "" {
-			mode = s.Quiz.Mode
-		} else if s.QuizSvc != nil && s.Quiz != nil && s.Quiz.ID != 0 {
-			if quiz, err := s.QuizSvc.GetQuizByID(s.Quiz.ID); err == nil && quiz != nil && quiz.Mode != "" {
-				mode = quiz.Mode
-			}
-		}
+		// Kurangi lives jika mode single_player
 		if mode == "single_player" {
 			_ = s.UserSvc.DecrementLife(userID)
-			if u, err := s.UserSvc.GetUserByIDUint(userID); err == nil && u != nil && u.Lives <= 0 {
-				s.Socket.Emit(EventLivesExhausted, gin.H{"message": "Lives exhausted", "lives": u.Lives})
-				s.emitSummary("Lives exhausted")
-				// Stop further progression
-				s.CurrentIdx = len(s.Questions)
-				return
-			}
 		}
 	}
-	// Emit only the selected and correct option indexes for highlighting
-	s.Socket.Emit(EventAnswerResult, gin.H{
+	
+	// Build result payload
+	resultPayload := gin.H{
 		"question_id": q.ID,
 		"is_correct":  correct,
 		"options": gin.H{
 			"selected_index": optionIndex(option),
 			"correct_index":  optionIndex(q.CorrectAnswer),
 		},
-	})
+		"your_score": s.PointsEarned,
+		"gained_xp":  earnedXP,
+	}
+	
+	// Selalu ambil remaining_lives untuk mode single_player
+	if mode == "single_player" {
+		if u, err := s.UserSvc.GetUserByIDUint(userID); err == nil && u != nil {
+			resultPayload["remaining_lives"] = int(u.Lives)
+			
+			// Emit answer result dulu
+			s.Socket.Emit(EventAnswerResult, resultPayload)
+			
+			// Jika lives habis, langsung finish quiz
+			if u.Lives <= 0 {
+				s.Socket.Emit(EventLivesExhausted, gin.H{"message": "Lives exhausted", "lives": u.Lives})
+				s.emitSummary("Lives exhausted")
+				s.CurrentIdx = len(s.Questions)
+				return
+			}
+		} else {
+			// Fallback jika gagal ambil user
+			s.Socket.Emit(EventAnswerResult, resultPayload)
+		}
+	} else {
+		s.Socket.Emit(EventAnswerResult, resultPayload)
+	}
 	s.Answered[q.ID] = true
+	
+	// Track answer for review - get the actual text value of the selected option
+	jawabanUserText := getOptionText(q, option)
+	s.AnswerReview = append(s.AnswerReview, AnswerReviewItem{
+		Pertanyaan:  q.Question,
+		JawabanUser: jawabanUserText,
+		Penjelasan:  q.Explanation,
+		IsCorrect:   correct,
+	})
+	
 	// no question_ended event
 	s.CurrentIdx++
 	// If this was the last question, emit completion immediately to avoid race/missed event
@@ -154,24 +211,42 @@ func (s *SocketQuizSession) emitSummary(message string) {
 	if total > 0 {
 		accuracy = float64(s.CorrectCount) / float64(total)
 	}
-	neededCorrect := (total + 1) / 2 // ceil(50%)
-	gap := neededCorrect - s.CorrectCount
-	if gap < 0 {
-		gap = 0
+	
+	// Calculate percentage (0-100%)
+	percentage := int(accuracy * 100)
+	if percentage > 100 {
+		percentage = 100
 	}
-	penalty := gap * 5 // 5 points per missing correct to reach 50%
+	
+	// Hitung total boost yang berhasil didapat
+	totalBoostValue := 0
+	if s.QuestionBoosters != nil {
+		for qID := range s.Answered {
+			if booster, exists := s.QuestionBoosters[qID]; exists && booster > 0 {
+				// Cek apakah pertanyaan ini dijawab benar
+				// (asumsi: jika ada di Answered dan contribute ke PointsEarned)
+				totalBoostValue += booster
+			}
+		}
+	}
 
 	s.Socket.Emit(EventQuizCompleted, gin.H{
 		"message":         message,
 		"total_questions": total,
 		"benar":           s.CorrectCount,
 		"salah":           s.WrongCount,
-		"boost":           s.BoostUsed,
+		"percentage":      percentage,
+		"boost":           totalBoostValue,
 		"points": gin.H{
 			"earned":       s.PointsEarned,
-			"delta_type":   func() string { if accuracy >= 0.5 { return "plus" } else { return "minus" } }(),
-			"delta_amount": func() int { if accuracy >= 0.5 { return s.PointsEarned } else { return penalty } }(),
+			"delta_amount": s.PointsEarned, // Total poin yang didapat dari quiz ini
+			"delta_type":   func() string { if s.PointsEarned >= 0 { return "plus" } else { return "minus" } }(),
 		},
+	})
+	
+	// Emit review jawaban
+	s.Socket.Emit(EventReviewJawaban, gin.H{
+		"data": s.AnswerReview,
 	})
 }
 
@@ -185,7 +260,8 @@ type MultiplayerSession struct {
 	State          string
 	Players        map[uint]*socket.Socket
 	Scores         map[uint]int
-	Answers        map[uint]bool
+	Answers        map[uint]bool // Tracks if user answered
+	AnswerResults  map[uint]bool // Tracks if answer was correct (true) or wrong (false)
 	Mutex          sync.Mutex
 	QuestionSvc    services.QuestionServiceInterface
 	QuizSvc        services.QuizServiceInterface
@@ -201,7 +277,7 @@ type AnswerSubmission struct {
 }
 
 func NewMultiplayerSession(quiz *models.Quiz, room string, qSvc services.QuestionServiceInterface, quizSvc services.QuizServiceInterface, pSvc services.ParticipantServiceInterface, uSvc services.UserServiceInterface, questions []models.Question) *MultiplayerSession {
-	return &MultiplayerSession{QuizID: quiz.ID, RoomName: room, Quiz: quiz, Questions: questions, Players: make(map[uint]*socket.Socket), Scores: make(map[uint]int), Answers: make(map[uint]bool), QuestionSvc: qSvc, QuizSvc: quizSvc, ParticipantSvc: pSvc, UserSvc: uSvc, AnswerCh: make(chan AnswerSubmission, 10), TimerCancel: make(chan struct{}, 1)}
+	return &MultiplayerSession{QuizID: quiz.ID, RoomName: room, Quiz: quiz, Questions: questions, Players: make(map[uint]*socket.Socket), Scores: make(map[uint]int), Answers: make(map[uint]bool), AnswerResults: make(map[uint]bool), QuestionSvc: qSvc, QuizSvc: quizSvc, ParticipantSvc: pSvc, UserSvc: uSvc, AnswerCh: make(chan AnswerSubmission, 10), TimerCancel: make(chan struct{}, 1)}
 }
 
 func (s *MultiplayerSession) broadcast(io *socket.Server, event string, data any) {
@@ -340,11 +416,14 @@ func (s *MultiplayerSession) processAnswer(io *socket.Server, q models.Question,
 		}
 		log.Printf("[socket.io] Correct answer from user %d, new score: %d", ans.UserID, s.Scores[ans.UserID])
 	} else {
-		log.Printf("[socket.io] Incorrect answer from user %d, answer was: %s, correct: %s",
-			ans.UserID, ans.Option, q.CorrectAnswer)
+		// Salah: kurangi 10 poin (bisa jadi minus)
+		s.Scores[ans.UserID] -= 10
+		log.Printf("[socket.io] Incorrect answer from user %d, answer was: %s, correct: %s, new score: %d",
+			ans.UserID, ans.Option, q.CorrectAnswer, s.Scores[ans.UserID])
 	}
 
 	s.Answers[ans.UserID] = true
+	s.AnswerResults[ans.UserID] = correct // Store whether answer was correct
 	// Emit answer_result only to the answering user's socket (no leakage)
 	if sock, ok := s.Players[ans.UserID]; ok && sock != nil {
 		sock.Emit(EventAnswerResult, gin.H{
@@ -366,17 +445,53 @@ func (s *MultiplayerSession) processAnswer(io *socket.Server, q models.Question,
 			if sock == nil {
 				continue
 			}
+			// Get current user's score
+			myScore := s.Scores[uid]
+			myScoreType := "plus"
+			if myScore < 0 {
+				myScoreType = "minus"
+			} else if myScore == 0 {
+				myScoreType = "zero"
+			}
+			
+			// Get opponent's data
 			oppScore := 0
 			var oppID uint
+			var oppAnswerCorrect *bool // nil if opponent hasn't answered yet
 			for id, sc := range s.Scores {
 				if id != uid {
 					oppScore = sc
 					oppID = id
+					// Get opponent's answer result from previous question
+					if result, exists := s.AnswerResults[id]; exists {
+						oppAnswerCorrect = &result
+					}
 				}
 			}
+			
+			// Determine opponent score type
+			oppScoreType := "plus"
+			if oppScore < 0 {
+				oppScoreType = "minus"
+			} else if oppScore == 0 {
+				oppScoreType = "zero"
+			}
+			
+			opponentData := gin.H{
+				"user_id":    oppID,
+				"score":      oppScore,
+				"score_type": oppScoreType,
+			}
+			// Add answer status if opponent answered
+			if oppAnswerCorrect != nil {
+				opponentData["answer_correct"] = *oppAnswerCorrect
+			}
+			
 			sock.Emit(EventNextQuestion, gin.H{
-				"current":  gin.H{"question_id": q.ID},
-				"opponent": gin.H{"user_id": oppID, "score": oppScore},
+				"current":        gin.H{"question_id": q.ID},
+				"your_score":     myScore,
+				"your_score_type": myScoreType,
+				"opponent":       opponentData,
 			})
 		}
 	}
@@ -746,65 +861,15 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				// Emit random XP bonus to both
 				bonus := []int{2, 3, 5}[time.Now().UnixNano()%3]
 				io.To(socket.Room(roomName(quiz.ID))).Emit("bonus_multiplier", gin.H{"multiplier": bonus})
-				// Start quiz automatically
-				if quiz.ModuleID != nil {
-					log.Printf("[socket.io] Auto-starting quiz for module_id=%d", *quiz.ModuleID)
-
-					// Use mode-based question selection
-					qs, err := questionSvc.GetQuestionsByModuleAndMode(*quiz.ModuleID, quiz.Mode)
-					if err != nil {
-						log.Printf("[socket.io] ERROR: Failed to get questions for module_id=%d mode=%s: %v", *quiz.ModuleID, quiz.Mode, err)
-						// Fallback to old method
-						qc := quiz.QuestionCount
-						if qc <= 0 {
-							qc = 10
-						}
-						qs, err = questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
-						if err != nil {
-							log.Printf("[socket.io] ERROR: Fallback also failed for module_id=%d: %v", *quiz.ModuleID, err)
-							// Emit error to both players
-							io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
-								"error":   "no_questions",
-								"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
-							})
-							return
-						}
-					}
-					if qs == nil || len(*qs) == 0 {
-						log.Printf("[socket.io] ERROR: No questions returned for module_id=%d mode=%s", *quiz.ModuleID, quiz.Mode)
-						// Emit error to both players
-						io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
-							"error":   "no_questions",
-							"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
-						})
-						return
-					}
-
-					log.Printf("[socket.io] Successfully retrieved %d questions for module_id=%d mode=%s", len(*qs), *quiz.ModuleID, quiz.Mode)
-
-					s := getOrCreateSession(quiz)
-					s.Questions = *qs
-					if s.State != "running" { // prevent double start
-						log.Printf("[socket.io] Emitting start_quiz event for quiz_id=%d with %d questions", quiz.ID, len(*qs))
-						io.To(socket.Room(roomName(quiz.ID))).Emit(EventStartQuiz, gin.H{
-							"quiz_id":         quiz.ID,
-							"total_questions": len(*qs),
-							"questions":       sanitizeQuestions(*qs),
-							"module_id":       *quiz.ModuleID,
-							"mode":            quiz.Mode,
-						})
-						log.Printf("[socket.io] Starting quiz session runner for quiz_id=%d", quiz.ID)
-						go s.run(io)
-					} else {
-						log.Printf("[socket.io] Quiz session already running for quiz_id=%d, state=%s", quiz.ID, s.State)
-					}
-				} else {
-					log.Printf("[socket.io] ERROR: Quiz has no module_id, cannot start quiz for quiz_id=%d", quiz.ID)
-					io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
-						"error":   "no_module",
-						"message": "Quiz has no module assigned",
-					})
-				}
+				
+				// Emit lobby ready event (waiting for host to start)
+				io.To(socket.Room(roomName(quiz.ID))).Emit("lobby_ready", gin.H{
+					"quiz_id": quiz.ID,
+					"message": "Lobby penuh, menunggu host memulai quiz",
+					"players": len(quiz.Participants),
+				})
+				
+				log.Printf("[socket.io] Lobby ready for quiz_id=%d, waiting for host to start", quiz.ID)
 				return
 			}
 			// If only one participant, emit lobby_joined with opponent nil and user details
@@ -812,6 +877,111 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": map[string]any{"id": u.ID, "name": u.Name, "point": u.Point, "profile_picture": u.ProfilePicture}, "opponent": nil})
 			} else {
 				client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": map[string]any{"id": userID}, "opponent": nil})
+			}
+		})
+
+		// host_start_quiz - Host manually starts the multiplayer quiz
+		client.On(EventHostStartQuiz, func(args ...any) {
+			log.Printf("[socket.io] host_start_quiz received with args: %#v", args)
+			
+			var quizID uint
+			var hostUserID uint
+			
+			// Parse arguments
+			if len(args) == 1 {
+				// Support object format: {quiz_id, user_id}
+				if obj, ok := args[0].(map[string]any); ok {
+					if qid, ok := obj["quiz_id"].(float64); ok {
+						quizID = uint(qid)
+					}
+					if uid, ok := obj["user_id"].(float64); ok {
+						hostUserID = uint(uid)
+					}
+				}
+			} else if len(args) >= 2 {
+				// Support positional args: quiz_id, user_id
+				if qid, ok := args[0].(float64); ok {
+					quizID = uint(qid)
+				}
+				if uid, ok := args[1].(float64); ok {
+					hostUserID = uint(uid)
+				}
+			}
+			
+			if quizID == 0 {
+				client.Emit(EventLobbyError, gin.H{"error": "invalid_quiz_id", "message": "Quiz ID is required"})
+				return
+			}
+			
+			// Get quiz
+			quiz, err := quizSvc.GetQuizByID(quizID)
+			if err != nil || quiz == nil {
+				client.Emit(EventLobbyError, gin.H{"error": "quiz_not_found", "message": "Quiz not found"})
+				return
+			}
+			
+			// Verify user is the host (first participant)
+			if len(quiz.Participants) == 0 || quiz.Participants[0].UserID != hostUserID {
+				client.Emit(EventLobbyError, gin.H{"error": "not_host", "message": "Only host can start the quiz"})
+				return
+			}
+			
+			// Start the quiz
+			if quiz.ModuleID != nil {
+				log.Printf("[socket.io] Host starting quiz for module_id=%d", *quiz.ModuleID)
+
+				// Use mode-based question selection
+				qs, err := questionSvc.GetQuestionsByModuleAndMode(*quiz.ModuleID, quiz.Mode)
+				if err != nil {
+					log.Printf("[socket.io] ERROR: Failed to get questions for module_id=%d mode=%s: %v", *quiz.ModuleID, quiz.Mode, err)
+					// Fallback to old method
+					qc := quiz.QuestionCount
+					if qc <= 0 {
+						qc = 10
+					}
+					qs, err = questionSvc.GetRandomQuestionsByModule(*quiz.ModuleID, qc)
+					if err != nil {
+						log.Printf("[socket.io] ERROR: Fallback also failed for module_id=%d: %v", *quiz.ModuleID, err)
+						io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+							"error":   "no_questions",
+							"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
+						})
+						return
+					}
+				}
+				if qs == nil || len(*qs) == 0 {
+					log.Printf("[socket.io] ERROR: No questions returned for module_id=%d mode=%s", *quiz.ModuleID, quiz.Mode)
+					io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+						"error":   "no_questions",
+						"message": fmt.Sprintf("No questions available for module %d", *quiz.ModuleID),
+					})
+					return
+				}
+
+				log.Printf("[socket.io] Successfully retrieved %d questions for module_id=%d mode=%s", len(*qs), *quiz.ModuleID, quiz.Mode)
+
+				s := getOrCreateSession(quiz)
+				s.Questions = *qs
+				if s.State != "running" { // prevent double start
+					log.Printf("[socket.io] Emitting start_quiz event for quiz_id=%d with %d questions", quiz.ID, len(*qs))
+					io.To(socket.Room(roomName(quiz.ID))).Emit(EventStartQuiz, gin.H{
+						"quiz_id":         quiz.ID,
+						"total_questions": len(*qs),
+						"questions":       sanitizeQuestions(*qs),
+						"module_id":       *quiz.ModuleID,
+						"mode":            quiz.Mode,
+					})
+					log.Printf("[socket.io] Starting quiz session runner for quiz_id=%d", quiz.ID)
+					go s.run(io)
+				} else {
+					log.Printf("[socket.io] Quiz session already running for quiz_id=%d, state=%s", quiz.ID, s.State)
+				}
+			} else {
+				log.Printf("[socket.io] ERROR: Quiz has no module_id, cannot start quiz for quiz_id=%d", quiz.ID)
+				io.To(socket.Room(roomName(quiz.ID))).Emit(EventLobbyError, gin.H{
+					"error":   "no_module",
+					"message": "Quiz has no module assigned",
+				})
 			}
 		})
 
@@ -1215,6 +1385,22 @@ func optionIndex(key string) int {
 		return 3
 	default:
 		return -1
+	}
+}
+
+// getOptionText returns the text value of an option based on the key (A/B/C/D)
+func getOptionText(q models.Question, optionKey string) string {
+	switch strings.ToUpper(strings.TrimSpace(optionKey)) {
+	case "A":
+		return q.Options.OptionA
+	case "B":
+		return q.Options.OptionB
+	case "C":
+		return q.Options.OptionC
+	case "D":
+		return q.Options.OptionD
+	default:
+		return ""
 	}
 }
 

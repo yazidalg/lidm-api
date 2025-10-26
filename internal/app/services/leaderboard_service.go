@@ -49,45 +49,22 @@ func (s *LeaderboardService) GetLeaderboard(moduleID *uint, quizType string, cur
 		return nil, err
 	}
 
-	// Create map to store user scores
-	userScores := make(map[uint]int64)
-	userMap := make(map[uint]models.User)
-
-	// Initialize all users with 0 score
-	for _, user := range allUsers {
-		userScores[user.ID] = 0
-		userMap[user.ID] = user
-	}
-
-	// Get participants with their scores
-	participants, err := s.ParticipantRepo.GetParticipantsWithScores(moduleID, quizType)
-	if err != nil {
-		return nil, err
-	}
-
-	// Update scores for users who have participated
-	for _, participant := range participants {
-		if participant.User.ID != 0 {
-			userScores[participant.UserID] += int64(participant.TotalScore)
-		}
-	}
-
-	// Convert to slice and sort by score
+	// Convert to slice and sort by TotalXP (from User.TotalXP field)
 	var entries []LeaderboardEntry
-	for userID, score := range userScores {
+	for _, user := range allUsers {
 		isCurrentUser := false
-		if currentUserID != nil && *currentUserID == userID {
+		if currentUserID != nil && *currentUserID == user.ID {
 			isCurrentUser = true
 		}
 
 		entries = append(entries, LeaderboardEntry{
-			User:          userMap[userID],
-			Score:         score,
+			User:          user,
+			Score:         int64(user.TotalXP), // Use TotalXP field from User
 			IsCurrentUser: isCurrentUser,
 		})
 	}
 
-	// Sort by score descending
+	// Sort by TotalXP descending
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i].Score > entries[j].Score
 	})
