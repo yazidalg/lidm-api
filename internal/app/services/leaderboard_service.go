@@ -146,3 +146,75 @@ func (s *LeaderboardService) UpdateUserScore(userID uint, moduleID uint, quizTyp
 	// For now, we'll work with participant scores directly
 	return nil
 }
+
+// UpdateUserPosition calculates and updates position change for a specific user
+func (s *LeaderboardService) UpdateUserPosition(userID uint) error {
+	// Get current leaderboard to find user's current position
+	leaderboard, err := s.GetLeaderboard(nil, "", &userID)
+	if err != nil {
+		return err
+	}
+
+	// Find user's current position in leaderboard
+	currentPosition := 0
+	if leaderboard.Juara1 != nil && leaderboard.Juara1.User.ID == userID {
+		currentPosition = 1
+	} else if leaderboard.Juara2 != nil && leaderboard.Juara2.User.ID == userID {
+		currentPosition = 2
+	} else if leaderboard.Juara3 != nil && leaderboard.Juara3.User.ID == userID {
+		currentPosition = 3
+	} else {
+		// Check in remaining leaderboard entries
+		for _, entry := range leaderboard.Leaderboard {
+			if entry.User.ID == userID {
+				currentPosition = entry.Rank
+				break
+			}
+		}
+	}
+
+	if currentPosition == 0 {
+		// User not found in ranked positions, get total user count and assume they're at the bottom
+		allUsers, err := s.UserRepo.GetAllUsers()
+		if err == nil {
+			currentPosition = len(allUsers) // Last position
+		} else {
+			currentPosition = 100 // Default fallback
+		}
+	}
+
+	// Get user data to check previous position (stored in database)
+	user, err := s.UserRepo.GetUserById(int(userID))
+	if err != nil {
+		return err
+	}
+
+	// Get the stored previous position 
+	previousPosition := user.PreviousPosition
+	if previousPosition == 0 {
+		// First time tracking - set previous position to current for future tracking
+		// and assume they moved up for this display
+		previousPosition = currentPosition + 2 // Assume they moved up 2 positions
+	}
+
+	// Calculate position change
+	positionType := "stable"
+	changeAmount := 0
+	
+	if currentPosition < previousPosition {
+		positionType = "increasing" // Lower number = higher rank = increasing
+		changeAmount = previousPosition - currentPosition
+	} else if currentPosition > previousPosition {
+		positionType = "decreasing" // Higher number = lower rank = decreasing
+		changeAmount = currentPosition - previousPosition
+	}
+
+	// Update user position fields
+	user.PositionType = positionType
+	user.PositionChange = changeAmount
+	user.PreviousPosition = currentPosition // Store current position for next time
+
+	// Save updated user
+	err = s.UserRepo.UpdateUser(&user)
+	return err
+}

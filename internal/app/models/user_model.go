@@ -23,6 +23,9 @@ type User struct {
 	CurrentStreak     int        `gorm:"default:0" json:"current_streak"` // Streak hari berturut-turut
 	MaxStreak         int        `gorm:"default:0" json:"max_streak"`     // Streak terpanjang
 	LastActiveDate    *time.Time `json:"last_active_date"`                // Tanggal terakhir aktif
+	PositionType      string     `gorm:"type:varchar(20);default:'stable'" json:"position_type"` // increasing, decreasing, stable
+	PositionChange    int        `gorm:"default:0" json:"position_change"`  // How many positions changed (1, 2, 3, etc)
+	PreviousPosition  int        `gorm:"default:0" json:"previous_position"` // Store previous position for comparison
 	CreatedAt         time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt         time.Time  `gorm:"autoUpdateTime"`
 

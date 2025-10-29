@@ -42,6 +42,8 @@ const (
 	EventLobbyNotFound  = "lobby_not_found"
 	EventLobbyError     = "lobby_error"
 	EventNextQuestion   = "next_question"
+	EventOpponentTaunt  = "opponent_taunt"  // Event for sending taunts/reactions to opponent
+	EventTauntReceived  = "taunt_received"  // Event when receiving a taunt from opponent
 )
 
 // AnswerReviewItem stores details of each answered question for review
@@ -50,6 +52,7 @@ type AnswerReviewItem struct {
 	JawabanUser  string `json:"jawaban_user"`
 	Penjelasan   string `json:"penjelasan"`
 	IsCorrect    bool   `json:"is_correct"`
+	QuestionType string `json:"question_type"` // "hots" or "regular"
 }
 
 // Single player session
@@ -188,10 +191,11 @@ func (s *SocketQuizSession) handleAnswer(userID uint, option string) {
 	// Track answer for review - get the actual text value of the selected option
 	jawabanUserText := getOptionText(q, option)
 	s.AnswerReview = append(s.AnswerReview, AnswerReviewItem{
-		Pertanyaan:  q.Question,
-		JawabanUser: jawabanUserText,
-		Penjelasan:  q.Explanation,
-		IsCorrect:   correct,
+		Pertanyaan:   q.Question,
+		JawabanUser:  jawabanUserText,
+		Penjelasan:   q.Explanation,
+		IsCorrect:    correct,
+		QuestionType: q.QuestionType, // Add question type (hots/regular)
 	})
 	
 	// no question_ended event
@@ -230,18 +234,44 @@ func (s *SocketQuizSession) emitSummary(message string) {
 		}
 	}
 
+	// Determine points type for consistent UI
+	pointsType := "plus"
+	if s.PointsEarned < 0 {
+		pointsType = "minus"
+	}
+
+	// Determine if user "won" based on performance and create positive messages
+	userWon := false
+	var positiveMessage string
+	
+	if percentage >= 80 {
+		userWon = true
+		positiveMessage = "Luar biasa! Skor sempurna! Kamu sangat hebat! 🌟"
+	} else if percentage >= 60 {
+		userWon = true
+		positiveMessage = "Bagus sekali! Kamu berhasil dengan baik! Terus pertahankan! 🎯"
+	} else if percentage >= 40 {
+		userWon = false
+		positiveMessage = "Tidak apa-apa! Kamu sudah berusaha keras. Belajar lagi ya! 📚"
+	} else {
+		userWon = false
+		positiveMessage = "Jangan patah semangat! Setiap kesalahan adalah pelajaran. Ayo coba lagi! 💪"
+	}
+
 	s.Socket.Emit(EventQuizCompleted, gin.H{
-		"message":         message,
+		"message":         positiveMessage, // Updated to positive message
 		"total_questions": total,
 		"benar":           s.CorrectCount,
 		"salah":           s.WrongCount,
 		"percentage":      percentage,
 		"boost":           totalBoostValue,
+		"winner":          userWon, // true or false based on performance
 		"points": gin.H{
 			"earned":       s.PointsEarned,
 			"delta_amount": s.PointsEarned, // Total poin yang didapat dari quiz ini
 			"delta_type":   func() string { if s.PointsEarned >= 0 { return "plus" } else { return "minus" } }(),
 		},
+		"type": pointsType, // "plus" or "minus" - consistent with multiplayer format
 	})
 	
 	// Emit review jawaban
@@ -252,16 +282,26 @@ func (s *SocketQuizSession) emitSummary(message string) {
 
 // Multiplayer session (simplified)
 type MultiplayerSession struct {
-	QuizID         uint
-	RoomName       string
-	Quiz           *models.Quiz
-	Questions      []models.Question
-	CurrentIdx     int
-	State          string
-	Players        map[uint]*socket.Socket
-	Scores         map[uint]int
-	Answers        map[uint]bool // Tracks if user answered
-	AnswerResults  map[uint]bool // Tracks if answer was correct (true) or wrong (false)
+	QuizID           uint
+	RoomName         string
+	Quiz             *models.Quiz
+	Questions        []models.Question
+	CurrentIdx       int
+	State            string
+	Players          map[uint]*socket.Socket
+	Scores           map[uint]int
+	Answers          map[uint]bool // Tracks if user answered
+	AnswerResults    map[uint]bool // Tracks if answer was correct (true) or wrong (false)
+	
+	// Enhanced tracking for detailed quiz_completed
+	UserCorrectCount map[uint]int   // Per-user correct answer count
+	UserWrongCount   map[uint]int   // Per-user wrong answer count
+	UserPointsPlus   map[uint]int   // Per-user positive points earned
+	UserPointsMinus  map[uint]int   // Per-user negative points lost
+	UserBoostUsed    map[uint]int   // Per-user boost multipliers used
+	QuestionBoosters map[uint]int   // Boost multiplier per question
+	UserAnswerReview map[uint][]AnswerReviewItem // Per-user answer review
+	
 	Mutex          sync.Mutex
 	QuestionSvc    services.QuestionServiceInterface
 	QuizSvc        services.QuizServiceInterface
@@ -277,7 +317,40 @@ type AnswerSubmission struct {
 }
 
 func NewMultiplayerSession(quiz *models.Quiz, room string, qSvc services.QuestionServiceInterface, quizSvc services.QuizServiceInterface, pSvc services.ParticipantServiceInterface, uSvc services.UserServiceInterface, questions []models.Question) *MultiplayerSession {
-	return &MultiplayerSession{QuizID: quiz.ID, RoomName: room, Quiz: quiz, Questions: questions, Players: make(map[uint]*socket.Socket), Scores: make(map[uint]int), Answers: make(map[uint]bool), AnswerResults: make(map[uint]bool), QuestionSvc: qSvc, QuizSvc: quizSvc, ParticipantSvc: pSvc, UserSvc: uSvc, AnswerCh: make(chan AnswerSubmission, 10), TimerCancel: make(chan struct{}, 1)}
+	// Initialize boost pattern for questions
+	questionBoosters := make(map[uint]int)
+	boostPattern := []int{1, 1, 2, 1, 3, 1, 1, 2, 1, 4} // Predefined boost pattern like single-player
+	for i, question := range questions {
+		if i < len(boostPattern) {
+			questionBoosters[question.ID] = boostPattern[i]
+		} else {
+			questionBoosters[question.ID] = 1 // Default multiplier
+		}
+	}
+	
+	return &MultiplayerSession{
+		QuizID: quiz.ID, 
+		RoomName: room, 
+		Quiz: quiz, 
+		Questions: questions, 
+		Players: make(map[uint]*socket.Socket), 
+		Scores: make(map[uint]int), 
+		Answers: make(map[uint]bool), 
+		AnswerResults: make(map[uint]bool),
+		UserCorrectCount: make(map[uint]int),
+		UserWrongCount: make(map[uint]int),
+		UserPointsPlus: make(map[uint]int),
+		UserPointsMinus: make(map[uint]int),
+		UserBoostUsed: make(map[uint]int),
+		QuestionBoosters: questionBoosters,
+		UserAnswerReview: make(map[uint][]AnswerReviewItem),
+		QuestionSvc: qSvc, 
+		QuizSvc: quizSvc, 
+		ParticipantSvc: pSvc, 
+		UserSvc: uSvc, 
+		AnswerCh: make(chan AnswerSubmission, 10), 
+		TimerCancel: make(chan struct{}, 1),
+	}
 }
 
 func (s *MultiplayerSession) broadcast(io *socket.Server, event string, data any) {
@@ -405,22 +478,67 @@ func (s *MultiplayerSession) processAnswer(io *socket.Server, q models.Question,
 	log.Printf("[socket.io] Processing answer from user %d for question %d: option=%s",
 		ans.UserID, q.ID, ans.Option)
 
+	// Initialize tracking maps if needed
+	if s.UserCorrectCount[ans.UserID] == 0 && s.UserWrongCount[ans.UserID] == 0 {
+		s.UserCorrectCount[ans.UserID] = 0
+		s.UserWrongCount[ans.UserID] = 0
+		s.UserPointsPlus[ans.UserID] = 0
+		s.UserPointsMinus[ans.UserID] = 0
+		s.UserBoostUsed[ans.UserID] = 0
+		s.UserAnswerReview[ans.UserID] = []AnswerReviewItem{}
+	}
+
 	// Compare by index to avoid case/key mismatches
 	correct := optionIndex(ans.Option) == optionIndex(q.CorrectAnswer)
+	
+	// Get boost multiplier for this question
+	booster := 1
+	if s.QuestionBoosters != nil {
+		if boost, exists := s.QuestionBoosters[q.ID]; exists {
+			booster = boost
+			if boost > 1 {
+				s.UserBoostUsed[ans.UserID]++
+			}
+		}
+	}
+	
+	// Calculate points with boost
+	basePoints := 10
+	actualPoints := basePoints
 	if correct {
-		s.Scores[ans.UserID] += 10
+		actualPoints = basePoints * booster
+		s.Scores[ans.UserID] += actualPoints
+		s.UserCorrectCount[ans.UserID]++
+		s.UserPointsPlus[ans.UserID] += actualPoints
+		
 		if s.UserSvc != nil {
-			_ = s.UserSvc.AddXP(ans.UserID, 10)
+			_ = s.UserSvc.AddXP(ans.UserID, int32(actualPoints))
 		} else {
 			log.Printf("[socket.io] WARNING: UserService is nil, can't add XP")
 		}
-		log.Printf("[socket.io] Correct answer from user %d, new score: %d", ans.UserID, s.Scores[ans.UserID])
+		log.Printf("[socket.io] Correct answer from user %d, boost: %dx, points: +%d, new score: %d", 
+			ans.UserID, booster, actualPoints, s.Scores[ans.UserID])
 	} else {
-		// Salah: kurangi 10 poin (bisa jadi minus)
-		s.Scores[ans.UserID] -= 10
-		log.Printf("[socket.io] Incorrect answer from user %d, answer was: %s, correct: %s, new score: %d",
-			ans.UserID, ans.Option, q.CorrectAnswer, s.Scores[ans.UserID])
+		// Salah: kurangi 10 poin (bisa jadi minus) - no boost on wrong answers
+		actualPoints = -basePoints
+		s.Scores[ans.UserID] += actualPoints
+		s.UserWrongCount[ans.UserID]++
+		s.UserPointsMinus[ans.UserID] += basePoints // Store as positive value for display
+		
+		log.Printf("[socket.io] Incorrect answer from user %d, answer was: %s, correct: %s, points: %d, new score: %d",
+			ans.UserID, ans.Option, q.CorrectAnswer, actualPoints, s.Scores[ans.UserID])
 	}
+
+	// Add to answer review - get the actual text value of the selected option
+	jawabanUserText := getOptionText(q, ans.Option)
+	reviewItem := AnswerReviewItem{
+		Pertanyaan:   q.Question,
+		JawabanUser:  jawabanUserText, // Use actual option text instead of letter
+		Penjelasan:   q.Explanation,
+		IsCorrect:    correct,
+		QuestionType: q.QuestionType, // Add question type (hots/regular)
+	}
+	s.UserAnswerReview[ans.UserID] = append(s.UserAnswerReview[ans.UserID], reviewItem)
 
 	s.Answers[ans.UserID] = true
 	s.AnswerResults[ans.UserID] = correct // Store whether answer was correct
@@ -523,21 +641,21 @@ func (s *MultiplayerSession) finish(io *socket.Server) {
 	// Check if services are available
 	if s.QuizSvc == nil {
 		log.Printf("[socket.io] ERROR: QuizService is nil in finish()")
-		s.broadcast(io, EventQuizCompleted, gin.H{"scores": s.Scores, "winner": winnerName})
+		s.broadcastMultiplayerCompletion(io, winnerName)
 		return
 	}
 
 	quiz, err := s.QuizSvc.GetQuizByID(s.QuizID)
 	if err != nil || quiz == nil {
 		log.Printf("[socket.io] ERROR: Failed to get quiz %d: %v", s.QuizID, err)
-		s.broadcast(io, EventQuizCompleted, gin.H{"scores": s.Scores, "winner": winnerName})
+		s.broadcastMultiplayerCompletion(io, winnerName)
 		return
 	}
 
 	// Check if ParticipantService is available
 	if s.ParticipantSvc == nil {
 		log.Printf("[socket.io] ERROR: ParticipantService is nil in finish()")
-		s.broadcast(io, EventQuizCompleted, gin.H{"scores": s.Scores, "winner": winnerName})
+		s.broadcastMultiplayerCompletion(io, winnerName)
 		return
 	}
 
@@ -574,7 +692,223 @@ func (s *MultiplayerSession) finish(io *socket.Server) {
 	}
 
 	log.Printf("[socket.io] Quiz %d completed, winner: %s", s.QuizID, winnerName)
-	s.broadcast(io, EventQuizCompleted, gin.H{"scores": s.Scores, "winner": winnerName})
+	
+	// Create comprehensive quiz_completed payload for multiplayer
+	s.broadcastMultiplayerCompletion(io, winnerName)
+}
+
+// broadcastMultiplayerCompletion sends detailed quiz_completed event to all multiplayer participants
+func (s *MultiplayerSession) broadcastMultiplayerCompletion(io *socket.Server, winnerName string) {
+	totalQuestions := len(s.Questions)
+	
+	// Prepare per-user data for each participant
+	for userID, sock := range s.Players {
+		if sock == nil {
+			continue
+		}
+		
+		// Get opponent data
+		var opponentID uint
+		var opponentScore int
+		var opponentCorrect int
+		var opponentWrong int
+		
+		for uid := range s.Players {
+			if uid != userID {
+				opponentID = uid
+				opponentScore = s.Scores[uid]
+				opponentCorrect = s.UserCorrectCount[uid]
+				opponentWrong = s.UserWrongCount[uid]
+				break
+			}
+		}
+		
+		// Get user names
+		var userName, opponentName string
+		if s.UserSvc != nil {
+			if user, err := s.UserSvc.GetUserById(int(userID)); err == nil {
+				userName = getFirstName(user.Name)
+			}
+			if opponentID > 0 {
+				if opponent, err := s.UserSvc.GetUserById(int(opponentID)); err == nil {
+					opponentName = getFirstName(opponent.Name)
+				}
+			}
+		}
+		
+
+		
+		// Calculate total boost multipliers used (sum of all boost values > 1)
+		userTotalBoost := 0
+		opponentTotalBoost := 0
+		if s.QuestionBoosters != nil {
+			for qID, booster := range s.QuestionBoosters {
+				if booster > 1 {
+					// Check if user answered this question correctly to get boost
+					for _, review := range s.UserAnswerReview[userID] {
+						if review.Pertanyaan == s.getQuestionByID(qID).Question && review.IsCorrect {
+							userTotalBoost += booster
+							break
+						}
+					}
+					// Check opponent
+					for _, review := range s.UserAnswerReview[opponentID] {
+						if review.Pertanyaan == s.getQuestionByID(qID).Question && review.IsCorrect {
+							opponentTotalBoost += booster
+							break
+						}
+					}
+				}
+			}
+		}
+		
+		// Emit simplified quiz_completed to this user
+		userPoints := s.Scores[userID]
+		opponentPoints := opponentScore
+		
+		// Determine if this user won and create positive messages
+		userWon := false
+		var message string
+		
+		if winnerName == "Seri" {
+			message = "Pertandingan seri! Kalian berdua hebat! 🤝"
+		} else {
+			// Check if current user won by comparing scores
+			if userPoints > opponentPoints {
+				userWon = true
+				message = "Selamat! Kamu menang! Terus tingkatkan kemampuanmu! 🎉"
+			} else {
+				userWon = false
+				message = "Jangan menyerah! Kamu sudah berusaha dengan baik. Coba lagi ya! 💪"
+			}
+		}
+		
+		// Calculate user's percentage  
+		userCorrect := s.UserCorrectCount[userID]
+		userWrong := s.UserWrongCount[userID]
+		userPercentage := 0
+		if totalQuestions > 0 {
+			userPercentage = int((float64(userCorrect) / float64(totalQuestions)) * 100)
+		}
+		
+		// Calculate opponent's percentage
+		opponentPercentage := 0
+		if totalQuestions > 0 {
+			opponentPercentage = int((float64(opponentCorrect) / float64(totalQuestions)) * 100)
+		}
+		
+		// Calculate boost for user
+		userBoost := 0
+		if s.QuestionBoosters != nil {
+			for qID, booster := range s.QuestionBoosters {
+				if booster > 1 {
+					// Check if user answered this question correctly to get boost
+					for _, review := range s.UserAnswerReview[userID] {
+						if review.Pertanyaan == s.getQuestionByID(qID).Question && review.IsCorrect {
+							userBoost += booster
+							break
+						}
+					}
+				}
+			}
+		}
+		
+		// Calculate boost for opponent
+		opponentBoost := 0
+		if s.QuestionBoosters != nil {
+			for qID, booster := range s.QuestionBoosters {
+				if booster > 1 {
+					// Check if opponent answered this question correctly to get boost
+					for _, review := range s.UserAnswerReview[opponentID] {
+						if review.Pertanyaan == s.getQuestionByID(qID).Question && review.IsCorrect {
+							opponentBoost += booster
+							break
+						}
+					}
+				}
+			}
+		}
+
+		// Calculate earned points (points gained/lost in this quiz)
+		userEarned := s.UserPointsPlus[userID] - s.UserPointsMinus[userID]
+		userEarnedType := "plus"
+		if userEarned < 0 {
+			userEarnedType = "minus"
+		}
+		
+		opponentEarned := s.UserPointsPlus[opponentID] - s.UserPointsMinus[opponentID]
+		opponentEarnedType := "plus"
+		if opponentEarned < 0 {
+			opponentEarnedType = "minus"
+		}
+		
+		// Get total scores (accumulated score from database/previous games)
+		var userTotalScore int32 = 0
+		var opponentTotalScore int32 = 0
+		
+		if s.UserSvc != nil {
+			if user, err := s.UserSvc.GetUserByIDUint(userID); err == nil && user != nil {
+				userTotalScore = user.TotalXP
+			}
+			if opponent, err := s.UserSvc.GetUserByIDUint(opponentID); err == nil && opponent != nil {
+				opponentTotalScore = opponent.TotalXP
+			}
+		}
+
+		sock.Emit(EventQuizCompleted, gin.H{
+			"scores": s.Scores,
+			"winner": userWon, // true or false
+			"message": message, // Positive message
+			"user": gin.H{
+				"name":           userName,            // User's first name
+				"total_score":    userTotalScore,      // Total accumulated score (like 1250)
+				"earned_points":  userEarned,          // Points earned/lost this quiz (like +12, -4)
+				"earned_type":    userEarnedType,      // "plus" or "minus"
+				"benar":          userCorrect,
+				"salah":          userWrong,
+				"percentage":     userPercentage,
+				"boost":          userBoost,
+			},
+			"opponent": gin.H{
+				"id":             opponentID,
+				"name":           opponentName,        // Opponent's first name
+				"total_score":    opponentTotalScore,  // Total accumulated score (like 976)
+				"earned_points":  opponentEarned,      // Points earned/lost this quiz (like +12, -4)
+				"earned_type":    opponentEarnedType,  // "plus" or "minus"
+				"benar":          opponentCorrect,
+				"salah":          opponentWrong,
+				"percentage":     opponentPercentage,
+				"boost":          opponentBoost,
+			},
+		})
+		
+		// Emit answer review for this user
+		sock.Emit(EventReviewJawaban, gin.H{
+			"data": s.UserAnswerReview[userID],
+		})
+	}
+}
+
+// Helper method to get question by ID
+func (s *MultiplayerSession) getQuestionByID(questionID uint) models.Question {
+	for _, q := range s.Questions {
+		if q.ID == questionID {
+			return q
+		}
+	}
+	return models.Question{} // Return empty question if not found
+}
+
+// getFirstName extracts the first name from a full name
+func getFirstName(fullName string) string {
+	if fullName == "" {
+		return ""
+	}
+	parts := strings.Fields(strings.TrimSpace(fullName))
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return fullName
 }
 
 // StartSocketIOServer bootstraps the v3 socket.io server
@@ -677,16 +1011,8 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			sess.Players[req.HostUserID] = client
 			io.To(socket.Room(room)).Emit(EventUserJoin, gin.H{"user_id": req.HostUserID})
 
-			// Immediately emit lobby_joined for the host (creator is considered joined)
-			if u, err := userSvc.GetUserByIDUint(req.HostUserID); err == nil && u != nil {
-				client.Emit(EventLobbyJoined, gin.H{
-					"quiz_id":  quiz.ID,
-					"user":     map[string]any{"id": u.ID, "name": u.Name, "point": u.Point, "profile_picture": u.ProfilePicture},
-					"opponent": nil,
-				})
-			} else {
-				client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": map[string]any{"id": req.HostUserID}, "opponent": nil})
-			}
+			// Host has created lobby, but don't emit lobby_joined until opponent joins
+			log.Printf("[socket.io] Host %d created lobby for quiz %d, waiting for opponent", req.HostUserID, quiz.ID)
 			client.Emit(EventLobbyCreated, gin.H{"quiz_id": quiz.ID, "invite_code": quiz.InviteCode, "module_id": quiz.ModuleID, "question_count": quiz.QuestionCount})
 		})
 
@@ -788,12 +1114,14 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 					// Build payload with user/opponent details
 					var me, opp map[string]any
 					if u, err := userSvc.GetUserByIDUint(userID); err == nil && u != nil {
-						me = map[string]any{"id": u.ID, "name": u.Name, "point": u.Point, "profile_picture": u.ProfilePicture}
+						me = map[string]any{"id": u.ID, "name": u.Name, "total_xp": u.TotalXP, "profile_picture": u.ProfilePicture}
 					}
 					if opponent != nil {
-						opp = map[string]any{"id": opponent.ID, "name": opponent.Name, "point": opponent.Point, "profile_picture": opponent.ProfilePicture}
+						opp = map[string]any{"id": opponent.ID, "name": opponent.Name, "total_xp": opponent.TotalXP, "profile_picture": opponent.ProfilePicture}
 					}
-					client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": me, "opponent": opp})
+					// Check if current user is host (first participant)
+					isHost := len(quiz.Participants) > 0 && quiz.Participants[0].UserID == userID
+					client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": me, "opponent": opp, "is_host": isHost})
 					return
 				}
 			}
@@ -830,31 +1158,33 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 						u2 = uu
 					}
 				}
-				// Emit to participant[0]
+				// Emit to participant[0] (host)
 				if u1 != nil {
 					if s1, ok := sess.Players[u1.ID]; ok && s1 != nil {
 						s1.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID,
-							"user": map[string]any{"id": u1.ID, "name": u1.Name, "point": u1.Point, "profile_picture": u1.ProfilePicture},
+							"user": map[string]any{"id": u1.ID, "name": u1.Name, "total_xp": u1.TotalXP, "profile_picture": u1.ProfilePicture},
 							"opponent": func() any {
 								if u2 == nil {
 									return nil
 								}
-								return map[string]any{"id": u2.ID, "name": u2.Name, "point": u2.Point, "profile_picture": u2.ProfilePicture}
+								return map[string]any{"id": u2.ID, "name": u2.Name, "total_xp": u2.TotalXP, "profile_picture": u2.ProfilePicture}
 							}(),
+							"is_host": true, // First participant is always host
 						})
 					}
 				}
-				// Emit to participant[1]
+				// Emit to participant[1] (joiner)
 				if u2 != nil {
 					if s2, ok := sess.Players[u2.ID]; ok && s2 != nil {
 						s2.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID,
-							"user": map[string]any{"id": u2.ID, "name": u2.Name, "point": u2.Point, "profile_picture": u2.ProfilePicture},
+							"user": map[string]any{"id": u2.ID, "name": u2.Name, "total_xp": u2.TotalXP, "profile_picture": u2.ProfilePicture},
 							"opponent": func() any {
 								if u1 == nil {
 									return nil
 								}
-								return map[string]any{"id": u1.ID, "name": u1.Name, "point": u1.Point, "profile_picture": u1.ProfilePicture}
+								return map[string]any{"id": u1.ID, "name": u1.Name, "total_xp": u1.TotalXP, "profile_picture": u1.ProfilePicture}
 							}(),
+							"is_host": false, // Second participant is not host
 						})
 					}
 				}
@@ -872,12 +1202,8 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				log.Printf("[socket.io] Lobby ready for quiz_id=%d, waiting for host to start", quiz.ID)
 				return
 			}
-			// If only one participant, emit lobby_joined with opponent nil and user details
-			if u, err := userSvc.GetUserByIDUint(userID); err == nil && u != nil {
-				client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": map[string]any{"id": u.ID, "name": u.Name, "point": u.Point, "profile_picture": u.ProfilePicture}, "opponent": nil})
-			} else {
-				client.Emit(EventLobbyJoined, gin.H{"quiz_id": quiz.ID, "user": map[string]any{"id": userID}, "opponent": nil})
-			}
+			// If only one participant, don't emit lobby_joined (wait for opponent)
+			log.Printf("[socket.io] User %d joined lobby for quiz %d, still waiting for opponent", userID, quiz.ID)
 		})
 
 		// host_start_quiz - Host manually starts the multiplayer quiz
@@ -889,12 +1215,15 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			
 			// Parse arguments
 			if len(args) == 1 {
-				// Support object format: {quiz_id, user_id}
+				// Support object format: {quiz_id, host_user_id} or {quiz_id, user_id}
 				if obj, ok := args[0].(map[string]any); ok {
 					if qid, ok := obj["quiz_id"].(float64); ok {
 						quizID = uint(qid)
 					}
-					if uid, ok := obj["user_id"].(float64); ok {
+					// Support both host_user_id and user_id
+					if uid, ok := obj["host_user_id"].(float64); ok {
+						hostUserID = uint(uid)
+					} else if uid, ok := obj["user_id"].(float64); ok {
 						hostUserID = uint(uid)
 					}
 				}
@@ -913,16 +1242,67 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				return
 			}
 			
-			// Get quiz
-			quiz, err := quizSvc.GetQuizByID(quizID)
-			if err != nil || quiz == nil {
-				client.Emit(EventLobbyError, gin.H{"error": "quiz_not_found", "message": "Quiz not found"})
+			if hostUserID == 0 {
+				client.Emit(EventLobbyError, gin.H{"error": "invalid_user_id", "message": "Host user ID is required"})
 				return
 			}
 			
+			// Get quiz with retry logic to handle database consistency
+			var quiz *models.Quiz
+			var err error
+			maxRetries := 3
+			for i := 0; i < maxRetries; i++ {
+				quiz, err = quizSvc.GetQuizByID(quizID)
+				if err != nil || quiz == nil {
+					if i < maxRetries-1 {
+						log.Printf("[socket.io] Quiz not found, retry %d/%d for quiz_id=%d", i+1, maxRetries, quizID)
+						time.Sleep(time.Millisecond * 100) // Small delay for database consistency
+						continue
+					}
+					client.Emit(EventLobbyError, gin.H{"error": "quiz_not_found", "message": "Quiz not found"})
+					return
+				}
+				
+				// Check if participants are loaded - if not, wait a bit and retry
+				if len(quiz.Participants) == 0 && i < maxRetries-1 {
+					log.Printf("[socket.io] No participants found yet, retry %d/%d for quiz_id=%d", i+1, maxRetries, quizID)
+					time.Sleep(time.Millisecond * 200)
+					continue
+				}
+				
+				break // Success or final attempt
+			}
+			
 			// Verify user is the host (first participant)
-			if len(quiz.Participants) == 0 || quiz.Participants[0].UserID != hostUserID {
-				client.Emit(EventLobbyError, gin.H{"error": "not_host", "message": "Only host can start the quiz"})
+			log.Printf("[socket.io] Host validation - quiz.Participants count: %d", len(quiz.Participants))
+			if len(quiz.Participants) > 0 {
+				log.Printf("[socket.io] Host validation - first participant UserID: %d, provided hostUserID: %d", quiz.Participants[0].UserID, hostUserID)
+				// Log all participants for debugging
+				for i, p := range quiz.Participants {
+					log.Printf("[socket.io] Participant[%d]: UserID=%d", i, p.UserID)
+				}
+			}
+			
+			if len(quiz.Participants) == 0 {
+				client.Emit(EventLobbyError, gin.H{"error": "no_participants", "message": "No participants found in quiz"})
+				return
+			}
+			
+			if quiz.Participants[0].UserID != hostUserID {
+				// Check if the user is in the participants list at all
+				isParticipant := false
+				for _, p := range quiz.Participants {
+					if p.UserID == hostUserID {
+						isParticipant = true
+						break
+					}
+				}
+				
+				if isParticipant {
+					client.Emit(EventLobbyError, gin.H{"error": "not_host", "message": "User is participant but not the host"})
+				} else {
+					client.Emit(EventLobbyError, gin.H{"error": "not_participant", "message": "User is not a participant in this quiz"})
+				}
 				return
 			}
 			
@@ -1160,6 +1540,33 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 				return
 			}
 
+			// Clean up any existing multiplayer sessions for this user
+			sessions.Lock()
+			for quizID, mpSession := range sessions.M {
+				if mpSession != nil && mpSession.Players != nil {
+					if _, exists := mpSession.Players[userID]; exists {
+						log.Printf("[socket.io] Removing user %d from multiplayer session %d due to single-player join", userID, quizID)
+						
+						// Remove user from multiplayer session
+						delete(mpSession.Players, userID)
+						
+						// Leave the multiplayer room
+						client.Leave(socket.Room(roomName(quizID)))
+						
+						// If this was the last player, clean up the entire session
+						if len(mpSession.Players) == 0 {
+							log.Printf("[socket.io] Cleaning up empty multiplayer session %d", quizID)
+							delete(sessions.M, quizID)
+						} else {
+							// Notify remaining players that opponent left
+							mpSession.broadcast(io, EventUserLeave, gin.H{"user_id": userID, "message": "Opponent left for single-player mode"})
+						}
+						break // User can only be in one multiplayer session at a time
+					}
+				}
+			}
+			sessions.Unlock()
+
 			// Prefer mode-specific question API
 			var qs *[]models.Question
 			var err error
@@ -1349,6 +1756,101 @@ func StartSocketIOServer(router *gin.Engine, questionSvc services.QuestionServic
 			}
 		})
 
+		// opponent_taunt - Send taunt/reaction to opponent in multiplayer
+		client.On(EventOpponentTaunt, func(args ...any) {
+			log.Printf("[socket.io] opponent_taunt received with args: %#v", args)
+			
+			var quizID uint
+			var senderUserID uint
+			var linkLottie string
+			var tauntType string
+			parsed := false
+			
+			// Parse arguments - expect {quiz_id, user_id, link_lottie, type?}
+			if len(args) == 1 {
+				if obj, ok := args[0].(map[string]any); ok {
+					if qid, ok := obj["quiz_id"].(float64); ok {
+						quizID = uint(qid)
+					}
+					if uid, ok := obj["user_id"].(float64); ok {
+						senderUserID = uint(uid)
+					}
+					if link, ok := obj["link_lottie"].(string); ok {
+						linkLottie = link
+					}
+					if tType, ok := obj["type"].(string); ok {
+						tauntType = tType
+					} else {
+						tauntType = "reaction" // default type
+					}
+					parsed = quizID != 0 && senderUserID != 0 && linkLottie != ""
+				}
+			}
+			
+			if !parsed {
+				client.Emit(EventLobbyError, gin.H{"error": "invalid_taunt_args", "args": args})
+				return
+			}
+			
+			// Find the multiplayer session
+			sessions.Lock()
+			mpSession, exists := sessions.M[quizID]
+			sessions.Unlock()
+			
+			if !exists || mpSession == nil {
+				client.Emit(EventLobbyError, gin.H{"error": "session_not_found", "quiz_id": quizID})
+				return
+			}
+			
+			// Find the opponent (the other player in the session)
+			var opponentSocket *socket.Socket
+			var opponentID uint
+			
+			for uid, sock := range mpSession.Players {
+				if uid != senderUserID && sock != nil {
+					opponentSocket = sock
+					opponentID = uid
+					break
+				}
+			}
+			
+			if opponentSocket == nil {
+				client.Emit(EventLobbyError, gin.H{"error": "opponent_not_found"})
+				return
+			}
+			
+			// Get sender user info for the taunt
+			var senderName string
+			if userSvc != nil {
+				if user, err := userSvc.GetUserByIDUint(senderUserID); err == nil && user != nil {
+					senderName = user.Name
+				}
+			}
+			if senderName == "" {
+				senderName = "Opponent" // fallback
+			}
+			
+			log.Printf("[socket.io] Sending taunt from user %d (%s) to user %d", senderUserID, senderName, opponentID)
+			
+			// Send the taunt to the opponent
+			opponentSocket.Emit(EventTauntReceived, gin.H{
+				"quiz_id":     quizID,
+				"sender_id":   senderUserID,
+				"sender_name": senderName,
+				"link_lottie": linkLottie,
+				"type":        tauntType,
+				"timestamp":   time.Now().Unix(),
+			})
+			
+			// Confirm to sender that taunt was sent
+			client.Emit("taunt_sent", gin.H{
+				"quiz_id":     quizID,
+				"target_id":   opponentID,
+				"link_lottie": linkLottie,
+				"type":        tauntType,
+			})
+		})
+
 		client.On("disconnect", func(...any) {
 			log.Printf("[socket.io] disconnected id=%s", client.Id())
 			sessions.Lock()
@@ -1450,10 +1952,11 @@ func sanitizeQuestions(qs []models.Question) []map[string]any {
 				"c": q.Options.OptionC,
 				"d": q.Options.OptionD,
 			},
-			"read_time":   q.ReadTime,
-			"answer_time": q.AnswerTime,
-			"module_id":   q.ModuleID,
-			"booster":     booster,
+			"read_time":      q.ReadTime,
+			"answer_time":    q.AnswerTime,
+			"module_id":      q.ModuleID,
+			"booster":        booster,
+			"question_type":  q.QuestionType, // "hots" or "regular"
 			// Expose correct answer as requested by FE
 			"correct_index":  optionIndex(q.CorrectAnswer),
 			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
@@ -1492,11 +1995,12 @@ func sanitizeQuestionsWithBoosters(qs []models.Question, boosters []int) []map[s
 				"c": q.Options.OptionC,
 				"d": q.Options.OptionD,
 			},
-			"read_time":     q.ReadTime,
-			"answer_time":   q.AnswerTime,
-			"module_id":     q.ModuleID,
-			"booster":       booster,
-			"correct_index": optionIndex(q.CorrectAnswer),
+			"read_time":      q.ReadTime,
+			"answer_time":    q.AnswerTime,
+			"module_id":      q.ModuleID,
+			"booster":        booster,
+			"question_type":  q.QuestionType, // "hots" or "regular"
+			"correct_index":  optionIndex(q.CorrectAnswer),
 			"correct_option": strings.ToLower(strings.TrimSpace(q.CorrectAnswer)),
 			"explanation":    q.Explanation,
 		})
