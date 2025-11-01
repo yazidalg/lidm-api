@@ -571,7 +571,10 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 	var request request.AddARExperimentToModuleRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
 		return
 	}
 
@@ -594,10 +597,10 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 		return
 	}
 
-	if !userModel.IsAdmin() {
+	if !userModel.IsAdmin() && !userModel.IsTeacher() {
 		c.JSON(http.StatusForbidden, gin.H{
-			"error":   "Admin access required",
-			"message": "Only administrators can add AR experiments to modules",
+			"error":   "Admin or Teacher access required",
+			"message": "Only administrators or teachers can add AR experiments to modules",
 		})
 		return
 	}

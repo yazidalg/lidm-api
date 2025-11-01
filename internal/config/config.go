@@ -58,21 +58,28 @@ func ConnectDB() *gorm.DB {
 		// -----------------------------
 		// Cloud SQL connection (Unix socket)
 		// -----------------------------
-		instanceConnectionName := os.Getenv("INSTANCE_CONNECTION_NAME") // e.g. "project:region:instance"
-		if instanceConnectionName == "" {
-			// Fallback to DB_HOST if INSTANCE_CONNECTION_NAME is not set
-			instanceConnectionName = os.Getenv("DB_HOST")
-			if instanceConnectionName == "" {
-				log.Fatal("❌ Both INSTANCE_CONNECTION_NAME and DB_HOST are not set")
+		dbHost := os.Getenv("DB_HOST")
+		if dbHost != "" {
+			dbPort := os.Getenv("DB_PORT")
+			if dbPort == "" {
+				dbPort = "3306"
 			}
+			dsn = fmt.Sprintf(
+				"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+				dbUser, dbPassword, dbHost, dbPort, dbName,
+			)
+			log.Printf("🔗 Connecting to production DB over TCP at %s:%s", dbHost, dbPort)
+		} else {
+			instanceConnectionName := os.Getenv("INSTANCE_CONNECTION_NAME") // e.g. "project:region:instance"
+			if instanceConnectionName == "" {
+				log.Fatal("❌ Neither DB_HOST nor INSTANCE_CONNECTION_NAME is set for production")
+			}
+			dsn = fmt.Sprintf(
+				"%s:%s@unix(/cloudsql/%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+				dbUser, dbPassword, instanceConnectionName, dbName,
+			)
+			log.Printf("🔗 Connecting to Cloud SQL via /cloudsql/%s", instanceConnectionName)
 		}
-
-		dsn = fmt.Sprintf(
-			"%s:%s@unix(/cloudsql/%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
-			dbUser, dbPassword, instanceConnectionName, dbName,
-		)
-		log.Printf("🔗 Connecting to Cloud SQL via /cloudsql/%s", instanceConnectionName)
-
 	} else {
 		// -----------------------------
 		// Local dev (TCP connection)

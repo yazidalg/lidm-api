@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"os"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
@@ -35,10 +38,28 @@ func NewRoute(
 	// Enable CORS - configurable for different environments
 	router.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
+
+		// Build allowed origins list from environment variable and defaults
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
-			// "https://your-frontend-domain.com", // Replace with your actual frontend domain
+			"https://lidm-frontend-629808488591.asia-southeast2.run.app",
+		}
+
+		// Add production frontend domain
+		if prodFrontend := os.Getenv("FRONTEND_URL"); prodFrontend != "" {
+			allowedOrigins = append(allowedOrigins, prodFrontend)
+		}
+
+		// Also support comma-separated list of origins
+		if allowedOriginsEnv := os.Getenv("ALLOWED_ORIGINS"); allowedOriginsEnv != "" {
+			envOrigins := strings.Split(allowedOriginsEnv, ",")
+			for _, envOrigin := range envOrigins {
+				trimmed := strings.TrimSpace(envOrigin)
+				if trimmed != "" {
+					allowedOrigins = append(allowedOrigins, trimmed)
+				}
+			}
 		}
 
 		// Allow requests from allowed origins or if no origin (like Postman)
@@ -57,7 +78,7 @@ func NewRoute(
 		if allowOrigin != "" {
 			c.Header("Access-Control-Allow-Origin", allowOrigin)
 		}
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Expose-Headers", "Content-Length")
