@@ -10,11 +10,15 @@ import (
 )
 
 type UserHandler struct {
-	userService services.UserServiceInterface
+	userService        services.UserServiceInterface
+	leaderboardService *services.LeaderboardService
 }
 
-func NewUserHandler(userService services.UserServiceInterface) *UserHandler {
-	return &UserHandler{userService}
+func NewUserHandler(userService services.UserServiceInterface, leaderboardService *services.LeaderboardService) *UserHandler {
+	return &UserHandler{
+		userService:        userService,
+		leaderboardService: leaderboardService,
+	}
 }
 
 func (h *UserHandler) GetUserById(c *gin.Context) {
@@ -27,10 +31,28 @@ func (h *UserHandler) GetUserById(c *gin.Context) {
 
 	user := userVal.(models.User)
 
-	c.JSON(http.StatusOK, gin.H{
+	// Update user position before returning profile
+	if h.leaderboardService != nil {
+		_ = h.leaderboardService.UpdateUserPosition(user.ID)
+		
+		// Refresh user data to get updated position information
+		if updatedUser, err := h.userService.GetUserByIDUint(user.ID); err == nil && updatedUser != nil {
+			user = *updatedUser
+		}
+	}
+
+	// Add the two fields you requested to the user response
+	responseData := user
+	
+	// Add position information in a simple format
+	response := gin.H{
 		"message": "User found",
-		"data":    user,
-	})
+		"data":    responseData,
+		"type":           user.PositionType,     // "increasing" or "decreasing"
+		"position_change": user.PositionChange, // 1, 2, 3, etc.
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {

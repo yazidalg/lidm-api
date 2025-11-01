@@ -4,12 +4,30 @@ import (
 	"encoding/json"
 	"log"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/socket/common"
 )
+
+// getOptionIndex converts option letter (A, B, C, D) to index (0, 1, 2, 3)
+func getOptionIndex(option string) int {
+	option = strings.ToUpper(strings.TrimSpace(option))
+	switch option {
+	case "A":
+		return 0
+	case "B":
+		return 1
+	case "C":
+		return 2
+	case "D":
+		return 3
+	default:
+		return -1 // Invalid option
+	}
+}
 
 // Inisialisasi Score untuk setiap pemain
 func (s *QuizSession) InitializeScores() {
@@ -58,6 +76,10 @@ func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQues
 
 	isCorrect := answerEvent.Payload.OptionSelected == currentQuestion.CorrectAnswer
 
+	// Convert option letters to index (A=0, B=1, C=2, D=3)
+	selectedIndex := getOptionIndex(answerEvent.Payload.OptionSelected)
+	correctIndex := getOptionIndex(currentQuestion.CorrectAnswer)
+
 	// Ambil detail quiz untuk cek mode & apply rules
 	quiz, err := s.Hub.QuizService.GetQuizByID(s.QuizID)
 	if err != nil {
@@ -66,6 +88,8 @@ func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQues
 
 	baseScore := 10
 	gainedXP := int32(0)
+	var remainingLives *int // Untuk menyimpan sisa lives jika mode single_player
+	
 	if isCorrect {
 		// Tambah base score
 		s.PlayerScores[answerEvent.Player] += baseScore
@@ -92,6 +116,9 @@ func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQues
 			} else {
 				// Ambil user ter-update
 				if u, err2 := s.Hub.UserService.GetUserByIDUint(answerEvent.Player.UserID); err2 == nil && u != nil {
+					livesCount := int(u.Lives)
+					remainingLives = &livesCount
+					
 					if u.Lives <= 0 {
 						payload, _ := json.Marshal(map[string]interface{}{"message": "Lives exhausted", "lives": u.Lives})
 						s.Hub.SendMessage(answerEvent.Player, common.Message{Action: "lives_exhausted", Payload: payload, Target: s.RoomName})
@@ -101,7 +128,24 @@ func (s *QuizSession) AnswerProcess(answerEvent *common.AnswerEvent, currentQues
 		}
 	}
 
-	resultPayload, _ := json.Marshal(map[string]interface{}{"is_correct": isCorrect, "your_score": s.PlayerScores[answerEvent.Player], "gained_xp": gainedXP})
+	// Buat result payload dengan kondisi
+	resultData := map[string]interface{}{
+		"is_correct":  isCorrect,
+		"question_id": currentQuestion.ID,
+		"options": map[string]interface{}{
+			"correct_index":  correctIndex,
+			"selected_index": selectedIndex,
+		},
+		"your_score": s.PlayerScores[answerEvent.Player],
+		"gained_xp":  gainedXP,
+	}
+	
+	// Jika mode single_player dan ada info lives, tambahkan ke response
+	if quiz != nil && quiz.Mode == "single_player" && remainingLives != nil {
+		resultData["remaining_lives"] = *remainingLives
+	}
+	
+	resultPayload, _ := json.Marshal(resultData)
 	s.Hub.BroadcastToRoom(common.Message{Action: "answer_result", Payload: resultPayload, Target: s.RoomName})
 
 	answeredEvent := &common.AnsweredQuestionEvent{

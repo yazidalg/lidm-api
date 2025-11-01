@@ -76,7 +76,7 @@ func (r *userRepository) DecrementLife(userID uint) error {
 	return r.db.Model(&models.User{}).Where("id = ? AND lives > 0", userID).UpdateColumn("lives", gorm.Expr("lives - 1")).Error
 }
 
-// ResetLivesIfNeeded - reset nyawa user ke maxLives jika hari sudah berganti
+// ResetLivesIfNeeded - reset nyawa user ke maxLives jika sudah melewati waktu life_reset_at
 func (r *userRepository) ResetLivesIfNeeded(userID uint, maxLives int) error {
 	var user models.User
 	if err := r.db.First(&user, userID).Error; err != nil {
@@ -84,13 +84,31 @@ func (r *userRepository) ResetLivesIfNeeded(userID uint, maxLives int) error {
 	}
 
 	now := time.Now()
-	if user.LifeResetAt == nil || (user.LifeResetAt.Year() != now.Year() || user.LifeResetAt.YearDay() != now.YearDay()) {
+	wib, _ := time.LoadLocation("Asia/Jakarta")
+	nowWIB := now.In(wib)
+	
+	// Reset jika:
+	// 1. LifeResetAt belum pernah diset (null), ATAU
+	// 2. Waktu sekarang sudah melewati life_reset_at (sudah waktunya reset)
+	needsReset := user.LifeResetAt == nil || nowWIB.After(*user.LifeResetAt)
+	
+	if needsReset {
+		// Set life_reset_at ke besok jam 00:00 WIB
+		nextResetTime := time.Date(nowWIB.Year(), nowWIB.Month(), nowWIB.Day()+1, 0, 0, 0, 0, wib)
+		
 		return r.db.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
 			"lives":         maxLives,
-			"life_reset_at": now,
+			"life_reset_at": nextResetTime,
 		}).Error
 	}
 	return nil
+}
+
+// isSameDay checks if two times are on the same calendar day
+func isSameDay(t1, t2 time.Time) bool {
+	y1, m1, d1 := t1.Date()
+	y2, m2, d2 := t2.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
 }
 
 // AddXP - tambah XP user
