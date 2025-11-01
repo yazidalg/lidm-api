@@ -43,7 +43,7 @@ func NewRoute(
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
-			"https://lidm-frontend-629808488591.asia-southeast2.run.app",
+			"https://lidm-frontend-629808488591.asia-southeast2.run.app/*",
 		}
 
 		// Add production frontend domain
