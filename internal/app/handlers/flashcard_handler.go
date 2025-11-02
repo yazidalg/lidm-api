@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
 	"github.com/yazidalg/lidm_backend/internal/app/repositories"
+	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
@@ -507,6 +508,100 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Flashcard schedule preview",
 		"data":    scheduleWithStats,
+	})
+}
+
+// UpdateFlashcard - Update a flashcard (Admin/Teacher only)
+func (h *FlashcardHandler) UpdateFlashcard(c *gin.Context) {
+	flashcardIDParam := c.Param("flashcard_id")
+	flashcardID, err := strconv.ParseUint(flashcardIDParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid flashcard ID",
+		})
+		return
+	}
+
+	// Check if flashcard exists
+	existingFlashcard, err := h.flashcardRepo.GetFlashcardByID(uint(flashcardID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Flashcard not found",
+		})
+		return
+	}
+
+	var req request.UpdateFlashcardRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Update only provided fields
+	if req.ModuleID != nil {
+		existingFlashcard.ModuleID = *req.ModuleID
+	}
+	if req.FrontText != nil {
+		existingFlashcard.FrontText = *req.FrontText
+	}
+	if req.BackText != nil {
+		existingFlashcard.BackText = *req.BackText
+	}
+	if req.Order != nil {
+		existingFlashcard.Order = *req.Order
+	}
+
+	// Update flashcard
+	updatedFlashcard, err := h.flashcardRepo.UpdateFlashcard(uint(flashcardID), existingFlashcard)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to update flashcard",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Flashcard updated successfully",
+		"data":    updatedFlashcard,
+	})
+}
+
+// DeleteFlashcard - Delete a flashcard (Admin/Teacher only)
+func (h *FlashcardHandler) DeleteFlashcard(c *gin.Context) {
+	flashcardIDParam := c.Param("flashcard_id")
+	flashcardID, err := strconv.ParseUint(flashcardIDParam, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid flashcard ID",
+		})
+		return
+	}
+
+	// Check if flashcard exists
+	_, err = h.flashcardRepo.GetFlashcardByID(uint(flashcardID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Flashcard not found",
+		})
+		return
+	}
+
+	// Delete flashcard
+	err = h.flashcardRepo.DeleteFlashcard(uint(flashcardID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to delete flashcard",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Flashcard deleted successfully",
 	})
 }
 
