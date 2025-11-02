@@ -133,6 +133,7 @@ func NewRoute(
 	userGroupHandler.Use(activityMiddleware.TrackActivity()) // Track user activities
 	{
 		userGroupHandler.GET("/profile", userHandler.GetUserById)
+		userGroupHandler.GET("/admin", userHandler.GetUserAdmin)
 	}
 
 	// Question routes - Admin only untuk CUD, User bisa Read
@@ -337,6 +338,7 @@ func NewRoute(
 	{
 		// User management untuk admin
 		adminGroup.GET("/users", userHandler.GetAllUsers)
+		adminGroup.PUT("/users/:id/account", userHandler.UpdateUserAccount)
 		adminGroup.PUT("/users/:id/role", userHandler.UpdateUserRole)
 		adminGroup.DELETE("/users/:id", userHandler.DeleteUser)
 

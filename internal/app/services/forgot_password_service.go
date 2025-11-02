@@ -75,23 +75,7 @@ func (s *forgotPasswordService) VerifyOTP(req request.VerifyOTPRequest) (bool, e
 }
 
 func (s *forgotPasswordService) ResetPassword(req request.ResetPasswordRequest) error {
-	// Verify OTP again
-	otpRecord, err := s.forgotPasswordRepo.GetValidOTP(req.Email, req.OTP)
-	if err != nil {
-		return err
-	}
-
-	if otpRecord == nil {
-		return errors.New("invalid or expired OTP")
-	}
-
-	// Mark OTP as used
-	_, err = s.forgotPasswordRepo.CheckUsedOTP(otpRecord)
-	if err != nil {
-		return errors.New("failed to mark OTP as used")
-	}
-
-	// Get user
+	// Get user by email
 	user, err := s.authRepo.GetByEmail(req.Email)
 	if err != nil {
 		return errors.New("user not found")

@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/models"
+	"github.com/yazidalg/lidm_backend/internal/app/request"
+	"github.com/yazidalg/lidm_backend/internal/app/response"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
 )
 
@@ -34,7 +36,7 @@ func (h *UserHandler) GetUserById(c *gin.Context) {
 	// Update user position before returning profile
 	if h.leaderboardService != nil {
 		_ = h.leaderboardService.UpdateUserPosition(user.ID)
-		
+
 		// Refresh user data to get updated position information
 		if updatedUser, err := h.userService.GetUserByIDUint(user.ID); err == nil && updatedUser != nil {
 			user = *updatedUser
@@ -43,16 +45,40 @@ func (h *UserHandler) GetUserById(c *gin.Context) {
 
 	// Add the two fields you requested to the user response
 	responseData := user
-	
+
 	// Add position information in a simple format
 	response := gin.H{
-		"message": "User found",
-		"data":    responseData,
-		"type":           user.PositionType,     // "increasing" or "decreasing"
+		"message":         "User found",
+		"data":            responseData,
+		"type":            user.PositionType,   // "increasing" or "decreasing"
 		"position_change": user.PositionChange, // 1, 2, 3, etc.
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *UserHandler) GetUserAdmin(c *gin.Context) {
+	userVal, exist := c.Get("user")
+	if !exist {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not unauthorized"})
+		return
+	}
+	user := userVal.(models.User)
+
+	responseData := response.UserAdminResponse{
+		ID:                uint32(user.ID),
+		Email:             user.Email,
+		Name:              user.Name,
+		IsVerified:        user.IsVerified,
+		VerificationToken: user.VerificationToken,
+		RoleID:            user.RoleID,
+		RoleName:          user.Role.Name,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User admin found",
+		"data":    responseData,
+	})
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
@@ -119,6 +145,48 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User role updated successfully",
+		"data":    updatedUser,
+	})
+}
+
+func (h *UserHandler) UpdateUserAccount(c *gin.Context) {
+	var req request.UpdateUserAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User ID is required",
+		})
+		return
+	}
+
+	// Convert string to uint
+	var id uint
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID",
+		})
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateUserAccount(id, req.Name, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to update user account",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User account updated successfully",
 		"data":    updatedUser,
 	})
 }
