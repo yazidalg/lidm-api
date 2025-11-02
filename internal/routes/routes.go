@@ -247,6 +247,7 @@ func NewRoute(
 		moduleAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			moduleAdminGroup.GET("/all", moduleHandler.GetAllModulesAdmin)
+			moduleAdminGroup.GET("/all-no-pagination", moduleHandler.GetAllModulesAdminAll)
 		}
 
 		// Admin and Teacher routes (original admin group)

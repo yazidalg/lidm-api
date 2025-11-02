@@ -705,3 +705,21 @@ func (h *ModuleHandler) GetAllModulesAdmin(c *gin.Context) {
 		},
 	})
 }
+
+// GetAllModulesAdminAll returns all modules for admin use (no user-specific data) without pagination
+func (h *ModuleHandler) GetAllModulesAdminAll(c *gin.Context) {
+	results, err := h.moduleService.GetAllModules()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to retrieve modules",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "All modules retrieved successfully",
+		"data":    results,
+	})
+}
