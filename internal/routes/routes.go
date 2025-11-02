@@ -338,7 +338,6 @@ func NewRoute(
 	{
 		// User management untuk admin
 		adminGroup.GET("/users", userHandler.GetAllUsers)
-		adminGroup.PUT("/users/:id/account", userHandler.UpdateUserAccount)
 		adminGroup.PUT("/users/:id/role", userHandler.UpdateUserRole)
 		adminGroup.DELETE("/users/:id", userHandler.DeleteUser)
 
@@ -348,6 +347,15 @@ func NewRoute(
 		adminGroup.GET("/roles/:id", roleHandler.GetRoleById)
 		adminGroup.PUT("/roles/:id", roleHandler.UpdateRole)
 		adminGroup.DELETE("/roles/:id", roleHandler.DeleteRole)
+	}
+
+	// Admin/Teacher routes - User account management
+	adminTeacherGroup := router.Group("admin")
+	adminTeacherGroup.Use(authMiddleware.RequireAuth)
+	adminTeacherGroup.Use(authMiddleware.RequireAdminOrTeacher)
+	{
+		// Update user account (name and email only)
+		adminTeacherGroup.PUT("/users/:id/account", userHandler.UpdateAccount)
 	}
 
 	// Public RAG endpoint (no auth required for AI/knowledge systems)

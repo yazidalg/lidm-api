@@ -18,8 +18,7 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 	userRepository := repositories.NewUserRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
-	authRepository := repositories.NewAuthRepository(db)
-	userService := services.NewUserService(userRepository, roleService, authRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	// Create leaderboard service for position tracking
 	leaderboardRepository := repositories.NewLeaderboardRepository(db)
@@ -41,8 +40,7 @@ func NewUserServiceOnly(db *gorm.DB) services.UserServiceInterface {
 	userRepository := repositories.NewUserRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
-	authRepository := repositories.NewAuthRepository(db)
-	return services.NewUserService(userRepository, roleService, authRepository)
+	return services.NewUserService(userRepository, roleService)
 }
 
 func NewBuildAuth(db *gorm.DB) *handlers.AuthHandler {
@@ -171,8 +169,7 @@ func NewBuildProgress(db *gorm.DB) *handlers.ProgressHandler {
 	userRepository := repositories.NewUserRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
-	authRepository := repositories.NewAuthRepository(db)
-	userService := services.NewUserService(userRepository, roleService, authRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	// Extra repos/services needed for aggregation
 	videoQuizRepository := repositories.NewVideoQuizRepository(db)
@@ -201,8 +198,7 @@ func NewBuildPrequiz(db *gorm.DB) (*handlers.PrequizHandler, services.PrequizSer
 	userRepository := repositories.NewUserRepository(db)
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
-	authRepository := repositories.NewAuthRepository(db)
-	userService := services.NewUserService(userRepository, roleService, authRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	prequizService := services.NewPrequizService(prequizRepository, userRepository)
 
@@ -222,7 +218,7 @@ func NewBuildAuthMiddleware(db *gorm.DB) *middleware.AuthMiddleware {
 	authService := services.NewAuthService(authRepository, roleService)
 	// user service for life reset
 	userRepository := repositories.NewUserRepository(db)
-	userService := services.NewUserService(userRepository, roleService, authRepository)
+	userService := services.NewUserService(userRepository, roleService)
 	authMiddleware := middleware.NewAuthMiddleware(authService, userService)
 	return authMiddleware
 }
@@ -262,8 +258,7 @@ func NewBuildDashboard(db *gorm.DB) *handlers.DashboardHandler {
 
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
-	authRepository := repositories.NewAuthRepository(db)
-	userService := services.NewUserService(userRepository, roleService, authRepository)
+	userService := services.NewUserService(userRepository, roleService)
 
 	dashboardHandler := handlers.NewDashboardHandler(activityService, userService)
 	return dashboardHandler

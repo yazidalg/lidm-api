@@ -149,48 +149,6 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 	})
 }
 
-func (h *UserHandler) UpdateUserAccount(c *gin.Context) {
-	var req request.UpdateUserAccountRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid request",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	userID := c.Param("id")
-	if userID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "User ID is required",
-		})
-		return
-	}
-
-	// Convert string to uint
-	var id uint
-	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid user ID",
-		})
-		return
-	}
-
-	updatedUser, err := h.userService.UpdateUserAccount(id, req.Name, req.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Failed to update user account",
-			"error":   err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User account updated successfully",
-		"data":    updatedUser,
-	})
-}
-
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
@@ -220,5 +178,53 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User deleted successfully",
+	})
+}
+
+func (h *UserHandler) UpdateAccount(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User ID is required",
+		})
+		return
+	}
+
+	// Convert string to uint
+	var id uint
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid user ID",
+		})
+		return
+	}
+
+	var req request.UpdateAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	updatedUser, err := h.userService.UpdateAccount(id, req.Name, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to update account",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	responseData := response.UpdateAccountResponse{
+		ID:    updatedUser.ID,
+		Name:  updatedUser.Name,
+		Email: updatedUser.Email,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Account updated successfully",
+		"data":    responseData,
 	})
 }
