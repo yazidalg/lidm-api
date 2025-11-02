@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -81,22 +80,32 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
 	// Preload semua komponen yang diperlukan untuk satu module: Video, AR, Prequizzes, dan Flashcards
+	// Use Where instead of passing id directly to First() to ensure preloads work correctly
 	err := r.db.
 		Preload("VideoMaterial").                                          // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiments
+		Preload("ARExperiment").                           // AR experiment (one-to-one relationship)
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
 		Preload("Flashcards", func(db *gorm.DB) *gorm.DB { // Flashcards ordered by order
 			return db.Order("flashcards.`order` ASC")
 		}).
-		First(&module, id).Error
+		Where("id = ?", id).
+		First(&module).Error
 
 	if err != nil {
 		return nil, err
+	}
+
+	// If ARExperiment is still nil, try to load it explicitly as a fallback
+	if module.ARExperiment == nil {
+		var arExp models.ARExperiment
+		if err := r.db.Where("module_id = ?", id).First(&arExp).Error; err == nil {
+			module.ARExperiment = &arExp
+		}
 	}
 
 	return &module, nil
@@ -111,9 +120,7 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
-			return db.Order("ar_experiments.created_at ASC")
-		}).                                                // AR experiments
+		Preload("ARExperiment").                           // AR experiment (one-to-one relationship, no ordering needed)
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -122,10 +129,6 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		}).
 		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
-
-	for _, module := range modules {
-		fmt.Println("ANJEENG ====> ✅", module.ARExperiment)
-	}
 
 	if err != nil {
 		return nil, err
@@ -150,9 +153,7 @@ func (r *moduleRepository) GetAllModulesWithPagination(limit, offset int) ([]mod
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
-			return db.Order("ar_experiments.created_at ASC")
-		}).                                                // AR experiments
+		Preload("ARExperiment").                           // AR experiment (one-to-one relationship, no ordering needed)
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).

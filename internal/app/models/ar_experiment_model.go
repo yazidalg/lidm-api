@@ -16,7 +16,4 @@ type ARExperiment struct {
 	ModuleID  uint      `gorm:"not null;index" json:"module_id"` // Foreign key to Module
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-
-	// Note: Removed SubMaterials relationship to avoid circular import
-	// SubMaterials can reference this via ARExperimentID
 }

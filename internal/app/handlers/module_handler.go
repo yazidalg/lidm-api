@@ -217,6 +217,29 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 	})
 }
 
+func (h *ModuleHandler) GetModuleByIdAdmin(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid module ID"})
+		return
+	}
+
+	result, err := h.moduleService.GetModuleByID(uint32(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   err.Error(),
+			"message": "Module not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Module retrieved successfully",
+		"data":    result,
+	})
+}
+
 func (h *ModuleHandler) GetAllModules(c *gin.Context) {
 	results, err := h.moduleService.GetAllModules()
 
