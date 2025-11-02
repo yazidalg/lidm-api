@@ -573,7 +573,7 @@ func (h *ModuleHandler) UpdateModuleWithVideo(c *gin.Context) {
 		CreatedAt:     result.CreatedAt,
 		UpdatedAt:     result.UpdatedAt,
 		VideoMaterial: *result.VideoMaterial,
-		ARExperiment:  *result.ARExperiment,
+		ARExperiments: result.ARExperiments,
 	}
 
 	if err != nil {

@@ -250,16 +250,19 @@ func (s *moduleService) UpdateModuleWithVideo(id uint32, request request.UpdateM
 		module.VideoMaterial = request.VideoMaterial
 	}
 
-	// Handle ARExperiment if provided
-	if request.ARExperiment != nil {
-		// Reset ID and timestamps to let GORM auto-generate
-		request.ARExperiment.ID = 0
-		request.ARExperiment.CreatedAt = time.Time{}
-		request.ARExperiment.UpdatedAt = time.Time{}
-		request.ARExperiment.DeletedAt = gorm.DeletedAt{}
+	// Handle ARExperiments if provided
+	if len(request.ARExperiments) > 0 {
+		module.ARExperiments = make([]models.ARExperiment, len(request.ARExperiments))
+		for i := range request.ARExperiments {
+			// Reset ID and timestamps to let GORM auto-generate
+			request.ARExperiments[i].ID = 0
+			request.ARExperiments[i].CreatedAt = time.Time{}
+			request.ARExperiments[i].UpdatedAt = time.Time{}
+			request.ARExperiments[i].DeletedAt = gorm.DeletedAt{}
 
-		request.ARExperiment.ModuleID = uint(id)
-		module.ARExperiment = request.ARExperiment
+			request.ARExperiments[i].ModuleID = uint(id)
+			module.ARExperiments[i] = request.ARExperiments[i]
+		}
 	}
 
 	result, err := s.moduleRepository.UpdateModuleWithVideo(id, module)
@@ -417,11 +420,11 @@ func (s *moduleService) GetAllModulesWithUnlockStatus(userID uint) ([]map[string
 
 			// Include content based on unlock status
 			"video_material": s.enrichVideoMaterialWithAnswers(module.VideoMaterial, answeredVideoMap), // Always show video_material with answered status
-			"ar_experiment": func() interface{} {
+			"ar_experiments": func() interface{} {
 				if isUnlocked {
-					return module.ARExperiment
+					return module.ARExperiments
 				}
-				return nil
+				return []interface{}{}
 			}(),
 			"prequizzes": limitedPrequizzes, // Show only 3 prequizzes regardless of unlock status
 			"flashcards": func() interface{} {
@@ -604,11 +607,11 @@ func (s *moduleService) GetModuleByIDWithProgress(moduleID uint32, userID uint) 
 		"total_video_quizzes":    totalVideoQuizzes,
 		"answered_prequizzes":    answeredPrequizzes,
 		"answered_video_quizzes": answeredVideoQuizzes,
-		"ar_experiment": func() interface{} {
+		"ar_experiments": func() interface{} {
 			if isUnlocked {
-				return module.ARExperiment
+				return module.ARExperiments
 			}
-			return nil
+			return []interface{}{}
 		}(),
 		"video_material": s.enrichVideoMaterialWithAnswers(module.VideoMaterial, answeredVideoMap),
 		"prequizzes":     limitedPrequizzes, // Show only 3 prequizzes regardless of unlock status

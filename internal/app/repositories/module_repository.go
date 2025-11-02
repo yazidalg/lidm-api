@@ -80,32 +80,24 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 	var module models.Module
 
 	// Preload semua komponen yang diperlukan untuk satu module: Video, AR, Prequizzes, dan Flashcards
-	// Use Where instead of passing id directly to First() to ensure preloads work correctly
 	err := r.db.
 		Preload("VideoMaterial").                                          // Video content
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiment (one-to-one relationship)
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
+			return db.Order("ar_experiments.created_at ASC")
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
 		Preload("Flashcards", func(db *gorm.DB) *gorm.DB { // Flashcards ordered by order
 			return db.Order("flashcards.`order` ASC")
 		}).
-		Where("id = ?", id).
-		First(&module).Error
+		First(&module, id).Error
 
 	if err != nil {
 		return nil, err
-	}
-
-	// If ARExperiment is still nil, try to load it explicitly as a fallback
-	if module.ARExperiment == nil {
-		var arExp models.ARExperiment
-		if err := r.db.Where("module_id = ?", id).First(&arExp).Error; err == nil {
-			module.ARExperiment = &arExp
-		}
 	}
 
 	return &module, nil
@@ -120,7 +112,9 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiment (one-to-one relationship, no ordering needed)
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
+			return db.Order("ar_experiments.created_at ASC")
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -153,7 +147,9 @@ func (r *moduleRepository) GetAllModulesWithPagination(limit, offset int) ([]mod
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiment (one-to-one relationship, no ordering needed)
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
+			return db.Order("ar_experiments.created_at ASC")
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -267,21 +263,23 @@ func (r *moduleRepository) UpdateModuleWithVideo(id uint32, module *models.Modul
 		}
 	}
 
-	// Handle ARExperiment creation if provided
-	if module.ARExperiment != nil {
-		// Reset ID and timestamps to let GORM auto-generate
-		module.ARExperiment.ID = 0
-		module.ARExperiment.CreatedAt = time.Time{}
-		module.ARExperiment.UpdatedAt = time.Time{}
-		module.ARExperiment.DeletedAt = gorm.DeletedAt{}
+	// Handle ARExperiments creation if provided
+	if len(module.ARExperiments) > 0 {
+		for i := range module.ARExperiments {
+			// Reset ID and timestamps to let GORM auto-generate
+			module.ARExperiments[i].ID = 0
+			module.ARExperiments[i].CreatedAt = time.Time{}
+			module.ARExperiments[i].UpdatedAt = time.Time{}
+			module.ARExperiments[i].DeletedAt = gorm.DeletedAt{}
 
-		// Set the ModuleID
-		module.ARExperiment.ModuleID = uint(id)
+			// Set the ModuleID
+			module.ARExperiments[i].ModuleID = uint(id)
 
-		// Create the AR experiment
-		if err := tx.Create(module.ARExperiment).Error; err != nil {
-			tx.Rollback()
-			return nil, err
+			// Create the AR experiment
+			if err := tx.Create(&module.ARExperiments[i]).Error; err != nil {
+				tx.Rollback()
+				return nil, err
+			}
 		}
 	}
 
