@@ -141,7 +141,7 @@ func (h *UserHandler) UpdateUserRole(c *gin.Context) {
 			"error":   err.Error(),
 		})
 		return
-	}
+}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User role updated successfully",

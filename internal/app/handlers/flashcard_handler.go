@@ -511,6 +511,51 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 	})
 }
 
+// CreateFlashcard - Create a new flashcard (Admin/Teacher only)
+func (h *FlashcardHandler) CreateFlashcard(c *gin.Context) {
+	var req request.CreateFlashcardRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Validate that the module exists
+	_, err := h.moduleRepo.GetModuleByID(uint32(req.ModuleID))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "Module not found",
+			"details": "The specified module does not exist",
+		})
+		return
+	}
+
+	// Create flashcard model
+	flashcard := &models.Flashcard{
+		ModuleID:  req.ModuleID,
+		FrontText: req.FrontText,
+		BackText:  req.BackText,
+		Order:     req.Order,
+	}
+
+	// Create flashcard
+	createdFlashcard, err := h.flashcardRepo.CreateFlashcard(flashcard)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to create flashcard",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Flashcard created successfully",
+		"data":    createdFlashcard,
+	})
+}
+
 // UpdateFlashcard - Update a flashcard (Admin/Teacher only)
 func (h *FlashcardHandler) UpdateFlashcard(c *gin.Context) {
 	flashcardIDParam := c.Param("flashcard_id")

@@ -428,10 +428,11 @@ func NewRoute(
 		flashcardGroup.GET("/due", flashcardHandler.GetDueFlashcards)                                     // Get due flashcards
 		flashcardGroup.GET("/stats", flashcardHandler.GetRetentionStats)                                  // Get retention statistics
 
-		// Admin/Teacher routes - Update and Delete flashcard
+		// Admin/Teacher routes - Create, Update and Delete flashcard
 		flashcardAdminGroup := flashcardGroup.Group("")
 		flashcardAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
+			flashcardAdminGroup.POST("/create", flashcardHandler.CreateFlashcard)           // Create flashcard
 			flashcardAdminGroup.PUT("/:flashcard_id", flashcardHandler.UpdateFlashcard)    // Update flashcard
 			flashcardAdminGroup.DELETE("/:flashcard_id", flashcardHandler.DeleteFlashcard) // Delete flashcard
 		}
