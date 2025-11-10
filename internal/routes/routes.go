@@ -43,7 +43,7 @@ func NewRoute(
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
-			"https://lidm-frontend-629808488591.asia-southeast2.run.app",
+			"https://leafy-guru-971323763477.asia-southeast2.run.app",
 		}
 
 		// Add production frontend domain
@@ -432,7 +432,7 @@ func NewRoute(
 		flashcardAdminGroup := flashcardGroup.Group("")
 		flashcardAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
-			flashcardAdminGroup.POST("/create", flashcardHandler.CreateFlashcard)           // Create flashcard
+			flashcardAdminGroup.POST("/create", flashcardHandler.CreateFlashcard)          // Create flashcard
 			flashcardAdminGroup.PUT("/:flashcard_id", flashcardHandler.UpdateFlashcard)    // Update flashcard
 			flashcardAdminGroup.DELETE("/:flashcard_id", flashcardHandler.DeleteFlashcard) // Delete flashcard
 		}
