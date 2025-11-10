@@ -217,6 +217,29 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 	})
 }
 
+func (h *ModuleHandler) GetModuleByIdAdmin(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid module ID"})
+		return
+	}
+
+	result, err := h.moduleService.GetModuleByID(uint32(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   err.Error(),
+			"message": "Module not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Module retrieved successfully",
+		"data":    result,
+	})
+}
+
 func (h *ModuleHandler) GetAllModules(c *gin.Context) {
 	results, err := h.moduleService.GetAllModules()
 
@@ -550,7 +573,7 @@ func (h *ModuleHandler) UpdateModuleWithVideo(c *gin.Context) {
 		CreatedAt:     result.CreatedAt,
 		UpdatedAt:     result.UpdatedAt,
 		VideoMaterial: *result.VideoMaterial,
-		ARExperiment:  *result.ARExperiment,
+		ARExperiments: result.ARExperiments,
 	}
 
 	if err != nil {
@@ -571,7 +594,10 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 	var request request.AddARExperimentToModuleRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Invalid request data",
+			"details": err.Error(),
+		})
 		return
 	}
 
@@ -594,10 +620,10 @@ func (h *ModuleHandler) AddARExperimentToModule(c *gin.Context) {
 		return
 	}
 
-	if !userModel.IsAdmin() {
+	if !userModel.IsAdmin() && !userModel.IsTeacher() {
 		c.JSON(http.StatusForbidden, gin.H{
-			"error":   "Admin access required",
-			"message": "Only administrators can add AR experiments to modules",
+			"error":   "Admin or Teacher access required",
+			"message": "Only administrators or teachers can add AR experiments to modules",
 		})
 		return
 	}
@@ -677,5 +703,23 @@ func (h *ModuleHandler) GetAllModulesAdmin(c *gin.Context) {
 			"has_next":     hasNext,
 			"has_previous": hasPrev,
 		},
+	})
+}
+
+// GetAllModulesAdminAll returns all modules for admin use (no user-specific data) without pagination
+func (h *ModuleHandler) GetAllModulesAdminAll(c *gin.Context) {
+	results, err := h.moduleService.GetAllModules()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to retrieve modules",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "All modules retrieved successfully",
+		"data":    results,
 	})
 }

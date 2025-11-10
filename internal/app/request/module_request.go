@@ -49,5 +49,5 @@ type UpdateModuleWithVideoRequest struct {
 	Icon          *string               `json:"icon" binding:"omitempty"`
 	Thumbnail     *string               `json:"thumbnail" binding:"omitempty"`
 	VideoMaterial *models.VideoMaterial `json:"video_material" binding:"omitempty"`
-	ARExperiment  *models.ARExperiment  `json:"ar_experiment" binding:"omitempty"`
+	ARExperiments []models.ARExperiment `json:"ar_experiments" binding:"omitempty"`
 }

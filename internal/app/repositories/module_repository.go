@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/yazidalg/lidm_backend/internal/app/models"
@@ -86,7 +85,9 @@ func (r *moduleRepository) GetModuleByID(id uint32) (*models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment").                           // AR experiments
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
+			return db.Order("ar_experiments.created_at ASC")
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -111,9 +112,9 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
 			return db.Order("ar_experiments.created_at ASC")
-		}).                                                // AR experiments
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -122,10 +123,6 @@ func (r *moduleRepository) GetAllModules() ([]models.Module, error) {
 		}).
 		Order("created_at ASC"). // Order modules by creation
 		Find(&modules).Error
-
-	for _, module := range modules {
-		fmt.Println("ANJEENG ====> ✅", module.ARExperiment)
-	}
 
 	if err != nil {
 		return nil, err
@@ -150,9 +147,9 @@ func (r *moduleRepository) GetAllModulesWithPagination(limit, offset int) ([]mod
 		Preload("VideoMaterial.VideoQuizzes", func(db *gorm.DB) *gorm.DB { // Video quizzes ordered by timestamp
 			return db.Order("video_quizzes.timestamp_start ASC")
 		}).
-		Preload("ARExperiment", func(db *gorm.DB) *gorm.DB {
+		Preload("ARExperiments", func(db *gorm.DB) *gorm.DB { // AR experiments ordered by created_at
 			return db.Order("ar_experiments.created_at ASC")
-		}).                                                // AR experiments
+		}).
 		Preload("Prequizzes", func(db *gorm.DB) *gorm.DB { // Load all prequizzes ordered by created_at
 			return db.Order("prequizzes.created_at ASC")
 		}).
@@ -266,21 +263,23 @@ func (r *moduleRepository) UpdateModuleWithVideo(id uint32, module *models.Modul
 		}
 	}
 
-	// Handle ARExperiment creation if provided
-	if module.ARExperiment != nil {
-		// Reset ID and timestamps to let GORM auto-generate
-		module.ARExperiment.ID = 0
-		module.ARExperiment.CreatedAt = time.Time{}
-		module.ARExperiment.UpdatedAt = time.Time{}
-		module.ARExperiment.DeletedAt = gorm.DeletedAt{}
+	// Handle ARExperiments creation if provided
+	if len(module.ARExperiments) > 0 {
+		for i := range module.ARExperiments {
+			// Reset ID and timestamps to let GORM auto-generate
+			module.ARExperiments[i].ID = 0
+			module.ARExperiments[i].CreatedAt = time.Time{}
+			module.ARExperiments[i].UpdatedAt = time.Time{}
+			module.ARExperiments[i].DeletedAt = gorm.DeletedAt{}
 
-		// Set the ModuleID
-		module.ARExperiment.ModuleID = uint(id)
+			// Set the ModuleID
+			module.ARExperiments[i].ModuleID = uint(id)
 
-		// Create the AR experiment
-		if err := tx.Create(module.ARExperiment).Error; err != nil {
-			tx.Rollback()
-			return nil, err
+			// Create the AR experiment
+			if err := tx.Create(&module.ARExperiments[i]).Error; err != nil {
+				tx.Rollback()
+				return nil, err
+			}
 		}
 	}
 

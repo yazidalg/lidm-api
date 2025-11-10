@@ -12,6 +12,7 @@ type UserRepositoryInterface interface {
 	GetUserByIDUint(id uint) (*models.User, error)
 	GetAllUsers() ([]models.User, error)
 	UpdateUser(user *models.User) error
+	UpdateAccount(userID uint, name, email string) (models.User, error)
 	UpdateUserRole(userID uint, roleID uint) (models.User, error)
 	DeleteUser(userID uint) error
 	DecrementLife(userID uint) error
@@ -71,6 +72,21 @@ func (r *userRepository) UpdateUser(user *models.User) error {
 	return r.db.Save(user).Error
 }
 
+// UpdateAccount - Update user account (name and email only)
+func (r *userRepository) UpdateAccount(userID uint, name, email string) (models.User, error) {
+	var user models.User
+	err := r.db.Model(&user).Where("id = ?", userID).Updates(map[string]interface{}{
+		"name":  name,
+		"email": email,
+	}).Error
+	if err != nil {
+		return user, err
+	}
+	// Fetch updated user with role
+	err = r.db.Preload("Role").First(&user, userID).Error
+	return user, err
+}
+
 // DecrementLife - kurangi nyawa user sebanyak 1 jika masih > 0
 func (r *userRepository) DecrementLife(userID uint) error {
 	return r.db.Model(&models.User{}).Where("id = ? AND lives > 0", userID).UpdateColumn("lives", gorm.Expr("lives - 1")).Error
@@ -86,16 +102,16 @@ func (r *userRepository) ResetLivesIfNeeded(userID uint, maxLives int) error {
 	now := time.Now()
 	wib, _ := time.LoadLocation("Asia/Jakarta")
 	nowWIB := now.In(wib)
-	
+
 	// Reset jika:
 	// 1. LifeResetAt belum pernah diset (null), ATAU
 	// 2. Waktu sekarang sudah melewati life_reset_at (sudah waktunya reset)
 	needsReset := user.LifeResetAt == nil || nowWIB.After(*user.LifeResetAt)
-	
+
 	if needsReset {
 		// Set life_reset_at ke besok jam 00:00 WIB
 		nextResetTime := time.Date(nowWIB.Year(), nowWIB.Month(), nowWIB.Day()+1, 0, 0, 0, 0, wib)
-		
+
 		return r.db.Model(&models.User{}).Where("id = ?", userID).Updates(map[string]interface{}{
 			"lives":         maxLives,
 			"life_reset_at": nextResetTime,

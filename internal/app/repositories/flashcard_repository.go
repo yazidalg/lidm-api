@@ -54,7 +54,12 @@ func (r *flashcardRepository) UpdateFlashcard(id uint, flashcard *models.Flashca
 	if err := r.db.Model(&models.Flashcard{}).Where("id = ?", id).Updates(flashcard).Error; err != nil {
 		return nil, err
 	}
-	return flashcard, nil
+	// Fetch the updated flashcard to return complete data
+	var updatedFlashcard models.Flashcard
+	if err := r.db.First(&updatedFlashcard, id).Error; err != nil {
+		return nil, err
+	}
+	return &updatedFlashcard, nil
 }
 
 func (r *flashcardRepository) DeleteFlashcard(id uint) error {

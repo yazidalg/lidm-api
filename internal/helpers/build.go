@@ -19,7 +19,7 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 	roleRepository := repositories.NewRoleRepository(db)
 	roleService := services.NewRoleService(roleRepository)
 	userService := services.NewUserService(userRepository, roleService)
-	
+
 	// Create leaderboard service for position tracking
 	leaderboardRepository := repositories.NewLeaderboardRepository(db)
 	participantRepository := repositories.NewParticipantRepository(db)
@@ -30,7 +30,7 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 		userRepository,
 		quizRepository,
 	)
-	
+
 	userHandler := handlers.NewUserHandler(userService, leaderboardService)
 	return userHandler
 }

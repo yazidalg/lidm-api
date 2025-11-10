@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"os"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/yazidalg/lidm_backend/internal/app/handlers"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
@@ -35,10 +38,28 @@ func NewRoute(
 	// Enable CORS - configurable for different environments
 	router.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
+
+		// Build allowed origins list from environment variable and defaults
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
-			// "https://your-frontend-domain.com", // Replace with your actual frontend domain
+			"https://leafy-guru-971323763477.asia-southeast2.run.app",
+		}
+
+		// Add production frontend domain
+		if prodFrontend := os.Getenv("FRONTEND_URL"); prodFrontend != "" {
+			allowedOrigins = append(allowedOrigins, prodFrontend)
+		}
+
+		// Also support comma-separated list of origins
+		if allowedOriginsEnv := os.Getenv("ALLOWED_ORIGINS"); allowedOriginsEnv != "" {
+			envOrigins := strings.Split(allowedOriginsEnv, ",")
+			for _, envOrigin := range envOrigins {
+				trimmed := strings.TrimSpace(envOrigin)
+				if trimmed != "" {
+					allowedOrigins = append(allowedOrigins, trimmed)
+				}
+			}
 		}
 
 		// Allow requests from allowed origins or if no origin (like Postman)
@@ -57,7 +78,7 @@ func NewRoute(
 		if allowOrigin != "" {
 			c.Header("Access-Control-Allow-Origin", allowOrigin)
 		}
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Expose-Headers", "Content-Length")
@@ -112,6 +133,7 @@ func NewRoute(
 	userGroupHandler.Use(activityMiddleware.TrackActivity()) // Track user activities
 	{
 		userGroupHandler.GET("/profile", userHandler.GetUserById)
+		userGroupHandler.GET("/admin", userHandler.GetUserAdmin)
 	}
 
 	// Question routes - Admin only untuk CUD, User bisa Read
@@ -225,6 +247,7 @@ func NewRoute(
 		moduleAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
 		{
 			moduleAdminGroup.GET("/all", moduleHandler.GetAllModulesAdmin)
+			moduleAdminGroup.GET("/all-no-pagination", moduleHandler.GetAllModulesAdminAll)
 		}
 
 		// Admin and Teacher routes (original admin group)
@@ -244,7 +267,7 @@ func NewRoute(
 		// User accessible routes (register more specific pattern before generic one)
 		moduleGroupHandler.GET("/:id/progress", progressHandler.GetModuleProgress)
 		moduleGroupHandler.GET("/:id", moduleHandler.GetModuleByID)
-		// Use unlock-aware endpoint for authenticated users
+		moduleGroupHandler.GET("/:id/admin", moduleHandler.GetModuleByIdAdmin) // Use unlock-aware endpoint for authenticated users
 		moduleGroupHandler.GET("/all", moduleHandler.GetAllModulesWithUnlockStatus)
 		// Keep legacy endpoint for backward compatibility
 		moduleGroupHandler.GET("/all-legacy", moduleHandler.GetAllModulesWithProgress)
@@ -327,6 +350,15 @@ func NewRoute(
 		adminGroup.DELETE("/roles/:id", roleHandler.DeleteRole)
 	}
 
+	// Admin/Teacher routes - User account management
+	adminTeacherGroup := router.Group("admin")
+	adminTeacherGroup.Use(authMiddleware.RequireAuth)
+	adminTeacherGroup.Use(authMiddleware.RequireAdminOrTeacher)
+	{
+		// Update user account (name and email only)
+		adminTeacherGroup.PUT("/users/:id/account", userHandler.UpdateAccount)
+	}
+
 	// Public RAG endpoint (no auth required for AI/knowledge systems)
 	router.GET("/user-activity/for-rag", activityHandler.GetActivitiesForRAG) // Enhanced data for RAG/AI
 
@@ -395,6 +427,15 @@ func NewRoute(
 		flashcardGroup.POST("/:flashcard_id/initialize", flashcardHandler.InitializeFlashcard)            // Initialize single flashcard
 		flashcardGroup.GET("/due", flashcardHandler.GetDueFlashcards)                                     // Get due flashcards
 		flashcardGroup.GET("/stats", flashcardHandler.GetRetentionStats)                                  // Get retention statistics
+
+		// Admin/Teacher routes - Create, Update and Delete flashcard
+		flashcardAdminGroup := flashcardGroup.Group("")
+		flashcardAdminGroup.Use(authMiddleware.RequireAdminOrTeacher)
+		{
+			flashcardAdminGroup.POST("/create", flashcardHandler.CreateFlashcard)          // Create flashcard
+			flashcardAdminGroup.PUT("/:flashcard_id", flashcardHandler.UpdateFlashcard)    // Update flashcard
+			flashcardAdminGroup.DELETE("/:flashcard_id", flashcardHandler.DeleteFlashcard) // Delete flashcard
+		}
 	}
 
 	return router
