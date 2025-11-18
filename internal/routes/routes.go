@@ -127,6 +127,9 @@ func NewRoute(
 		forgotPasswordGroup.POST("/reset", forgotPasswordHandler.ResetPassword)
 	}
 
+	// Delete account route (public - requires email and password)
+	router.DELETE("/user/delete-account", userHandler.DeleteOwnAccount)
+
 	// User routes (authenticated users only)
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(authMiddleware.RequireAuth)

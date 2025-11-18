@@ -9,16 +9,19 @@ import (
 	"github.com/yazidalg/lidm_backend/internal/app/request"
 	"github.com/yazidalg/lidm_backend/internal/app/response"
 	"github.com/yazidalg/lidm_backend/internal/app/services"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
 	userService        services.UserServiceInterface
+	authService        services.AuthServiceInterface
 	leaderboardService *services.LeaderboardService
 }
 
-func NewUserHandler(userService services.UserServiceInterface, leaderboardService *services.LeaderboardService) *UserHandler {
+func NewUserHandler(userService services.UserServiceInterface, authService services.AuthServiceInterface, leaderboardService *services.LeaderboardService) *UserHandler {
 	return &UserHandler{
 		userService:        userService,
+		authService:        authService,
 		leaderboardService: leaderboardService,
 	}
 }
@@ -178,6 +181,50 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User deleted successfully",
+	})
+}
+
+// DeleteOwnAccount - User dapat menghapus akun mereka sendiri tanpa autentikasi
+// Memerlukan email dan password untuk verifikasi
+func (h *UserHandler) DeleteOwnAccount(c *gin.Context) {
+	var req request.DeleteAccountRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// Get user by email
+	user, err := h.authService.GetUserByEmail(req.Email)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "User not found",
+		})
+		return
+	}
+
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "Invalid email or password",
+		})
+		return
+	}
+
+	// Delete the user's account
+	err = h.userService.DeleteUser(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Failed to delete account",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Account deleted successfully",
 	})
 }
 
