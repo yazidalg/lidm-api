@@ -43,6 +43,7 @@ func NewRoute(
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
+			"http://localhost:8080",
 			"https://leafy-guru-971323763477.asia-southeast2.run.app",
 		}
 
