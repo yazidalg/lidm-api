@@ -138,6 +138,8 @@ func NewRoute(
 	{
 		userGroupHandler.GET("/profile", userHandler.GetUserById)
 		userGroupHandler.GET("/admin", userHandler.GetUserAdmin)
+		userGroupHandler.PUT("/edit-profile", userHandler.EditProfile)              // Edit own profile
+		userGroupHandler.POST("/upload-photo-profile", userHandler.UploadPhotoProfile) // Upload photo profile
 	}
 
 	// Question routes - Admin only untuk CUD, User bisa Read

@@ -12,7 +12,7 @@ type UserRepositoryInterface interface {
 	GetUserByIDUint(id uint) (*models.User, error)
 	GetAllUsers() ([]models.User, error)
 	UpdateUser(user *models.User) error
-	UpdateAccount(userID uint, name, email string) (models.User, error)
+	UpdateAccount(userID uint, name, email, photoProfile string) (models.User, error)
 	UpdateUserRole(userID uint, roleID uint) (models.User, error)
 	DeleteUser(userID uint) error
 	DecrementLife(userID uint) error
@@ -72,13 +72,20 @@ func (r *userRepository) UpdateUser(user *models.User) error {
 	return r.db.Save(user).Error
 }
 
-// UpdateAccount - Update user account (name and email only)
-func (r *userRepository) UpdateAccount(userID uint, name, email string) (models.User, error) {
+// UpdateAccount - Update user account (name, email, and photo profile)
+func (r *userRepository) UpdateAccount(userID uint, name, email, photoProfile string) (models.User, error) {
 	var user models.User
-	err := r.db.Model(&user).Where("id = ?", userID).Updates(map[string]interface{}{
+	updates := map[string]interface{}{
 		"name":  name,
 		"email": email,
-	}).Error
+	}
+	
+	// Only update photo_profile if provided (not empty)
+	if photoProfile != "" {
+		updates["profile_picture"] = photoProfile
+	}
+	
+	err := r.db.Model(&user).Where("id = ?", userID).Updates(updates).Error
 	if err != nil {
 		return user, err
 	}
