@@ -44,7 +44,56 @@ func (r *userRepository) UpdateUserRole(userID uint, roleID uint) (models.User, 
 }
 
 func (r *userRepository) DeleteUser(userID uint) error {
-	return r.db.Delete(&models.User{}, userID).Error
+	// Start a transaction to ensure all deletions succeed or none do
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// Delete user's leaderboard entry
+	if err := tx.Where("user_id = ?", userID).Delete(&models.Leaderboard{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete user's quiz sessions
+	if err := tx.Where("user_id = ?", userID).Delete(&models.QuizSession{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete user's participant records
+	if err := tx.Where("user_id = ?", userID).Delete(&models.Participant{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete user's module progress
+	if err := tx.Where("user_id = ?", userID).Delete(&models.ModuleProgress{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete user's activities
+	if err := tx.Where("user_id = ?", userID).Delete(&models.UserActivity{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Delete user's flashcard progress
+	if err := tx.Where("user_id = ?", userID).Delete(&models.UserFlashcardProgress{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Finally, delete the user
+	if err := tx.Delete(&models.User{}, userID).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Commit the transaction
+	return tx.Commit().Error
 }
 
 func NewUserRepository(db *gorm.DB) *userRepository {
