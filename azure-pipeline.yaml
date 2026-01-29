@@ -1,0 +1,73 @@
+trigger: none
+pr: none
+
+name: dast-$(Date:yyyyMMdd)$(Rev:.r)
+
+parameters:
+  - name: targetUrl
+    displayName: Target URL to scan (required)
+    type: string
+    default: ''
+  - name: zapScanMinutes
+    displayName: ZAP max runtime (minutes)
+    type: number
+    default: 15
+  - name: failOnAlerts
+    displayName: Fail pipeline if ZAP exits non-zero (e.g., alerts found)
+    type: boolean
+    default: true
+  - name: appName
+    displayName: Application name (optional, for reporting)
+    type: string
+    default: ''
+  - name: revision
+    displayName: Deployed revision/tag (optional, for reporting)
+    type: string
+    default: ''
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+- stage: DAST
+  displayName: Dynamic Application Security Testing (OWASP ZAP)
+  jobs:
+  - job: ZapBaseline
+    displayName: ZAP Baseline Scan
+    timeoutInMinutes: 60
+    steps:
+    - checkout: none
+
+    - script: |
+        set -euo pipefail
+
+        mkdir -p "$(Build.ArtifactStagingDirectory)/zap/wrk/"
+
+        docker run --rm \
+          -v "$(Build.ArtifactStagingDirectory)/zap/wrk/":/zap/wrk/:rw \
+          -t ghcr.io/zaproxy/zaproxy:latest \
+          zap-api-scan.py \
+          -t "https://lidm-api.motionlaboratory.com/" \
+          -f openapi \
+          -g api-scan.conf \
+          -x OWASP-ZAP-Report.xml \
+          -r api-scan-report.html
+
+        true
+
+      displayName: Run OWASP ZAP baseline scan
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish ZAP reports (always)
+      condition: always()
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/zap'
+        artifact: 'zap-reports'
+
+    - script: |
+        set -euo pipefail
+        echo "Reports published as artifact: zap-reports"
+        echo "Files:"
+        ls -lah "$(Build.ArtifactStagingDirectory)/zap" || true
+      displayName: List published report files
+      condition: always()
