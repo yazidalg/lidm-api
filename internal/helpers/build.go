@@ -20,6 +20,10 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 	roleService := services.NewRoleService(roleRepository)
 	userService := services.NewUserService(userRepository, roleService)
 
+	// Create auth service for email/password verification
+	authRepository := repositories.NewAuthRepository(db)
+	authService := services.NewAuthService(authRepository, roleService)
+
 	// Create leaderboard service for position tracking
 	leaderboardRepository := repositories.NewLeaderboardRepository(db)
 	participantRepository := repositories.NewParticipantRepository(db)
@@ -31,7 +35,7 @@ func NewBuildUser(db *gorm.DB) *handlers.UserHandler {
 		quizRepository,
 	)
 
-	userHandler := handlers.NewUserHandler(userService, leaderboardService)
+	userHandler := handlers.NewUserHandler(userService, authService, leaderboardService)
 	return userHandler
 }
 

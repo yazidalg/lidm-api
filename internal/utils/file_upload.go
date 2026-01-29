@@ -85,8 +85,23 @@ func UploadFile(c *gin.Context, fieldName string, config FileUploadConfig) (stri
 		return "", fmt.Errorf("failed to save file: %v", err)
 	}
 
-	// Return relative path for database storage
-	relativePath := filepath.Join("uploads/icons", filename)
+	// Return relative path for database storage (remove leading ./ if exists)
+	relativePath := fullPath
+	if filepath.IsAbs(fullPath) {
+		relativePath = fullPath
+	} else {
+		// Remove leading "./" if present
+		relativePath = filepath.Clean(fullPath)
+		if len(relativePath) > 2 && relativePath[:2] == "./" {
+			relativePath = relativePath[2:]
+		} else if len(relativePath) > 1 && relativePath[0] == '.' {
+			relativePath = relativePath[1:]
+			if len(relativePath) > 0 && relativePath[0] == '/' {
+				relativePath = relativePath[1:]
+			}
+		}
+	}
+	
 	return relativePath, nil
 }
 

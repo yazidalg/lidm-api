@@ -11,7 +11,8 @@ type UserAdminResponse struct {
 }
 
 type UpdateAccountResponse struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	PhotoProfile string `json:"photo_profile"`
 }

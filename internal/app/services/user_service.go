@@ -9,7 +9,7 @@ type UserServiceInterface interface {
 	GetUserById(id int) (models.User, error)
 	GetUserByIDUint(id uint) (*models.User, error)
 	GetAllUsers() ([]models.User, error)
-	UpdateAccount(userID uint, name, email string) (models.User, error)
+	UpdateAccount(userID uint, name, email, photoProfile string) (models.User, error)
 	UpdateUserRole(userID uint, roleName string) (models.User, error)
 	DeleteUser(userID uint) error
 	DecrementLife(userID uint) error
@@ -38,8 +38,8 @@ func (s *userService) GetAllUsers() ([]models.User, error) {
 	return s.userRepository.GetAllUsers()
 }
 
-func (s *userService) UpdateAccount(userID uint, name, email string) (models.User, error) {
-	return s.userRepository.UpdateAccount(userID, name, email)
+func (s *userService) UpdateAccount(userID uint, name, email, photoProfile string) (models.User, error) {
+	return s.userRepository.UpdateAccount(userID, name, email, photoProfile)
 }
 
 func (s *userService) UpdateUserRole(userID uint, roleName string) (models.User, error) {

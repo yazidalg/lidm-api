@@ -43,6 +43,7 @@ func NewRoute(
 		allowedOrigins := []string{
 			"http://localhost:5173",
 			"http://localhost:3000",
+			"http://localhost:8080",
 			"https://leafy-guru-971323763477.asia-southeast2.run.app",
 		}
 
@@ -127,6 +128,9 @@ func NewRoute(
 		forgotPasswordGroup.POST("/reset", forgotPasswordHandler.ResetPassword)
 	}
 
+	// Delete account route (public - requires email and password)
+	router.DELETE("/user/delete-account", userHandler.DeleteOwnAccount)
+
 	// User routes (authenticated users only)
 	userGroupHandler := router.Group("user")
 	userGroupHandler.Use(authMiddleware.RequireAuth)
@@ -134,6 +138,8 @@ func NewRoute(
 	{
 		userGroupHandler.GET("/profile", userHandler.GetUserById)
 		userGroupHandler.GET("/admin", userHandler.GetUserAdmin)
+		userGroupHandler.PUT("/edit-profile", userHandler.EditProfile)              // Edit own profile
+		userGroupHandler.POST("/upload-photo-profile", userHandler.UploadPhotoProfile) // Upload photo profile
 	}
 
 	// Question routes - Admin only untuk CUD, User bisa Read

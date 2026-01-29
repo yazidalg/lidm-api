@@ -437,6 +437,10 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 
 		// Generate schedule preview only for due flashcards
 		for _, flashcard := range dueFlashcardsInModule {
+			// Check if this flashcard has been reviewed (has progress record)
+			progress, progressErr := h.fsrsService.GetFlashcardProgress(uid, flashcard.ID)
+			isReviewed := progressErr == nil && progress != nil
+			
 			schedule, err := h.fsrsService.GetNextReviewSchedule(uid, flashcard.ID, 0)
 			if err != nil {
 				// If error, use basic info
@@ -445,6 +449,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 					"back_text":    flashcard.BackText,
 					"order":        flashcard.Order,
 					"flashcard_id": flashcard.ID,
+					"is_reviewed":  isReviewed, // Flag indicating if ever reviewed
 					"error":        "Failed to get schedule",
 				})
 				continue
@@ -455,6 +460,7 @@ func (h *FlashcardHandler) GetFlashcardIntervals(c *gin.Context) {
 				"back_text":      flashcard.BackText,
 				"order":          flashcard.Order,
 				"flashcard_id":   flashcard.ID,
+				"is_reviewed":    isReviewed, // Flag indicating if ever reviewed
 				"scheduleTimers": schedule["scheduleTimers"],
 			})
 		}
